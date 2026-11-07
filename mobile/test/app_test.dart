@@ -128,13 +128,13 @@ void main() {
     }, loggedIn: true);
     await t.tap(find.text('Shifokorlar').last);
     await t.pumpAndSettle();
-    expect(find.text('Abdullayev Jasur Akmalovich'), findsOneWidget);
+    expect(find.textContaining('Abdullayev Jasur Akmalovich'), findsOneWidget);
 
     await t.tap(find.widgetWithText(ChoiceChip, 'Terapevt'));
     await t.pumpAndSettle();
     expect(lastSpecialty, 'therapist');
-    expect(find.text('Abdullayev Jasur Akmalovich'), findsNothing);
-    expect(find.text('Karimova Dilnoza Rustamovna'), findsOneWidget);
+    expect(find.textContaining('Abdullayev Jasur Akmalovich'), findsNothing);
+    expect(find.textContaining('Karimova Dilnoza Rustamovna'), findsOneWidget);
   });
 
   testWidgets('admin moderatsiya tabini ko\'radi, bemor ko\'rmaydi', (t) async {

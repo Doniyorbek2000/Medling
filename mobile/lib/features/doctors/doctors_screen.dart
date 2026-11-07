@@ -163,31 +163,35 @@ class DoctorCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            doctor.fullName,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
+                    // Belgi ism oxiriga yopishgan holda o'raladi (ism ikki
+                    // qatorga o'tsa ham o'ng chetga qochmaydi).
+                    Text.rich(
+                      TextSpan(
+                        text: doctor.fullName,
+                        children: [
+                          if (doctor.verified)
+                            WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: Tooltip(
+                                  message: l.verifiedLicense,
+                                  child: const Icon(
+                                    Icons.verified_rounded,
+                                    color: Brand.teal,
+                                    size: 18,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        if (doctor.verified) ...[
-                          const SizedBox(width: 4),
-                          Tooltip(
-                            message: l.verifiedLicense,
-                            child: const Icon(
-                              Icons.verified_rounded,
-                              color: Brand.teal,
-                              size: 18,
-                            ),
-                          ),
                         ],
-                      ],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
