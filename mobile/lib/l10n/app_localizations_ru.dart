@@ -884,4 +884,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get completeProfile => 'Заполните профиль';
+
+  @override
+  String get licenses => 'Лицензии';
 }

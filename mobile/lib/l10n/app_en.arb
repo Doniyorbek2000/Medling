@@ -267,5 +267,6 @@
   "specTraumatologist": "Traumatologist",
   "specPsychiatrist": "Psychiatrist",
   "tashkentTime": "Tashkent time (UTC+5)",
-  "completeProfile": "Complete your profile"
+  "completeProfile": "Complete your profile",
+  "licenses": "Licenses"
 }

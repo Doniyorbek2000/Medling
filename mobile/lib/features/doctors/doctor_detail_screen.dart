@@ -136,8 +136,8 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                           const SizedBox(width: 4),
                           Text(
                             l.verifiedLicense,
-                            style: const TextStyle(
-                              color: Brand.teal,
+                            style: TextStyle(
+                              color: context.ink(Brand.teal),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -228,50 +228,58 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
               itemBuilder: (_, i) {
                 final day = _days[i];
                 final sel = day == _day;
-                return InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    setState(() => _day = day);
-                    _loadSlots();
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? context.colors.primary
-                          : context.colors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
+                return Semantics(
+                  button: true,
+                  selected: sel,
+                  label: context.fmt.fullDate(day),
+                  excludeSemantics: true,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      setState(() => _day = day);
+                      _loadSlots();
+                    },
+                    child: AnimatedContainer(
+                      duration: context.motion(
+                        const Duration(milliseconds: 180),
+                      ),
+                      width: 60,
+                      decoration: BoxDecoration(
                         color: sel
                             ? context.colors.primary
-                            : context.colors.outlineVariant,
+                            : context.colors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: sel
+                              ? context.colors.primary
+                              : context.colors.outlineVariant,
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          i == 0 ? l.today : context.fmt.weekdayShort(day),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: sel
-                                ? context.colors.onPrimary
-                                : context.colors.onSurfaceVariant,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            i == 0 ? l.today : context.fmt.weekdayShort(day),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: sel
+                                  ? context.colors.onPrimary
+                                  : context.colors.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${day.day}',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: sel
-                                ? context.colors.onPrimary
-                                : context.colors.onSurface,
+                          const SizedBox(height: 4),
+                          Text(
+                            '${day.day}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: sel
+                                  ? context.colors.onPrimary
+                                  : context.colors.onSurface,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );

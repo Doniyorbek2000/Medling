@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -17,11 +19,49 @@ class Brand {
   );
 }
 
+/// WCAG kontrast nisbati (1..21).
+double contrastRatio(Color a, Color b) {
+  final l1 = a.computeLuminance(), l2 = b.computeLuminance();
+  return (math.max(l1, l2) + 0.05) / (math.min(l1, l2) + 0.05);
+}
+
+/// [color] ni [background] ustida o'qiladigan qiladi: tus saqlanadi, yorqinlik
+/// WCAG AA (matn uchun 4.5:1) ga yetguncha o'zgartiriladi. Brend ranglari
+/// (masalan, yashil-moviy #12AEAB) oq fonda matn uchun yetarli kontrast
+/// bermaydi — shu funksiya orqali matn rangi avtomatik to'qlashtiriladi.
+Color readableOn(Color color, Color background, {double minRatio = 4.5}) {
+  var hsl = HSLColor.fromColor(color);
+  final darken = background.computeLuminance() > 0.4;
+  for (
+    var i = 0;
+    i < 50 && contrastRatio(hsl.toColor(), background) < minRatio;
+    i++
+  ) {
+    hsl = hsl.withLightness(
+      (hsl.lightness + (darken ? -0.02 : 0.02)).clamp(0.0, 1.0),
+    );
+  }
+  return hsl.toColor();
+}
+
 /// Kontekstga bog'liq ranglar (yorug'/qorong'i rejim).
 extension AppColors on BuildContext {
   ColorScheme get colors => Theme.of(this).colorScheme;
   TextTheme get text => Theme.of(this).textTheme;
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
+
+  /// Kartochka foni ustidagi matn uchun o'qiladigan rang.
+  Color ink(Color c) => readableOn(c, colors.surface);
+
+  /// Shaffof tusli fon ([alpha]) ustidagi matn uchun o'qiladigan rang.
+  Color inkOnTint(Color c, double alpha) => readableOn(
+    c,
+    Color.alphaBlend(c.withValues(alpha: alpha), colors.surface),
+  );
+
+  /// "Animatsiyani kamaytirish" sozlamasi yoqilgan bo'lsa — animatsiyasiz.
+  Duration motion(Duration d) =>
+      MediaQuery.disableAnimationsOf(this) ? Duration.zero : d;
 }
 
 ThemeData buildTheme(Brightness brightness) {
@@ -42,10 +82,36 @@ ThemeData buildTheme(Brightness brightness) {
   final border = dark ? const Color(0xFF22324A) : const Color(0xFFE3E9F2);
   final radius = BorderRadius.circular(14);
 
+  // Tipografiya (UI/UX Pro Max: "medical, clean, accessible"): sarlavhalar
+  // Figtree, matn Noto Sans. Figtree'da kirill va ʻ (U+02BB) yo'q — ular
+  // Noto Sans'dan olinadi, shuning uchun ruscha ham to'g'ri ko'rinadi.
+  final base =
+      (dark ? Typography.material2021().white : Typography.material2021().black)
+          .apply(fontFamily: 'NotoSans');
+  TextStyle? display(TextStyle? t) => t?.copyWith(
+    fontFamily: 'Figtree',
+    fontFamilyFallback: const ['NotoSans'],
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+  );
+  final textTheme = base.copyWith(
+    displayLarge: display(base.displayLarge),
+    displayMedium: display(base.displayMedium),
+    displaySmall: display(base.displaySmall),
+    headlineLarge: display(base.headlineLarge),
+    headlineMedium: display(base.headlineMedium),
+    headlineSmall: display(base.headlineSmall),
+    titleLarge: display(base.titleLarge),
+    titleMedium: base.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+    labelLarge: base.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+  );
+
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
     brightness: brightness,
+    fontFamily: 'NotoSans',
+    textTheme: textTheme,
     scaffoldBackgroundColor: scheme.surfaceContainerLowest,
     // iOS'da Cupertino uslubidagi o'tishlar va "orqaga surish" ishlaydi.
     pageTransitionsTheme: const PageTransitionsTheme(
@@ -63,7 +129,9 @@ ThemeData buildTheme(Brightness brightness) {
       centerTitle: false,
       titleTextStyle: TextStyle(
         color: scheme.onSurface,
-        fontSize: 20,
+        fontFamily: 'Figtree',
+        fontFamilyFallback: const ['NotoSans'],
+        fontSize: 21,
         fontWeight: FontWeight.w700,
       ),
     ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,18 @@ Future<void> main() async {
   } on MissingPluginException {
     // Testlar / qo'llab-quvvatlanmaydigan platforma.
   }
+
+  // Shrift litsenziyalari (SIL OFL 1.1) "Litsenziyalar" sahifasida ko'rinadi.
+  LicenseRegistry.addLicense(() async* {
+    for (final (pkg, file) in [
+      ('Figtree', 'OFL-Figtree.txt'),
+      ('Noto Sans', 'OFL-NotoSans.txt'),
+    ]) {
+      yield LicenseEntryWithLineBreaks([
+        pkg,
+      ], await rootBundle.loadString('assets/fonts/$file'));
+    }
+  });
 
   final api = ApiClient();
   final settings = AppSettings();

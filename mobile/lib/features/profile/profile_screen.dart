@@ -278,6 +278,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               _tile(
+                Icons.gavel_outlined,
+                l.licenses,
+                onTap: () => showLicensePage(
+                  context: context,
+                  applicationName: 'MedLink',
+                  applicationVersion: AppConfig.version,
+                ),
+              ),
+              _tile(
                 Icons.info_outline_rounded,
                 l.version,
                 trailing: const Text(AppConfig.version),
@@ -329,7 +338,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Icon(Icons.badge_outlined, color: color),
         title: Text(
           label,
-          style: TextStyle(color: color, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: context.ink(color),
+            fontWeight: FontWeight.w700,
+          ),
         ),
         subtitle: Text(
           [
@@ -387,7 +399,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Color? color,
   }) => ListTile(
     leading: Icon(icon, color: color),
-    title: Text(title, style: TextStyle(color: color)),
+    title: Text(
+      title,
+      style: TextStyle(color: color == null ? null : context.ink(color)),
+    ),
     subtitle: subtitle == null ? null : Text(subtitle),
     trailing:
         trailing ??

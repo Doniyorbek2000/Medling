@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medlink/core/api_client.dart';
 import 'package:medlink/core/clinic_time.dart';
+import 'package:medlink/core/theme.dart';
 import 'package:medlink/core/l10n.dart';
 import 'package:medlink/core/session.dart';
 import 'package:medlink/features/auth/phone_screen.dart';
@@ -220,5 +221,22 @@ void main() {
       'status': 'confirmed',
     });
     expect(m.startsAt.isUtc, isTrue);
+  });
+
+  test('brend ranglari matn uchun WCAG AA kontrastga keltiriladi', () {
+    const white = Color(0xFFFFFFFF);
+    const darkSurface = Color(0xFF111D2E);
+    for (final c in [Brand.teal, Brand.warning, Brand.danger, Brand.blue]) {
+      expect(
+        contrastRatio(readableOn(c, white), white),
+        greaterThanOrEqualTo(4.5),
+      );
+      expect(
+        contrastRatio(readableOn(c, darkSurface), darkSurface),
+        greaterThanOrEqualTo(4.5),
+      );
+    }
+    // Teal oq fonda o'zi yetarli emas — shuning uchun helper kerak.
+    expect(contrastRatio(Brand.teal, white), lessThan(4.5));
   });
 }

@@ -113,11 +113,22 @@ class _PhoneScreenState extends State<PhoneScreen> {
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _valid ? _submit() : null,
               decoration: InputDecoration(
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.only(left: 16, right: 8),
-                  child: Text(
-                    '🇺🇿  +998',
-                    style: TextStyle(fontSize: 20, letterSpacing: 1),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.only(left: 14, right: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.phone_iphone_rounded,
+                        size: 20,
+                        color: context.colors.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '+998',
+                        style: TextStyle(fontSize: 20, letterSpacing: 1),
+                      ),
+                    ],
                   ),
                 ),
                 prefixIconConstraints: const BoxConstraints(),

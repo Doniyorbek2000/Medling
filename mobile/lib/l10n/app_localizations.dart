@@ -1707,6 +1707,12 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Profilni to\'ldiring'**
   String get completeProfile;
+
+  /// No description provided for @licenses.
+  ///
+  /// In uz, this message translates to:
+  /// **'Litsenziyalar'**
+  String get licenses;
 }
 
 class _AppLocalizationsDelegate

@@ -114,8 +114,11 @@ class EmergencyBanner extends StatelessWidget {
                 Expanded(
                   child: Text(
                     text ?? l.emergencyBanner(AppConfig.emergencyPhone),
-                    style: const TextStyle(
-                      color: Brand.danger,
+                    style: TextStyle(
+                      color: context.inkOnTint(
+                        Brand.danger,
+                        context.isDark ? 0.18 : 0.07,
+                      ),
                       fontWeight: FontWeight.w600,
                     ),
                   ),

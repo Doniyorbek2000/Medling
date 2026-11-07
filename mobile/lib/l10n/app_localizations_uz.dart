@@ -891,4 +891,7 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get completeProfile => 'Profilni to\'ldiring';
+
+  @override
+  String get licenses => 'Litsenziyalar';
 }

@@ -372,7 +372,10 @@ class _PaymentScreenState extends State<PaymentScreen>
         secondary: Icon(icon, color: color, size: 30),
         title: Text(
           title,
-          style: TextStyle(fontWeight: FontWeight.w800, color: color),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: context.ink(color),
+          ),
         ),
         subtitle: Text(subtitle),
       ),
@@ -396,7 +399,7 @@ class _SuccessView extends StatelessWidget {
               const Spacer(),
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.5, end: 1),
-                duration: const Duration(milliseconds: 500),
+                duration: context.motion(const Duration(milliseconds: 500)),
                 curve: Curves.elasticOut,
                 builder: (_, v, child) =>
                     Transform.scale(scale: v, child: child),

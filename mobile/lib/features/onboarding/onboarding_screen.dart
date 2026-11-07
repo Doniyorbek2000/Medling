@@ -74,7 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 for (var i = 0; i < slides.length; i++)
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
+                    duration: context.motion(const Duration(milliseconds: 250)),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     width: i == _index ? 24 : 8,
                     height: 8,
@@ -93,7 +93,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPressed: () => last
                     ? context.read<AppSettings>().completeOnboarding()
                     : _pages.nextPage(
-                        duration: const Duration(milliseconds: 300),
+                        duration: context.motion(
+                          const Duration(milliseconds: 300),
+                        ),
                         curve: Curves.easeOut,
                       ),
                 child: Text(last ? l.getStarted : l.next),

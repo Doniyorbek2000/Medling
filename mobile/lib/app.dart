@@ -71,7 +71,7 @@ class _Root extends StatelessWidget {
       page = const LockGate(child: HomeShell());
     }
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: context.motion(const Duration(milliseconds: 300)),
       child: KeyedSubtree(key: ValueKey(page.runtimeType), child: page),
     );
   }

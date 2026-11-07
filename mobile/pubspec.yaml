@@ -73,6 +73,32 @@ flutter:
   assets:
     - assets/brand/
     - assets/pay/
+    - assets/fonts/OFL-Figtree.txt
+    - assets/fonts/OFL-NotoSans.txt
+
+  # Shriftlar ilova ichida (Google Fonts'ga tarmoq so'rovi yo'q — maxfiylik
+  # va oflayn ishlash uchun). Noto Sans faqat lotin + kirill qismi.
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-400.ttf
+        - asset: assets/fonts/Figtree-500.ttf
+          weight: 500
+        - asset: assets/fonts/Figtree-600.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-700.ttf
+          weight: 700
+        - asset: assets/fonts/Figtree-800.ttf
+          weight: 800
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-400.ttf
+        - asset: assets/fonts/NotoSans-500.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/NotoSans-700.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

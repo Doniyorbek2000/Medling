@@ -223,8 +223,8 @@ class _ConsentTile extends StatelessWidget {
                 if (doc.required)
                   TextSpan(
                     text: '  ${l.required}',
-                    style: const TextStyle(
-                      color: Brand.danger,
+                    style: TextStyle(
+                      color: context.ink(Brand.danger),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),

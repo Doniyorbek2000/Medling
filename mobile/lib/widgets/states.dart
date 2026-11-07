@@ -194,6 +194,17 @@ class _SkeletonListState extends State<SkeletonList>
   )..repeat(reverse: true);
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // "Animatsiyani kamaytirish" yoqilgan bo'lsa — skelet pulsatsiyasiz.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
     _c.dispose();
     super.dispose();
@@ -380,7 +391,11 @@ class StatusChip extends StatelessWidget {
     ),
     child: Text(
       label,
-      style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700),
+      style: TextStyle(
+        color: context.inkOnTint(color, 0.12),
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
     ),
   );
 }

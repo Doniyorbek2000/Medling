@@ -80,7 +80,10 @@ class TriageResultScreen extends StatelessWidget {
                         Text(
                           u.title,
                           style: TextStyle(
-                            color: u.color,
+                            color: context.inkOnTint(
+                              u.color,
+                              context.isDark ? 0.2 : 0.08,
+                            ),
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
                           ),

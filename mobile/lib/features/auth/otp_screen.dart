@@ -160,7 +160,7 @@ class _Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AnimatedContainer(
-    duration: const Duration(milliseconds: 150),
+    duration: context.motion(const Duration(milliseconds: 150)),
     width: 48,
     height: 58,
     alignment: Alignment.center,

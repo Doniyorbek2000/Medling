@@ -168,47 +168,50 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: 6,
                     itemBuilder: (_, i) {
                       final code = specialtyCodes[i];
-                      return Card(
-                        child: InkWell(
-                          onTap: () => _push(
-                            DoctorsScreen(
-                              initialSpecialty: code,
-                              standalone: true,
+                      return Semantics(
+                        button: true,
+                        child: Card(
+                          child: InkWell(
+                            onTap: () => _push(
+                              DoctorsScreen(
+                                initialSpecialty: code,
+                                standalone: true,
+                              ),
                             ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: context.colors.primary.withValues(
-                                      alpha: 0.1,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: context.colors.primary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
                                     ),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Icon(
-                                    specialtyIcon(code),
-                                    color: context.colors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                // Uzun nomlar (Gastroenterolog) so'z o'rtasida
-                                // bo'linmasdan kichrayadi.
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    specialtyName(l, code),
-                                    maxLines: 1,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
+                                    child: Icon(
+                                      specialtyIcon(code),
+                                      color: context.colors.primary,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  // Uzun nomlar (Gastroenterolog) so'z o'rtasida
+                                  // bo'linmasdan kichrayadi.
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      specialtyName(l, code),
+                                      maxLines: 1,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
