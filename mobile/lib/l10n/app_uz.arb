@@ -541,5 +541,6 @@
   "errorTooLate": "Video qabul vaqti tugagan",
   "errorVideoUnavailable": "Video xizmati vaqtincha ishlamayapti",
   "errorTypeUnavailable": "Shifokor bu turdagi qabulni o'tkazmaydi",
-  "errorInvalidSchedule": "Jadval noto'g'ri: ish vaqti va kunlarini tekshiring"
+  "errorInvalidSchedule": "Jadval noto'g'ri: ish vaqti va kunlarini tekshiring",
+  "videoNotConfiguredDoctor": "Video xizmati hozircha ulanmagan. Bemor bilan chat orqali bog'laning."
 }

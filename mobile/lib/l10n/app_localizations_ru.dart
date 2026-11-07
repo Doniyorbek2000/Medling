@@ -1226,4 +1226,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get errorInvalidSchedule => 'Неверный график: проверьте дни и часы';
+
+  @override
+  String get videoNotConfiguredDoctor =>
+      'Видеосвязь пока не подключена. Свяжитесь с пациентом в чате.';
 }

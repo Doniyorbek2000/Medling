@@ -2325,6 +2325,12 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Jadval noto\'g\'ri: ish vaqti va kunlarini tekshiring'**
   String get errorInvalidSchedule;
+
+  /// No description provided for @videoNotConfiguredDoctor.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video xizmati hozircha ulanmagan. Bemor bilan chat orqali bog\'laning.'**
+  String get videoNotConfiguredDoctor;
 }
 
 class _AppLocalizationsDelegate

@@ -1234,4 +1234,8 @@ class AppLocalizationsUz extends AppLocalizations {
   @override
   String get errorInvalidSchedule =>
       'Jadval noto\'g\'ri: ish vaqti va kunlarini tekshiring';
+
+  @override
+  String get videoNotConfiguredDoctor =>
+      'Video xizmati hozircha ulanmagan. Bemor bilan chat orqali bog\'laning.';
 }

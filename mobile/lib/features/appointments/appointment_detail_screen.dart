@@ -71,7 +71,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
   }
 
   String get _peerTitle => _isDoctor
-      ? context.l10n.rolePatient
+      ? (_a.patientName ?? context.l10n.rolePatient)
       : (_a.doctor?.fullName ?? context.l10n.roleDoctor);
 
   Future<void> _openChat() => Navigator.of(context).push(
@@ -157,7 +157,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                 child: Column(
                   children: [
                     Avatar(
-                      initials: _isDoctor ? '+' : (d?.initials ?? '?'),
+                      initials: _isDoctor
+                          ? _initials(_a.patientName)
+                          : (d?.initials ?? '?'),
                       radius: 36,
                     ),
                     const SizedBox(height: 12),
@@ -329,7 +331,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
     final tooLate = now.isAfter(_a.startsAt.add(Appointment.lateJoin));
     final String hint;
     if (!_a.videoAvailable) {
-      hint = l.videoNotConfigured;
+      hint = _isDoctor ? l.videoNotConfiguredDoctor : l.videoNotConfigured;
     } else if (open) {
       hint = l.videoReady;
     } else if (tooLate) {
@@ -395,6 +397,11 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
         ],
       ),
     );
+  }
+
+  static String _initials(String? name) {
+    final parts = (name ?? '').split(' ').where((p) => p.isNotEmpty).take(2);
+    return parts.isEmpty ? '+' : parts.map((p) => p[0]).join();
   }
 
   Widget _row(IconData icon, String k, String v) => Padding(

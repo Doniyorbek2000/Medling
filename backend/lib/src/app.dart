@@ -109,6 +109,14 @@ class MedLinkApi {
     }
   }
 
+  /// Shifokorga bemor ismi (tibbiy profildan; to'ldirilmagan bo'lsa null).
+  /// To'lanmagan bron uchun ko'rsatilmaydi.
+  Future<String?> _patientName(Appointment a) async {
+    if (a.status == AppointmentStatus.awaitingPayment) return null;
+    final name = (await profiles.get(a.patientId)).fullName;
+    return name.isEmpty ? null : name;
+  }
+
   Future<void> _audit(User u, String action, String resource, [String? id]) =>
       audit.record(
         AuditEvent(
@@ -328,7 +336,10 @@ class MedLinkApi {
           'items': [
             for (final a in appointments.forDoctor(d.id))
               if (a.status != AppointmentStatus.awaitingPayment)
-                await appointments.toJson(a),
+                {
+                  ...await appointments.toJson(a),
+                  'patientName': await _patientName(a),
+                },
           ],
         });
       })
@@ -410,10 +421,12 @@ class MedLinkApi {
         final u = requireUser(req);
         final a = appointments.requireParticipant(id, u.id);
         await _audit(u, 'appointment.read', 'appointment', id);
+        final role = appointments.participantRole(a, u.id);
         return jsonOk({
           ...await appointments.toJson(a),
-          'myRole': appointments.participantRole(a, u.id),
+          'myRole': role,
           'videoAvailable': video.configured && a.isOnline,
+          if (role == 'doctor') 'patientName': await _patientName(a),
         });
       })
       ..get('/v1/appointments/<id>/messages', (Request req, String id) async {

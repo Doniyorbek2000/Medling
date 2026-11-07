@@ -143,6 +143,11 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
                 ],
               ),
               const SizedBox(height: 8),
+              if (a.patientName != null)
+                Text(
+                  a.patientName!,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               Text(
                 a.reason.isEmpty ? l.noReason : a.reason,
                 maxLines: 2,

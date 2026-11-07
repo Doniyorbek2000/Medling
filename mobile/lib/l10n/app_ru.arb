@@ -370,5 +370,6 @@
   "errorTooLate": "Время видеоприёма истекло",
   "errorVideoUnavailable": "Видеосвязь временно недоступна",
   "errorTypeUnavailable": "Врач не проводит такой тип приёма",
-  "errorInvalidSchedule": "Неверный график: проверьте дни и часы"
+  "errorInvalidSchedule": "Неверный график: проверьте дни и часы",
+  "videoNotConfiguredDoctor": "Видеосвязь пока не подключена. Свяжитесь с пациентом в чате."
 }

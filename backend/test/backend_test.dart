@@ -1003,6 +1003,7 @@ void main() {
       );
       expect(done['status'], 'completed');
       expect(done['myRole'], 'patient');
+      expect(done.containsKey('patientName'), isFalse); // bemorga kerak emas
       expect((done['conclusion'] as Map)['diagnosis'], 'Birlamchi insomniya');
       expect(
         ((done['conclusion'] as Map)['prescriptions'] as List).single['drug'],

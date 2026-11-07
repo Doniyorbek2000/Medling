@@ -370,5 +370,6 @@
   "errorTooLate": "The video window has ended",
   "errorVideoUnavailable": "Video is temporarily unavailable",
   "errorTypeUnavailable": "The doctor does not offer this visit type",
-  "errorInvalidSchedule": "Invalid schedule: check days and hours"
+  "errorInvalidSchedule": "Invalid schedule: check days and hours",
+  "videoNotConfiguredDoctor": "Video is not set up yet. Please use the chat with the patient."
 }

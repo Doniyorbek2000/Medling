@@ -119,6 +119,7 @@ class Appointment {
           ? null
           : Conclusion.fromJson(j['conclusion'] as Map<String, dynamic>),
       myRole = j['myRole'] as String?,
+      patientName = j['patientName'] as String?,
       videoAvailable = j['videoAvailable'] as bool? ?? false;
 
   final String id;
@@ -135,6 +136,9 @@ class Appointment {
 
   /// `patient` | `doctor` — faqat GET /v1/appointments/{id} javobida.
   final String? myRole;
+
+  /// Faqat shifokorga: bemor ismi (tibbiy profildan).
+  final String? patientName;
   final bool videoAvailable;
 
   bool get isOnline => type == 'online';

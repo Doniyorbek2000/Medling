@@ -1224,4 +1224,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorInvalidSchedule => 'Invalid schedule: check days and hours';
+
+  @override
+  String get videoNotConfiguredDoctor =>
+      'Video is not set up yet. Please use the chat with the patient.';
 }
