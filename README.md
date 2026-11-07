@@ -172,7 +172,6 @@ chiqarishdan oldin hal qilinishi shart:
 8. **Push-bildirishnomalar** (qabul eslatmasi, moderatsiya natijasi) hali yo'q.
    Ular uchun Firebase loyihasi (`google-services.json`,
    `GoogleService-Info.plist`) va APNs kaliti kerak.
-9. **Native build bu yerda tekshirilmagan.** Ish muhitida Android SDK va
-   Xcode yo'q edi. Dart kodi `analyze` va testlardan o'tgan, ilova web build
-   orqali brauzerda bosib ko'rilgan. APK, AAB va iOS build'ni CI tekshiradi:
-   birinchi CI natijasiga qarang.
+9. **Qurilmada sinash.** APK, AAB va iOS build CI'da muvaffaqiyatli yig'iladi,
+   lekin ilova haqiqiy telefonda ishga tushirib ko'rilmagan. Google Pay, Apple
+   Pay, Face ID va deep link'larni haqiqiy qurilmada sinab ko'ring.
