@@ -1,0 +1,152 @@
+// ignore_for_file: prefer_initializing_formals
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:shelf/shelf.dart';
+import 'package:uuid/uuid.dart';
+
+import '../core/http_utils.dart';
+import '../security/field_encryption.dart';
+
+enum Role { patient, doctor, admin }
+
+class User {
+  User({
+    required this.id,
+    required this.phoneHash,
+    required this.phoneEnc,
+    required this.role,
+  });
+  final String id;
+
+  /// Qidiruv uchun HMAC-SHA256 (telefon raqami ochiq saqlanmaydi).
+  final String phoneHash;
+
+  /// Aloqa uchun shifrlangan raqam.
+  final String phoneEnc;
+  Role role;
+}
+
+/// SMS provayder (masalan Eskiz.uz yoki Play Mobile) uchun interfeys.
+abstract class OtpSender {
+  Future<void> send(String phone, String code);
+}
+
+class _OtpEntry {
+  _OtpEntry(this.codeHash, this.expires);
+  final String codeHash;
+  final DateTime expires;
+  int attempts = 0;
+}
+
+class AuthService {
+  AuthService({
+    required String jwtSecret,
+    required this.encryption,
+    required this.otpSender,
+    Set<String> adminPhones = const <String>{},
+    Random? random,
+  }) : _jwtKey = SecretKey(jwtSecret),
+       _hmacKey = utf8.encode('otp-hmac:$jwtSecret'),
+       _adminPhones = adminPhones,
+       _random = random ?? Random.secure();
+
+  final SecretKey _jwtKey;
+  final List<int> _hmacKey;
+  final Set<String> _adminPhones;
+  final Random _random;
+  final FieldEncryption encryption;
+  final OtpSender otpSender;
+
+  final _users = <String, User>{};
+  final _otps = <String, _OtpEntry>{};
+
+  static const otpTtl = Duration(minutes: 5);
+  static const maxOtpAttempts = 5;
+  static const accessTtl = Duration(minutes: 15);
+
+  static final _phoneRe = RegExp(r'^\+998\d{9}$');
+
+  String _hash(String v) =>
+      Hmac(sha256, _hmacKey).convert(utf8.encode(v)).toString();
+
+  User? userById(String id) => _users[id];
+
+  Future<void> requestOtp(String phone) async {
+    if (!_phoneRe.hasMatch(phone)) {
+      throw ApiException(400, 'invalid_phone', 'Format: +998XXXXXXXXX');
+    }
+    final code = List.generate(6, (_) => _random.nextInt(10)).join();
+    _otps[_hash(phone)] = _OtpEntry(_hash(code), DateTime.now().add(otpTtl));
+    await otpSender.send(phone, code);
+  }
+
+  Future<({String token, User user})> verifyOtp(
+    String phone,
+    String code,
+  ) async {
+    final key = _hash(phone);
+    final entry = _otps[key];
+    if (entry == null || DateTime.now().isAfter(entry.expires)) {
+      throw ApiException(401, 'otp_expired');
+    }
+    if (++entry.attempts > maxOtpAttempts) {
+      _otps.remove(key);
+      throw ApiException(429, 'otp_attempts_exceeded');
+    }
+    // Vaqtga bog'liq bo'lmagan taqqoslash.
+    final a = entry.codeHash, b = _hash(code);
+    var diff = a.length ^ b.length;
+    for (var i = 0; i < a.length && i < b.length; i++) {
+      diff |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    if (diff != 0) throw ApiException(401, 'otp_invalid');
+    _otps.remove(key);
+
+    var user = _users.values.where((u) => u.phoneHash == key).firstOrNull;
+    if (user == null) {
+      final id = const Uuid().v4();
+      user = User(
+        id: id,
+        phoneHash: key,
+        phoneEnc: await encryption.encrypt(phone, aad: 'user:$id:phone'),
+        role: _adminPhones.contains(phone) ? Role.admin : Role.patient,
+      );
+      _users[id] = user;
+    }
+    return (token: issueToken(user), user: user);
+  }
+
+  String issueToken(User user) => JWT(
+    {'role': user.role.name},
+    subject: user.id,
+    issuer: 'medlink',
+  ).sign(_jwtKey, expiresIn: accessTtl);
+
+  /// So'rovdagi Bearer tokenni tekshiradi va foydalanuvchini kontekstga qo'yadi.
+  Middleware middleware() =>
+      (inner) => (req) async {
+        final h = req.headers['authorization'];
+        User? user;
+        if (h != null && h.startsWith('Bearer ')) {
+          try {
+            final jwt = JWT.verify(h.substring(7), _jwtKey, issuer: 'medlink');
+            user = _users[jwt.subject];
+          } on JWTException {
+            // Noto'g'ri token — anonim sifatida davom etadi.
+          }
+        }
+        return inner(user == null ? req : req.change(context: {'user': user}));
+      };
+}
+
+User requireUser(Request req, [Set<Role>? roles]) {
+  final u = req.context['user'] as User?;
+  if (u == null) throw ApiException(401, 'unauthorized');
+  if (roles != null && !roles.contains(u.role)) {
+    throw ApiException(403, 'forbidden');
+  }
+  return u;
+}
