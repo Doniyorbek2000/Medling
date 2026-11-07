@@ -38,6 +38,7 @@ class MedLinkApi {
     required this.chat,
     required this.video,
     required this.publicBaseUrl,
+    this.trustProxy = false,
   });
 
   final AuthService auth;
@@ -56,18 +57,33 @@ class MedLinkApi {
   final ChatService chat;
   final VideoTokenIssuer video;
   final String publicBaseUrl;
+  final bool trustProxy;
 
   final _rate = <String, List<DateTime>>{};
 
   /// Oddiy sliding-window limitlovchi (OTP brute-force'ga qarshi).
-  void _limit(Request req, String bucket, int max, Duration window) {
-    final ip =
-        (req.context['shelf.io.connection_info'] as dynamic)
+  /// Mijoz IP manzili. Load balancer / Cloud Run ortida barcha so'rovlar bir
+  /// IP'dan kelgandek ko'rinadi — shuning uchun [trustProxy] yoqilgan bo'lsa,
+  /// `X-Forwarded-For` dagi birinchi manzil olinadi. Faqat ishonchli proksi
+  /// ortida yoqing (aks holda sarlavhani soxtalashtirish mumkin).
+  String clientIp(Request req) {
+    if (trustProxy) {
+      final xff = req.headers['x-forwarded-for'];
+      if (xff != null && xff.trim().isNotEmpty) {
+        return xff.split(',').first.trim();
+      }
+    }
+    return (req.context['shelf.io.connection_info'] as dynamic)
                 ?.remoteAddress
                 ?.address
             as String? ??
         'unknown';
-    final key = '$bucket:$ip';
+  }
+
+  void _limit(Request req, String bucket, int max, Duration window) =>
+      _limitKey('$bucket:${clientIp(req)}', max, window);
+
+  void _limitKey(String key, int max, Duration window) {
     final now = DateTime.now();
     final hits = (_rate[key] ??= [])
       ..removeWhere((t) => now.difference(t) > window);
@@ -108,8 +124,10 @@ class MedLinkApi {
       ..get('/health', (Request _) => jsonOk({'ok': true}))
       // ---------------- Auth ----------------
       ..post('/v1/auth/otp/request', (Request req) async {
-        _limit(req, 'otp', 5, const Duration(minutes: 10));
+        _limit(req, 'otp', 20, const Duration(minutes: 10));
         final j = await readJson(req);
+        // Bitta raqamga SMS "bombardimon"idan himoya — IP'dan qat'i nazar.
+        _limitKey('otp-phone:${j['phone']}', 5, const Duration(minutes: 10));
         await auth.requestOtp('${j['phone']}');
         return jsonOk({'sent': true});
       })
@@ -191,11 +209,8 @@ class MedLinkApi {
       ..post('/v1/consents', (Request req) async {
         final u = requireUser(req);
         final j = await readJson(req);
-        final ip =
-            (req.context['shelf.io.connection_info'] as dynamic)
-                    ?.remoteAddress
-                    ?.address
-                as String?;
+        // Rozilik dalili sifatida mijozning haqiqiy IP'si saqlanadi.
+        final ip = clientIp(req);
         for (final d in (j['decisions'] as List).cast<Map<String, dynamic>>()) {
           final scope = ConsentScope.parse(d['scope'] as String);
           try {

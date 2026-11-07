@@ -1024,5 +1024,41 @@ void main() {
         201,
       );
     });
+
+    test('OTP: telefon raqami bo\'yicha limit va X-Forwarded-For', () async {
+      for (var i = 0; i < 5; i++) {
+        expect(
+          (await send(
+            'POST',
+            '/v1/auth/otp/request',
+            body: {'phone': '+998906666666'},
+          )).$1,
+          200,
+        );
+      }
+      // 6-urinish shu raqamga — rad etiladi.
+      final (c, j) = await send(
+        'POST',
+        '/v1/auth/otp/request',
+        body: {'phone': '+998906666666'},
+      );
+      expect(c, 429);
+      expect((j['error'] as Map)['code'], 'rate_limited');
+      // Boshqa raqam ishlayveradi (umumiy IP limiti 20).
+      expect(
+        (await send(
+          'POST',
+          '/v1/auth/otp/request',
+          body: {'phone': '+998906666667'},
+        )).$1,
+        200,
+      );
+      final req = Request(
+        'GET',
+        Uri.parse('http://localhost/health'),
+        headers: {'x-forwarded-for': '203.0.113.7, 10.0.0.1'},
+      );
+      expect(api.clientIp(req), 'unknown'); // trustProxy o'chiq
+    });
   });
 }

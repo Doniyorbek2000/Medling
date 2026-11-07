@@ -136,6 +136,8 @@ Future<void> main() async {
       apiSecret: env['LIVEKIT_API_SECRET'] ?? '',
     ),
     publicBaseUrl: cfg.publicBaseUrl,
+    // Cloud Run / load balancer ortida: true.
+    trustProxy: env['MEDLINK_TRUST_PROXY'] == 'true',
   );
 
   final server = await io.serve(api.handler, InternetAddress.anyIPv4, cfg.port);
