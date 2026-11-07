@@ -268,5 +268,15 @@
   "specPsychiatrist": "Психиатр",
   "tashkentTime": "По времени Ташкента (UTC+5)",
   "completeProfile": "Заполните профиль",
-  "licenses": "Лицензии"
+  "licenses": "Лицензии",
+  "reminderTitle": "MedLink: напоминание о приёме",
+  "reminderDayBefore": "Завтра в {time} у вас приём.",
+  "reminderHourBefore": "Ваш приём через час, в {time}.",
+  "notifications": "Уведомления",
+  "notificationsSubtitle": "Напоминания о приёмах и изменения статуса",
+  "notificationsDenied": "Разрешение не выдано. Включите уведомления для MedLink в настройках телефона.",
+  "enableRemindersTitle": "Не пропустите приём",
+  "enableRemindersBody": "Напомним за день и за час до приёма. Медицинские данные в тексте не показываются.",
+  "enableReminders": "Включить напоминания",
+  "remindersEnabled": "Напоминания включены"
 }

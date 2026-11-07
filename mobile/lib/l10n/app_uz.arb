@@ -383,5 +383,29 @@
   "specPsychiatrist": "Psixiatr",
   "tashkentTime": "Toshkent vaqti bilan (UTC+5)",
   "completeProfile": "Profilni to'ldiring",
-  "licenses": "Litsenziyalar"
+  "licenses": "Litsenziyalar",
+  "reminderTitle": "MedLink: qabul eslatmasi",
+  "reminderDayBefore": "Ertaga soat {time} da qabulingiz bor.",
+  "@reminderDayBefore": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderHourBefore": "Qabulingiz 1 soatdan keyin, soat {time} da.",
+  "@reminderHourBefore": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notifications": "Bildirishnomalar",
+  "notificationsSubtitle": "Qabul eslatmalari va holat o'zgarishlari",
+  "notificationsDenied": "Ruxsat berilmadi. Telefon sozlamalaridan MedLink uchun bildirishnomalarni yoqing.",
+  "enableRemindersTitle": "Qabulni unutmang",
+  "enableRemindersBody": "Qabuldan 1 kun va 1 soat oldin eslatma yuboramiz. Matnda tibbiy ma'lumot ko'rsatilmaydi.",
+  "enableReminders": "Eslatmalarni yoqish",
+  "remindersEnabled": "Eslatmalar yoqildi"
 }

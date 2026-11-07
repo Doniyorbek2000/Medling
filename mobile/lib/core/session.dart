@@ -26,6 +26,11 @@ class Session extends ChangeNotifier {
   static const refreshEvery = Duration(minutes: 10);
   static const requiredConsents = {'terms', 'personalData', 'healthData'};
 
+  /// Bildirishnomalar uchun hodisalar (NotificationsController ulaydi).
+  Future<void> Function()? onLoggedIn;
+  Future<void> Function()? beforeLogout;
+  bool _loggingOut = false;
+
   bool loading = true;
   String? token;
   String? userId;
@@ -44,6 +49,7 @@ class Session extends ChangeNotifier {
         token = saved;
         await refreshToken();
         await reloadMe();
+        onLoggedIn?.call().catchError((Object _) {});
       }
     } catch (_) {
       await logout();
@@ -69,6 +75,7 @@ class Session extends ChangeNotifier {
     );
     await _setToken(res['token'] as String);
     notifyListeners();
+    onLoggedIn?.call().catchError((Object _) {});
   }
 
   /// Rol (masalan, moderatsiyadan keyin "doctor") va rozilik holatini yangilaydi.
@@ -112,6 +119,18 @@ class Session extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    // Takroriy chaqiruvdan himoya: beforeLogout ichidagi so'rov 401 qaytarsa,
+    // onUnauthorized yana logout'ni chaqiradi.
+    if (_loggingOut) return;
+    _loggingOut = true;
+    try {
+      if (token != null) {
+        await beforeLogout?.call().timeout(const Duration(seconds: 5));
+      }
+    } catch (_) {
+      // Server bilan aloqa bo'lmasa ham chiqish davom etadi.
+    }
+    _loggingOut = false;
     _refreshTimer?.cancel();
     token = null;
     userId = null;

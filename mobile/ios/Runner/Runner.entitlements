@@ -2,6 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Push (APNs). App Store'ga yuklashda Xcode avtomatik "production" qiladi. -->
+	<key>aps-environment</key>
+	<string>development</string>
 	<!-- Apple Pay: Merchant ID Apple Developer kabinetida yaratilishi va
 	     assets/pay/apple_pay.json dagi merchantIdentifier bilan bir xil bo'lishi kerak. -->
 	<key>com.apple.developer.in-app-payments</key>

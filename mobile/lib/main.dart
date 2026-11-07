@@ -7,6 +7,8 @@ import 'app.dart';
 import 'core/api_client.dart';
 import 'core/app_lock.dart';
 import 'core/deep_links.dart';
+import 'core/notifications.dart';
+import 'core/notifications_controller.dart';
 import 'core/session.dart';
 import 'core/settings.dart';
 import 'data/repository.dart';
@@ -35,16 +37,28 @@ Future<void> main() async {
   final api = ApiClient();
   final settings = AppSettings();
   await settings.load();
-  final session = Session(api)..restore();
+  final session = Session(api);
+  final repository = MedLinkRepository(api);
+  final notifications = NotificationsService();
+  await notifications.init();
+  final notificationsController = NotificationsController(
+    service: notifications,
+    settings: settings,
+    repo: repository,
+    session: session,
+  );
+  session.restore();
   final links = DeepLinks()..start();
 
   runApp(
     MedLinkProviders(
       settings: settings,
       session: session,
-      repository: MedLinkRepository(api),
+      repository: repository,
       deepLinks: links,
       appLock: AppLock(),
+      notifications: notifications,
+      notificationsController: notificationsController,
       child: const MedLinkApp(),
     ),
   );
@@ -59,6 +73,8 @@ class MedLinkProviders extends StatelessWidget {
     required this.deepLinks,
     required this.appLock,
     required this.child,
+    this.notifications,
+    this.notificationsController,
   });
 
   final AppSettings settings;
@@ -67,6 +83,8 @@ class MedLinkProviders extends StatelessWidget {
   final DeepLinks deepLinks;
   final AppLock appLock;
   final Widget child;
+  final NotificationsService? notifications;
+  final NotificationsController? notificationsController;
 
   @override
   Widget build(BuildContext context) => MultiProvider(
@@ -76,6 +94,8 @@ class MedLinkProviders extends StatelessWidget {
       Provider.value(value: repository),
       Provider.value(value: deepLinks),
       Provider.value(value: appLock),
+      Provider<NotificationsService?>.value(value: notifications),
+      Provider<NotificationsController?>.value(value: notificationsController),
     ],
     child: child,
   );

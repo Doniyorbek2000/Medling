@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -11,6 +12,8 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // Ilova ochiq paytida ham mahalliy eslatmalar ko'rinsin va bosilsin.
+    UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
     let center = NotificationCenter.default
     center.addObserver(
       self, selector: #selector(showPrivacyCover),

@@ -15,6 +15,9 @@ class AppSettings extends ChangeNotifier {
   bool biometricLock = false;
   bool onboardingDone = false;
 
+  /// Foydalanuvchi o'zi yoqmaguncha bildirishnomalar o'chiq.
+  bool notificationsEnabled = false;
+
   Future<void> load() async {
     try {
       final all = await _storage.readAll();
@@ -26,6 +29,7 @@ class AppSettings extends ChangeNotifier {
       );
       biometricLock = all['settings.biometric'] == 'true';
       onboardingDone = all['settings.onboarding'] == 'true';
+      notificationsEnabled = all['settings.notifications'] == 'true';
     } catch (_) {
       // Saqlash joyi buzilgan bo'lsa — standart sozlamalar.
     }
@@ -52,6 +56,12 @@ class AppSettings extends ChangeNotifier {
     biometricLock = v;
     notifyListeners();
     await _storage.write(key: 'settings.biometric', value: '$v');
+  }
+
+  Future<void> setNotifications(bool v) async {
+    notificationsEnabled = v;
+    notifyListeners();
+    await _storage.write(key: 'settings.notifications', value: '$v');
   }
 
   Future<void> completeOnboarding() async {

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../core/api_client.dart';
 import '../models/models.dart';
 
@@ -6,6 +8,9 @@ import '../models/models.dart';
 class MedLinkRepository {
   MedLinkRepository(this.api);
   final ApiClient api;
+
+  /// Qabullar yuklanganda (mahalliy eslatmalarni yangilash uchun).
+  void Function(List<Appointment>)? onAppointments;
 
   // ---- Rozilik ----
   Future<List<ConsentDoc>> consents() async {
@@ -26,6 +31,19 @@ class MedLinkRepository {
     });
     return (res['missingConsents'] as List).cast<String>();
   }
+
+  // ---- Push qurilmalari ----
+  Future<void> registerDevice(String token, String locale) =>
+      api.post('/v1/me/devices', {
+        'token': token,
+        'platform': defaultTargetPlatform == TargetPlatform.iOS
+            ? 'ios'
+            : 'android',
+        'locale': locale,
+      });
+
+  Future<void> unregisterDevice(String token) =>
+      api.post('/v1/me/devices/remove', {'token': token});
 
   // ---- Tibbiy profil ----
   Future<MedicalProfile> profile() async =>
@@ -114,10 +132,12 @@ class MedLinkRepository {
 
   Future<List<Appointment>> appointments() async {
     final res = await api.get('/v1/appointments');
-    return [
+    final list = [
       for (final a in res['items'] as List)
         Appointment.fromJson(a as Map<String, dynamic>),
     ];
+    onAppointments?.call(list);
+    return list;
   }
 
   Future<void> cancelAppointment(String id) =>

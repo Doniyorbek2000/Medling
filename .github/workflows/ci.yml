@@ -11,6 +11,15 @@ concurrency:
 
 env:
   FLUTTER_VERSION: "3.47.9"
+  # Firebase (push) — repozitoriy o'zgaruvchilari (Settings → Variables).
+  # Bo'sh bo'lsa ilova push'siz yig'iladi, mahalliy eslatmalar ishlaydi.
+  FIREBASE_DEFINES: >-
+    --dart-define=FIREBASE_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }}
+    --dart-define=FIREBASE_SENDER_ID=${{ vars.FIREBASE_SENDER_ID }}
+    --dart-define=FIREBASE_ANDROID_API_KEY=${{ vars.FIREBASE_ANDROID_API_KEY }}
+    --dart-define=FIREBASE_ANDROID_APP_ID=${{ vars.FIREBASE_ANDROID_APP_ID }}
+    --dart-define=FIREBASE_IOS_API_KEY=${{ vars.FIREBASE_IOS_API_KEY }}
+    --dart-define=FIREBASE_IOS_APP_ID=${{ vars.FIREBASE_IOS_APP_ID }}
 
 jobs:
   backend:
@@ -82,8 +91,8 @@ jobs:
           MEDLINK_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           MEDLINK_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          flutter build apk --release --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }}
-          flutter build appbundle --release --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }}
+          flutter build apk --release --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }} $FIREBASE_DEFINES
+          flutter build appbundle --release --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }} $FIREBASE_DEFINES
       - uses: actions/upload-artifact@v4
         with:
           name: medlink-android
@@ -105,4 +114,4 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter pub get
-      - run: flutter build ios --release --no-codesign --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }}
+      - run: flutter build ios --release --no-codesign --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }} $FIREBASE_DEFINES

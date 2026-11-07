@@ -894,4 +894,41 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get licenses => 'Litsenziyalar';
+
+  @override
+  String get reminderTitle => 'MedLink: qabul eslatmasi';
+
+  @override
+  String reminderDayBefore(String time) {
+    return 'Ertaga soat $time da qabulingiz bor.';
+  }
+
+  @override
+  String reminderHourBefore(String time) {
+    return 'Qabulingiz 1 soatdan keyin, soat $time da.';
+  }
+
+  @override
+  String get notifications => 'Bildirishnomalar';
+
+  @override
+  String get notificationsSubtitle =>
+      'Qabul eslatmalari va holat o\'zgarishlari';
+
+  @override
+  String get notificationsDenied =>
+      'Ruxsat berilmadi. Telefon sozlamalaridan MedLink uchun bildirishnomalarni yoqing.';
+
+  @override
+  String get enableRemindersTitle => 'Qabulni unutmang';
+
+  @override
+  String get enableRemindersBody =>
+      'Qabuldan 1 kun va 1 soat oldin eslatma yuboramiz. Matnda tibbiy ma\'lumot ko\'rsatilmaydi.';
+
+  @override
+  String get enableReminders => 'Eslatmalarni yoqish';
+
+  @override
+  String get remindersEnabled => 'Eslatmalar yoqildi';
 }

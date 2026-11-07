@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_lock.dart';
 import '../../core/config.dart';
 import '../../core/l10n.dart';
+import '../../core/notifications_controller.dart';
 import '../../core/session.dart';
 import '../../core/settings.dart';
 import '../../core/theme.dart';
@@ -103,6 +104,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!ok) return;
     }
     await settings.setBiometricLock(v);
+  }
+
+  Future<void> _toggleNotifications(bool v) async {
+    final c = context.read<NotificationsController?>();
+    if (c == null) return;
+    if (!v) return c.disable();
+    final ok = await c.enable();
+    if (!ok && mounted) showMessage(context, context.l10n.notificationsDenied);
   }
 
   Future<void> _pickTheme() async {
@@ -237,6 +246,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 trailing: Text(themeLabel),
                 onTap: _pickTheme,
               ),
+              if (context.read<NotificationsController?>() != null)
+                SwitchListTile.adaptive(
+                  secondary: const Icon(Icons.notifications_outlined),
+                  title: Text(l.notifications),
+                  subtitle: Text(l.notificationsSubtitle),
+                  value: settings.notificationsEnabled,
+                  onChanged: _toggleNotifications,
+                ),
               if (_biometricAvailable)
                 SwitchListTile.adaptive(
                   secondary: const Icon(Icons.fingerprint_rounded),

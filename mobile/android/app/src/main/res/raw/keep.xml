@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R8 resource shrinker ikonkani o'chirib yubormasligi uchun: u koddan
+     faqat nomi bo'yicha ("ic_stat_medlink") chaqiriladi. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_medlink" />

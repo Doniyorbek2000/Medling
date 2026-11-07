@@ -268,5 +268,15 @@
   "specPsychiatrist": "Psychiatrist",
   "tashkentTime": "Tashkent time (UTC+5)",
   "completeProfile": "Complete your profile",
-  "licenses": "Licenses"
+  "licenses": "Licenses",
+  "reminderTitle": "MedLink: visit reminder",
+  "reminderDayBefore": "You have a visit tomorrow at {time}.",
+  "reminderHourBefore": "Your visit is in 1 hour, at {time}.",
+  "notifications": "Notifications",
+  "notificationsSubtitle": "Visit reminders and status updates",
+  "notificationsDenied": "Permission denied. Enable notifications for MedLink in your phone settings.",
+  "enableRemindersTitle": "Don't miss your visit",
+  "enableRemindersBody": "We'll remind you a day and an hour before. No medical details are shown.",
+  "enableReminders": "Turn on reminders",
+  "remindersEnabled": "Reminders are on"
 }

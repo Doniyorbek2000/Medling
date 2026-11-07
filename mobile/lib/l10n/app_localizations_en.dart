@@ -887,4 +887,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get licenses => 'Licenses';
+
+  @override
+  String get reminderTitle => 'MedLink: visit reminder';
+
+  @override
+  String reminderDayBefore(String time) {
+    return 'You have a visit tomorrow at $time.';
+  }
+
+  @override
+  String reminderHourBefore(String time) {
+    return 'Your visit is in 1 hour, at $time.';
+  }
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get notificationsSubtitle => 'Visit reminders and status updates';
+
+  @override
+  String get notificationsDenied =>
+      'Permission denied. Enable notifications for MedLink in your phone settings.';
+
+  @override
+  String get enableRemindersTitle => 'Don\'t miss your visit';
+
+  @override
+  String get enableRemindersBody =>
+      'We\'ll remind you a day and an hour before. No medical details are shown.';
+
+  @override
+  String get enableReminders => 'Turn on reminders';
+
+  @override
+  String get remindersEnabled => 'Reminders are on';
 }

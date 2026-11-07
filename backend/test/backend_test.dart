@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:medlink_backend/medlink_backend.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
@@ -323,17 +325,84 @@ void main() {
     });
   });
 
+  group('Push bildirishnomalar', () {
+    test('FCM: eskirgan token ro\'yxatdan chiqariladi', () async {
+      final devices = DeviceRegistry()
+        ..register(userId: 'u1', token: 'dead', platform: 'ios', locale: 'en')
+        ..register(
+          userId: 'u1',
+          token: 'live',
+          platform: 'android',
+          locale: 'en',
+        );
+      Map<String, dynamic>? lastBody;
+      final client = MockClient((req) async {
+        lastBody = jsonDecode(req.body) as Map<String, dynamic>;
+        final token = (lastBody!['message'] as Map)['fid'];
+        return token == 'dead'
+            ? http.Response('{"error":{"status":"NOT_FOUND"}}', 404)
+            : http.Response('{}', 200);
+      });
+      final svc = NotificationService(
+        devices: devices,
+        sender: FcmPushSender(
+          client: client,
+          tokens: GcpTokenProvider(client, staticToken: 't'),
+          projectId: 'medlink',
+        ),
+      );
+      await svc.notify(
+        'u1',
+        PushKind.appointmentReminder,
+        at: DateTime.utc(2026, 11, 8, 4),
+        data: {'appointmentId': 'a1'},
+      );
+      expect(devices.forUser('u1').map((d) => d.token), ['live']);
+      final msg = lastBody!['message'] as Map;
+      expect((msg['notification'] as Map)['body'], contains('08.11 09:00'));
+      expect(
+        ((msg['android'] as Map)['notification'] as Map)['visibility'],
+        'PRIVATE',
+      );
+    });
+
+    test('token boshqa hisobga o\'tadi', () {
+      final r = DeviceRegistry()
+        ..register(userId: 'a', token: 't', platform: 'ios', locale: 'uz')
+        ..register(userId: 'b', token: 't', platform: 'ios', locale: 'uz');
+      expect(r.forUser('a'), isEmpty);
+      expect(r.forUser('b'), hasLength(1));
+      expect(
+        () =>
+            r.register(userId: 'a', token: 'x', platform: 'web', locale: 'uz'),
+        throwsFormatException,
+      );
+    });
+  });
+
   group('API oqimi', () {
     late MedLinkApi api;
     late Handler h;
     late _CapturingOtp otp;
+    late LogPushSender push;
+    late AppointmentService appts;
+    late DoctorService doctors;
+    late NotificationService notifications;
 
     setUp(() {
       final enc = FieldEncryption({'k1': _key}, 'k1');
       otp = _CapturingOtp();
-      final doctors = DoctorService(enc);
-      final appts = AppointmentService(doctors, enc);
+      doctors = DoctorService(enc);
+      appts = AppointmentService(doctors, enc);
       final orders = OrderRepository();
+      push = LogPushSender();
+      final devices = DeviceRegistry();
+      notifications = NotificationService(devices: devices, sender: push);
+      wireAppointmentNotifications(
+        appointments: appts,
+        doctors: doctors,
+        notifications: notifications,
+      );
       api = MedLinkApi(
         auth: AuthService(
           jwtSecret: 'x' * 40,
@@ -368,6 +437,8 @@ void main() {
         wallet: _FakeWallet(),
         audit: InMemoryAuditLog(),
         profiles: MedicalProfileService(enc),
+        devices: devices,
+        notifications: notifications,
         publicBaseUrl: 'http://localhost',
       );
       h = api.handler;
@@ -446,6 +517,22 @@ void main() {
       for (final t in [doc, admin, patient]) {
         await consentAll(t);
       }
+      // Push qurilmalari: bemor — rus, shifokor — o'zbek tilida.
+      for (final (t, token, loc) in [
+        (patient, 'fcm-patient', 'ru'),
+        (doc, 'fcm-doctor', 'uz'),
+      ]) {
+        expect(
+          (await send(
+            'POST',
+            '/v1/me/devices',
+            token: t,
+            body: {'token': token, 'platform': 'android', 'locale': loc},
+          )).$1,
+          200,
+        );
+      }
+      List<String> titles() => [for (final m in push.sent) m.$2.title];
 
       final (c1, app) = await send(
         'POST',
@@ -488,6 +575,8 @@ void main() {
         (await send('GET', '/v1/doctors?specialty=cardiologist')).$2['items'],
         hasLength(1),
       );
+      await Future<void>.delayed(Duration.zero);
+      expect(titles(), ['Ariza tasdiqlandi']);
 
       final tomorrow = DateTime.now().toUtc().add(const Duration(days: 1));
       final day = tomorrow.toIso8601String().substring(0, 10);
@@ -530,6 +619,44 @@ void main() {
       expect(order['amountUzs'], 200000);
       final (_, list) = await send('GET', '/v1/appointments', token: patient);
       expect((list['items'] as List).single['status'], 'confirmed');
+
+      // To'lovdan keyin: bemorga (ruscha) va shifokorga (o'zbekcha) push.
+      await Future<void>.delayed(Duration.zero);
+      expect(titles(), containsAll(['Приём подтверждён', 'Yangi bemor']));
+      for (final (_, m) in push.sent) {
+        // Qulf ekranida tibbiy ma'lumot ko'rinmasligi kerak.
+        final text = '${m.title} ${m.body} ${m.data}'.toLowerCase();
+        for (final secret in ['aliyev', 'kardiolog', 'cardiolog', 'bosim']) {
+          expect(text, isNot(contains(secret)));
+        }
+      }
+      expect(push.sent.last.$2.data['appointmentId'], appt['id']);
+
+      // Eslatma: qabulga 30 daqiqa qolganda — bir marta.
+      final reminders = ReminderScheduler(
+        appointments: appts,
+        doctors: doctors,
+        notifications: notifications,
+      );
+      final startsAt = DateTime.parse(slot);
+      expect(
+        await reminders.tick(startsAt.subtract(const Duration(hours: 3))),
+        0,
+      );
+      expect(
+        await reminders.tick(startsAt.subtract(const Duration(minutes: 30))),
+        1,
+      );
+      expect(
+        await reminders.tick(startsAt.subtract(const Duration(minutes: 29))),
+        0,
+      );
+      expect(
+        titles().where(
+          (t) => t.contains('eslatma') || t.contains('Напоминание'),
+        ),
+        hasLength(2),
+      );
 
       // Qabul hali boshlanmagan — yakunlab bo'lmaydi.
       final docToken = await login('+998901111111'); // rol endi doctor

@@ -12,9 +12,19 @@ import 'core/settings.dart';
 import 'core/theme.dart';
 import 'features/auth/phone_screen.dart';
 import 'features/consent/consent_screen.dart';
+import 'core/notifications.dart';
+import 'data/repository.dart';
+import 'features/appointments/appointment_detail_screen.dart';
 import 'features/home/home_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'widgets/brand.dart';
+
+/// Bildirishnoma bosilganda sahifa ochish uchun.
+final appNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Biometrik qulf holati: qulf ochilmaguncha bildirishnoma orqali tibbiy
+/// sahifa ochilmaydi (aks holda qulfni chetlab o'tish mumkin bo'lardi).
+final appLocked = ValueNotifier<bool>(false);
 
 class MedLinkApp extends StatelessWidget {
   const MedLinkApp({super.key});
@@ -23,6 +33,7 @@ class MedLinkApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       onGenerateTitle: (c) => c.l10n.appName,
       debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
@@ -68,7 +79,7 @@ class _Root extends StatelessWidget {
     } else if (s.needsConsent) {
       page = const ConsentScreen(initial: true);
     } else {
-      page = const LockGate(child: HomeShell());
+      page = const NotificationRouter(child: LockGate(child: HomeShell()));
     }
     return AnimatedSwitcher(
       duration: context.motion(const Duration(milliseconds: 300)),
@@ -95,6 +106,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    appLocked.value = _locked;
     WidgetsBinding.instance.addObserver(this);
     if (_locked) WidgetsBinding.instance.addPostFrameCallback((_) => _unlock());
   }
@@ -116,6 +128,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       if (p != null &&
           DateTime.now().difference(p) > const Duration(seconds: 30)) {
         setState(() => _locked = true);
+        appLocked.value = true;
         _unlock();
       }
     }
@@ -128,7 +141,10 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
       context.l10n.biometricReason,
     );
     _prompting = false;
-    if (ok && mounted) setState(() => _locked = false);
+    if (ok && mounted) {
+      setState(() => _locked = false);
+      appLocked.value = false;
+    }
   }
 
   @override
@@ -225,4 +241,65 @@ class _IdleGuardState extends State<_IdleGuard> with WidgetsBindingObserver {
     onPointerDown: (_) => _reset(),
     child: widget.child,
   );
+}
+
+/// Bildirishnoma bosilganda tegishli sahifani ochadi. Biometrik qulf ochiq
+/// bo'lgandagina ishlaydi.
+class NotificationRouter extends StatefulWidget {
+  const NotificationRouter({super.key, required this.child});
+  final Widget child;
+
+  @override
+  State<NotificationRouter> createState() => _NotificationRouterState();
+}
+
+class _NotificationRouterState extends State<NotificationRouter> {
+  StreamSubscription<NotificationTap>? _sub;
+  NotificationTap? _pending;
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = context.read<NotificationsService?>()?.taps.listen((t) {
+      _pending = t;
+      _tryOpen();
+    });
+    appLocked.addListener(_tryOpen);
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    appLocked.removeListener(_tryOpen);
+    super.dispose();
+  }
+
+  Future<void> _tryOpen() async {
+    final t = _pending;
+    if (t == null || appLocked.value || !mounted) return;
+    _pending = null;
+    if (t.type == 'doctor_application') {
+      HomeTabs.request.value = 'profile';
+      return;
+    }
+    final id = t.appointmentId;
+    if (id == null) return;
+    try {
+      final list = await context.read<MedLinkRepository>().appointments();
+      final a = list.where((x) => x.id == id).firstOrNull;
+      if (a == null) {
+        // Shifokor uchun: bemorlar ro'yxati.
+        HomeTabs.request.value = 'patients';
+        return;
+      }
+      await appNavigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (_) => AppointmentDetailScreen(appointment: a),
+        ),
+      );
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

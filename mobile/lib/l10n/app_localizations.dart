@@ -1713,6 +1713,66 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Litsenziyalar'**
   String get licenses;
+
+  /// No description provided for @reminderTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'MedLink: qabul eslatmasi'**
+  String get reminderTitle;
+
+  /// No description provided for @reminderDayBefore.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ertaga soat {time} da qabulingiz bor.'**
+  String reminderDayBefore(String time);
+
+  /// No description provided for @reminderHourBefore.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabulingiz 1 soatdan keyin, soat {time} da.'**
+  String reminderHourBefore(String time);
+
+  /// No description provided for @notifications.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bildirishnomalar'**
+  String get notifications;
+
+  /// No description provided for @notificationsSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul eslatmalari va holat o\'zgarishlari'**
+  String get notificationsSubtitle;
+
+  /// No description provided for @notificationsDenied.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ruxsat berilmadi. Telefon sozlamalaridan MedLink uchun bildirishnomalarni yoqing.'**
+  String get notificationsDenied;
+
+  /// No description provided for @enableRemindersTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabulni unutmang'**
+  String get enableRemindersTitle;
+
+  /// No description provided for @enableRemindersBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabuldan 1 kun va 1 soat oldin eslatma yuboramiz. Matnda tibbiy ma\'lumot ko\'rsatilmaydi.'**
+  String get enableRemindersBody;
+
+  /// No description provided for @enableReminders.
+  ///
+  /// In uz, this message translates to:
+  /// **'Eslatmalarni yoqish'**
+  String get enableReminders;
+
+  /// No description provided for @remindersEnabled.
+  ///
+  /// In uz, this message translates to:
+  /// **'Eslatmalar yoqildi'**
+  String get remindersEnabled;
 }
 
 class _AppLocalizationsDelegate

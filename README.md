@@ -35,6 +35,10 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
   (Android) va Apple Pay (iOS).
 - Qabullar: kelgusi va o'tgan qabullar, tafsilotlar, bekor qilish, yakunlangan
   qabuldan keyin shifokorni baholash.
+- Bildirishnomalar: to'lov tasdiqlandi, qabul bekor qilindi, qabuldan 24 soat
+  va 1 soat oldin eslatma. Ruxsat birinchi to'lovdan keyin yoki sozlamalarda
+  so'raladi. Bildirishnoma bosilsa qabul sahifasi ochiladi (biometrik qulf
+  ochilgandan keyin).
 - Sozlamalar: til (o'zbek, rus, ingliz), mavzu (yorug', qorong'i, tizim
   bo'yicha), Face ID / barmoq izi bilan qulflash.
 - Maxfiylik: rozilikni qaytarib olish, ma'lumotlar nusxasini olish, tibbiy
@@ -44,6 +48,8 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 - Ariza: F.I.Sh., mutaxassislik, litsenziya, hujjatlar.
 - Holat: `pending` → `approved` / `rejected` (sababi bilan) → `suspended`.
   Rad etilsa, qayta ariza topshirish mumkin.
+- Push: yangi bemor yozildi, qabul bekor qilindi, qabul eslatmasi, ariza
+  natijasi.
 - Tasdiqlangandan keyin "Bemorlarim" bo'limi ochiladi (rol ilova qayta
   ochilganda avtomatik yangilanadi). Qabulni yakunlash.
 
@@ -66,6 +72,35 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 | To'lov hamyoni | Google Pay | Apple Pay (entitlement) |
 | Deep link | `medlink://payment-result` | `medlink://payment-result` |
 | Release | R8 minify + shrink, imzo `key.properties` yoki CI secret'lari orqali | `--no-codesign` CI build, imzolash Xcode'da |
+
+## Push-bildirishnomalar
+
+| | |
+|---|---|
+| Server push | Firebase Cloud Messaging HTTP v1, qurilma FID (Firebase Installation ID) bo'yicha (`message.fid`) |
+| Mahalliy eslatmalar | Qabuldan 24 soat va 1 soat oldin, telefonda rejalashtiriladi (Firebase'siz ham ishlaydi, qayta yonganda tiklanadi) |
+| Server eslatmasi | Qabulga 1 soat qolganda bemor va shifokorga (`ReminderScheduler`) |
+| Maxfiylik | Matnda shifokor ismi, mutaxassislik, sabab yo'q (testlar tekshiradi). Android qulf ekranida mazmun yashirin (`visibility: private`) |
+| Ruxsat | Ilova ochilganda emas — to'lovdan keyin yoki sozlamalarda. Rad etilsa, telefon sozlamalariga yo'naltiriladi |
+| Eskirgan qurilmalar | FCM `UNREGISTERED` qaytarsa, qurilma o'chiriladi. Chiqishda FID serverdan o'chiriladi |
+
+**Firebase'ni ulash:**
+1. Firebase Console'da loyiha yarating, unga Android (`uz.medlink.medlink`)
+   va iOS (`uz.medlink.medlink`) ilovalarini qo'shing.
+2. iOS: Apple Developer'da APNs kalitini (.p8) yarating va Firebase →
+   Project settings → Cloud Messaging bo'limiga yuklang. App ID uchun Push
+   Notifications imkoniyatini yoqing.
+3. Ilovani quyidagi parametrlar bilan yig'ing (bular maxfiy emas, CI'da
+   repozitoriy *Variables* sifatida beriladi):
+   ```bash
+   flutter build appbundle \
+     --dart-define=FIREBASE_PROJECT_ID=... --dart-define=FIREBASE_SENDER_ID=... \
+     --dart-define=FIREBASE_ANDROID_API_KEY=... --dart-define=FIREBASE_ANDROID_APP_ID=... \
+     --dart-define=FIREBASE_IOS_API_KEY=... --dart-define=FIREBASE_IOS_APP_ID=...
+   ```
+4. Backend: `FCM_PROJECT_ID` ni bering. Xizmat hisobiga Firebase Cloud
+   Messaging API'ga yuborish ruxsatini bering. `FCM_PROJECT_ID` bo'sh bo'lsa,
+   push'lar faqat logga yoziladi.
 
 ## Arxitektura (mobil)
 
@@ -169,9 +204,10 @@ chiqarishdan oldin hal qilinishi shart:
    (Eskiz, Play Mobile) kerak.
 7. **Rozilik matnlari** (`mobile/lib/l10n/app_*.arb`, `consent*` kalitlari)
    namunaviy, uchala tilda ham. Ularni yurist tekshirishi kerak.
-8. **Push-bildirishnomalar** (qabul eslatmasi, moderatsiya natijasi) hali yo'q.
-   Ular uchun Firebase loyihasi (`google-services.json`,
-   `GoogleService-Info.plist`) va APNs kaliti kerak.
+8. **Firebase loyihasi.** Push kodi tayyor, lekin Firebase loyihasi, APNs
+   kaliti va yuqoridagi parametrlar berilmaguncha faqat mahalliy eslatmalar
+   ishlaydi.
 9. **Qurilmada sinash.** APK, AAB va iOS build CI'da muvaffaqiyatli yig'iladi,
    lekin ilova haqiqiy telefonda ishga tushirib ko'rilmagan. Google Pay, Apple
-   Pay, Face ID va deep link'larni haqiqiy qurilmada sinab ko'ring.
+   Pay, Face ID, push-bildirishnomalar va deep link'larni haqiqiy qurilmada
+   sinab ko'ring.

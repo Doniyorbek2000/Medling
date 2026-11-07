@@ -15,6 +15,9 @@ class HomeTabs extends InheritedWidget {
   const HomeTabs({super.key, required this.select, required super.child});
   final void Function(String id) select;
 
+  /// Tashqaridan tab ochish so'rovi (masalan, bildirishnoma bosilganda).
+  static final request = ValueNotifier<String?>(null);
+
   static HomeTabs? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<HomeTabs>();
 
@@ -31,6 +34,25 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   String _current = 'home';
+
+  @override
+  void initState() {
+    super.initState();
+    HomeTabs.request.addListener(_onRequest);
+  }
+
+  @override
+  void dispose() {
+    HomeTabs.request.removeListener(_onRequest);
+    super.dispose();
+  }
+
+  void _onRequest() {
+    final id = HomeTabs.request.value;
+    if (id == null) return;
+    HomeTabs.request.value = null;
+    if (mounted) setState(() => _current = id);
+  }
 
   @override
   Widget build(BuildContext context) {

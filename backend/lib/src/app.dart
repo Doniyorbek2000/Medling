@@ -15,6 +15,7 @@ import 'payments/click.dart';
 import 'payments/orders.dart';
 import 'payments/payme.dart';
 import 'payments/wallet.dart';
+import 'notifications/notifications.dart';
 import 'profile/medical_profile.dart';
 
 class MedLinkApi {
@@ -30,6 +31,8 @@ class MedLinkApi {
     required this.wallet,
     required this.audit,
     required this.profiles,
+    required this.devices,
+    required this.notifications,
     required this.publicBaseUrl,
   });
 
@@ -44,6 +47,8 @@ class MedLinkApi {
   final WalletGateway wallet;
   final AuditLog audit;
   final MedicalProfileService profiles;
+  final DeviceRegistry devices;
+  final NotificationService notifications;
   final String publicBaseUrl;
 
   final _rate = <String, List<DateTime>>{};
@@ -127,6 +132,24 @@ class MedLinkApi {
               .map((s) => s.name)
               .toList(),
         });
+      })
+      // ---------------- Push qurilmalari ----------------
+      ..post('/v1/me/devices', (Request req) async {
+        final u = requireUser(req);
+        final j = await readJson(req);
+        devices.register(
+          userId: u.id,
+          token: '${j['token'] ?? ''}',
+          platform: '${j['platform'] ?? ''}',
+          locale: '${j['locale'] ?? 'uz'}',
+        );
+        return jsonOk({'registered': true});
+      })
+      ..post('/v1/me/devices/remove', (Request req) async {
+        // Token URL'da emas, tanada yuboriladi (loglarga tushmasligi uchun).
+        final u = requireUser(req);
+        devices.unregister(u.id, '${(await readJson(req))['token'] ?? ''}');
+        return jsonOk({'removed': true});
       })
       // ---------------- Tibbiy profil ----------------
       ..get('/v1/me/profile', (Request req) async {
@@ -320,6 +343,16 @@ class MedLinkApi {
           owner.role = d.status == ModerationStatus.approved
               ? Role.doctor
               : Role.patient;
+        }
+        if (decision == ModerationStatus.approved ||
+            decision == ModerationStatus.rejected) {
+          notifications.notify(
+            d.userId,
+            decision == ModerationStatus.approved
+                ? PushKind.doctorApproved
+                : PushKind.doctorRejected,
+            data: {'type': 'doctor_application'},
+          );
         }
         await _audit(u, 'doctor.moderate.${decision.name}', 'doctor', id);
         return jsonOk({'id': d.id, 'status': d.status.name});

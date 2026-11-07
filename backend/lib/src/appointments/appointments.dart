@@ -27,6 +27,9 @@ class Appointment {
   AppointmentStatus status = AppointmentStatus.awaitingPayment;
   final DateTime createdAt = DateTime.now().toUtc();
   Review? review;
+
+  /// Server push eslatmasi yuborilganmi (takror yubormaslik uchun).
+  bool reminderSent = false;
 }
 
 class Review {
@@ -57,6 +60,10 @@ class AppointmentService {
   final DoctorService doctors;
   final FieldEncryption encryption;
   final _items = <String, Appointment>{};
+
+  /// Bildirishnomalar uchun hodisalar (main/server'da ulanadi).
+  void Function(Appointment a)? onConfirmed;
+  void Function(Appointment a, String actorUserId)? onCancelled;
 
   static const slot = Duration(minutes: 30);
   static const holdFor = Duration(minutes: 15);
@@ -119,8 +126,19 @@ class AppointmentService {
     final a = _items[id];
     if (a != null && a.status == AppointmentStatus.awaitingPayment) {
       a.status = AppointmentStatus.confirmed;
+      onConfirmed?.call(a);
     }
   }
+
+  /// Boshlanishiga [lead] dan kam qolgan, eslatma yuborilmagan qabullar.
+  List<Appointment> dueForReminder(DateTime now, Duration lead) => [
+    for (final a in _items.values)
+      if (a.status == AppointmentStatus.confirmed &&
+          !a.reminderSent &&
+          a.startsAt.isAfter(now) &&
+          a.startsAt.difference(now) <= lead)
+        a,
+  ];
 
   void cancel(String id, String actorUserId) {
     final a = _items[id] ?? (throw ApiException(404, 'not_found'));
@@ -131,7 +149,11 @@ class AppointmentService {
     if (a.status == AppointmentStatus.completed) {
       throw ApiException(409, 'already_completed');
     }
+    // Faqat tasdiqlangan qabul bekor qilinsa xabar beriladi (to'lanmagan
+    // bron haqida shifokor bilmagan).
+    final wasConfirmed = a.status == AppointmentStatus.confirmed;
     a.status = AppointmentStatus.cancelled;
+    if (wasConfirmed) onCancelled?.call(a, actorUserId);
   }
 
   /// Shifokor qabulni yakunlaydi (faqat to'langan va boshlangan qabul).

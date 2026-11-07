@@ -887,4 +887,41 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get licenses => 'Лицензии';
+
+  @override
+  String get reminderTitle => 'MedLink: напоминание о приёме';
+
+  @override
+  String reminderDayBefore(String time) {
+    return 'Завтра в $time у вас приём.';
+  }
+
+  @override
+  String reminderHourBefore(String time) {
+    return 'Ваш приём через час, в $time.';
+  }
+
+  @override
+  String get notifications => 'Уведомления';
+
+  @override
+  String get notificationsSubtitle =>
+      'Напоминания о приёмах и изменения статуса';
+
+  @override
+  String get notificationsDenied =>
+      'Разрешение не выдано. Включите уведомления для MedLink в настройках телефона.';
+
+  @override
+  String get enableRemindersTitle => 'Не пропустите приём';
+
+  @override
+  String get enableRemindersBody =>
+      'Напомним за день и за час до приёма. Медицинские данные в тексте не показываются.';
+
+  @override
+  String get enableReminders => 'Включить напоминания';
+
+  @override
+  String get remindersEnabled => 'Напоминания включены';
 }

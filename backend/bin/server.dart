@@ -51,6 +51,30 @@ Future<void> main() async {
   if (env['MEDLINK_SEED_DEMO'] != 'false') await doctors.seedDemo();
   final appointments = AppointmentService(doctors, enc);
   final orders = OrderRepository();
+
+  // Push: FCM_PROJECT_ID berilsa — Firebase, aks holda faqat log (dev).
+  final devices = DeviceRegistry();
+  final fcmProject = env['FCM_PROJECT_ID'] ?? '';
+  final notifications = NotificationService(
+    devices: devices,
+    sender: fcmProject.isEmpty
+        ? LogPushSender()
+        : FcmPushSender(
+            client: httpClient,
+            tokens: tokens,
+            projectId: fcmProject,
+          ),
+  );
+  wireAppointmentNotifications(
+    appointments: appointments,
+    doctors: doctors,
+    notifications: notifications,
+  );
+  ReminderScheduler(
+    appointments: appointments,
+    doctors: doctors,
+    notifications: notifications,
+  ).start();
   void paid(PaymentOrder o) => appointments.markPaid(o.appointmentId);
   void refunded(PaymentOrder o) =>
       appointments.byId(o.appointmentId)?.status = AppointmentStatus.cancelled;
@@ -88,6 +112,8 @@ Future<void> main() async {
     wallet: StripeWalletGateway(httpClient, cfg.stripeSecretKey),
     audit: InMemoryAuditLog(),
     profiles: MedicalProfileService(enc),
+    devices: devices,
+    notifications: notifications,
     publicBaseUrl: cfg.publicBaseUrl,
   );
 

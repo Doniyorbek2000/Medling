@@ -11,6 +11,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/deep_links.dart';
 import '../../core/format.dart';
 import '../../core/l10n.dart';
+import '../../core/notifications_controller.dart';
+import '../../core/settings.dart';
 import '../../core/theme.dart';
 import '../../data/repository.dart';
 import '../../models/models.dart';
@@ -431,6 +433,8 @@ class _SuccessView extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: context.text.bodyLarge,
               ),
+              const SizedBox(height: 24),
+              const _ReminderOptIn(),
               const Spacer(),
               FilledButton(
                 onPressed: () =>
@@ -440,6 +444,66 @@ class _SuccessView extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// To'lovdan keyin: eslatmalarni yoqish taklifi (ruxsat aynan foydali
+/// paytda so'raladi, ilova ochilishi bilanoq emas).
+class _ReminderOptIn extends StatefulWidget {
+  const _ReminderOptIn();
+
+  @override
+  State<_ReminderOptIn> createState() => _ReminderOptInState();
+}
+
+class _ReminderOptInState extends State<_ReminderOptIn> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final c = context.read<NotificationsController?>();
+    final enabled = context.watch<AppSettings>().notificationsEnabled;
+    if (c == null) return const SizedBox.shrink();
+    if (enabled) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.notifications_active_outlined,
+            color: context.ink(Brand.success),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            l.remindersEnabled,
+            style: TextStyle(color: context.ink(Brand.success)),
+          ),
+        ],
+      );
+    }
+    return SectionCard(
+      icon: Icons.notifications_outlined,
+      title: l.enableRemindersTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.enableRemindersBody),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: _busy
+                ? null
+                : () async {
+                    setState(() => _busy = true);
+                    final ok = await c.enable();
+                    if (!context.mounted) return;
+                    setState(() => _busy = false);
+                    if (!ok) showMessage(context, l.notificationsDenied);
+                  },
+            child: Text(l.enableReminders),
+          ),
+        ],
       ),
     );
   }
