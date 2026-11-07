@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:medlink_backend/medlink_backend.dart';
 import 'package:shelf/shelf.dart';
+import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:test/test.dart';
 
 final _key = List<int>.generate(32, (i) => i);
@@ -325,6 +326,37 @@ void main() {
     });
   });
 
+  group('Eskiz SMS', () {
+    test('login, yuborish va token eskirsa qayta kirish', () async {
+      final calls = <String>[];
+      var logins = 0;
+      final client = MockClient((req) async {
+        calls.add(req.url.path);
+        if (req.url.path.endsWith('/auth/login')) {
+          logins++;
+          return http.Response(
+            jsonEncode({
+              'data': {'token': 'tok$logins'},
+            }),
+            200,
+          );
+        }
+        final auth = req.headers['authorization'];
+        if (auth == 'Bearer tok1' && logins == 1 && calls.length > 2) {
+          return http.Response('{}', 401);
+        }
+        expect(req.bodyFields['mobile_phone'], '998901234567');
+        expect(req.bodyFields['message'], contains('123456'));
+        return http.Response('{"status":"waiting"}', 200);
+      });
+      final s = EskizOtpSender(client: client, email: 'e', password: 'p');
+      await s.send('+998901234567', '123456');
+      expect(logins, 1);
+      await s.send('+998901234567', '123456'); // 401 -> qayta login
+      expect(logins, 2);
+    });
+  });
+
   group('Push bildirishnomalar', () {
     test('FCM: eskirgan token ro\'yxatdan chiqariladi', () async {
       final devices = DeviceRegistry()
@@ -388,6 +420,8 @@ void main() {
     late AppointmentService appts;
     late DoctorService doctors;
     late NotificationService notifications;
+    late ChatService chat;
+    late VideoTokenIssuer video;
 
     setUp(() {
       final enc = FieldEncryption({'k1': _key}, 'k1');
@@ -402,6 +436,18 @@ void main() {
         appointments: appts,
         doctors: doctors,
         notifications: notifications,
+      );
+      chat = ChatService(appts, enc);
+      wireConsultationNotifications(
+        appointments: appts,
+        doctors: doctors,
+        chat: chat,
+        notifications: notifications,
+      );
+      video = VideoTokenIssuer(
+        url: 'wss://video.test',
+        apiKey: 'APIkey',
+        apiSecret: 's' * 40,
       );
       api = MedLinkApi(
         auth: AuthService(
@@ -439,6 +485,8 @@ void main() {
         profiles: MedicalProfileService(enc),
         devices: devices,
         notifications: notifications,
+        chat: chat,
+        video: video,
         publicBaseUrl: 'http://localhost',
       );
       h = api.handler;
@@ -578,7 +626,11 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(titles(), ['Ariza tasdiqlandi']);
 
-      final tomorrow = DateTime.now().toUtc().add(const Duration(days: 1));
+      // Standart jadval: dushanba–shanba. Eng yaqin ish kunini tanlaymiz.
+      var tomorrow = DateTime.now().toUtc().add(const Duration(days: 1));
+      if (tomorrow.weekday == DateTime.sunday) {
+        tomorrow = tomorrow.add(const Duration(days: 1));
+      }
       final day = tomorrow.toIso8601String().substring(0, 10);
       final (_, slots) = await send(
         'GET',
@@ -681,6 +733,295 @@ void main() {
       expect(
         (await send('GET', '/v1/me', token: docToken)).$2['role'],
         'doctor',
+      );
+    });
+
+    test('onlayn konsultatsiya: jadval, chat, video, xulosa', () async {
+      final doc = await login('+998903333333');
+      final admin = await login('+998900000001');
+      final patient = await login('+998904444444');
+      final stranger = await login('+998905555555');
+      for (final t in [doc, admin, patient, stranger]) {
+        await consentAll(t);
+      }
+      await send(
+        'POST',
+        '/v1/me/devices',
+        token: doc,
+        body: {'token': 'fid-doc', 'platform': 'ios', 'locale': 'uz'},
+      );
+      await send(
+        'POST',
+        '/v1/me/devices',
+        token: patient,
+        body: {'token': 'fid-patient', 'platform': 'android', 'locale': 'ru'},
+      );
+      final (_, app) = await send(
+        'POST',
+        '/v1/doctors/apply',
+        token: doc,
+        body: {
+          'fullName': 'Karimova Dilnoza Rustamovna',
+          'specialty': 'psychiatrist',
+          'licenseNumber': 'LIC-9',
+          'documentRefs': ['gs://x'],
+          'priceUzs': 200000,
+        },
+      );
+      await send(
+        'POST',
+        '/v1/admin/doctors/${app['id']}/moderate',
+        token: admin,
+        body: {'decision': 'approved'},
+      );
+      final docT = await login('+998903333333'); // rol: doctor
+
+      // Onlayn hali yoqilmagan — bron qilib bo'lmaydi.
+      final tomorrow = DateTime.now().toUtc().add(const Duration(days: 1));
+      final day = tomorrow.toIso8601String().substring(0, 10);
+      final weekday = DateTime.parse(day).weekday;
+
+      // Jadval: faqat ertangi kun, 10:00–12:00, onlayn 150 000.
+      final (cs, settings) = await send(
+        'PUT',
+        '/v1/doctor/settings',
+        token: docT,
+        body: {
+          'workDays': [weekday],
+          'startHour': 10,
+          'endHour': 12,
+          'onlineEnabled': true,
+          'onlinePriceUzs': 150000,
+        },
+      );
+      expect(cs, 200);
+      expect(settings['onlineEnabled'], isTrue);
+      expect(
+        (await send(
+          'PUT',
+          '/v1/doctor/settings',
+          token: docT,
+          body: {'startHour': 12, 'endHour': 10},
+        )).$1,
+        400,
+      );
+      expect(
+        (await send('GET', '/v1/doctor/settings', token: patient)).$1,
+        403,
+      );
+
+      final (_, slots) = await send(
+        'GET',
+        '/v1/doctors/${app['id']}/slots?date=$day',
+      );
+      // 10:00–12:00 Toshkent = 4 ta 30 daqiqalik slot.
+      expect(slots['items'], hasLength(4));
+      expect(DateTime.parse((slots['items'] as List).first as String).hour, 5);
+      final otherDay = tomorrow
+          .add(const Duration(days: 1))
+          .toIso8601String()
+          .substring(0, 10);
+      expect(
+        (await send(
+          'GET',
+          '/v1/doctors/${app['id']}/slots?date=$otherDay',
+        )).$2['items'],
+        isEmpty,
+      );
+
+      final slot = (slots['items'] as List).first as String;
+      final (cb, appt) = await send(
+        'POST',
+        '/v1/appointments',
+        token: patient,
+        body: {
+          'doctorId': app['id'],
+          'startsAt': slot,
+          'reason': 'Uyqusizlik',
+          'type': 'online',
+        },
+      );
+      expect(cb, 201);
+      expect(appt['type'], 'online');
+      expect(appt['priceUzs'], 150000);
+
+      // To'lanmagan qabulda chat yopiq.
+      expect(
+        (await send(
+          'POST',
+          '/v1/appointments/${appt['id']}/messages',
+          token: patient,
+          body: {'text': 'Salom'},
+        )).$1,
+        409,
+      );
+      await send(
+        'POST',
+        '/v1/payments/wallet',
+        token: patient,
+        body: {
+          'appointmentId': appt['id'],
+          'provider': 'googlePay',
+          'token': 'tok_ok',
+        },
+      );
+
+      // Begona foydalanuvchi qabulni ham, chatni ham ko'ra olmaydi.
+      expect(
+        (await send(
+          'GET',
+          '/v1/appointments/${appt['id']}',
+          token: stranger,
+        )).$1,
+        403,
+      );
+      expect(
+        (await send(
+          'GET',
+          '/v1/appointments/${appt['id']}/messages',
+          token: stranger,
+        )).$1,
+        403,
+      );
+
+      final (c1, m1) = await send(
+        'POST',
+        '/v1/appointments/${appt['id']}/messages',
+        token: patient,
+        body: {'text': 'Salom, doktor! 3 kundan beri uxlay olmayapman.'},
+      );
+      expect(c1, 201);
+      expect(m1['mine'], isTrue);
+      await send(
+        'POST',
+        '/v1/appointments/${appt['id']}/messages',
+        token: docT,
+        body: {'text': 'Salom! Qabulda batafsil gaplashamiz.'},
+      );
+      final (_, page) = await send(
+        'GET',
+        '/v1/appointments/${appt['id']}/messages?after=1',
+        token: patient,
+      );
+      expect((page['items'] as List).single['senderRole'], 'doctor');
+      expect((page['items'] as List).single['mine'], isFalse);
+      expect(page['canWrite'], isTrue);
+
+      // Shifokorga push: "Yangi xabar" — xabar matni ham, mutaxassislik ham yo'q.
+      await Future<void>.delayed(Duration.zero);
+      // Ikkala tomonga ham push: "Yangi xabar" — xabar matni ham,
+      // mutaxassislik ham qulf ekranida ko'rinmaydi.
+      final chatPush = push.sent.where(
+        (p) => p.$2.data['kind'] == 'newMessage',
+      );
+      expect(chatPush, hasLength(2));
+      for (final (_, m) in chatPush) {
+        final txt = '${m.title} ${m.body}'.toLowerCase();
+        expect(txt, isNot(contains('uxlay')));
+        expect(txt, isNot(contains('psix')));
+      }
+
+      // Shifokor bemor profilini ko'radi; bemor esa bu endpointni ishlata olmaydi.
+      expect(
+        (await send(
+          'GET',
+          '/v1/doctor/appointments/${appt['id']}/patient',
+          token: docT,
+        )).$1,
+        200,
+      );
+      expect(
+        (await send(
+          'GET',
+          '/v1/doctor/appointments/${appt['id']}/patient',
+          token: patient,
+        )).$1,
+        403,
+      );
+
+      // Video: qabulgacha hali ko'p vaqt bor.
+      final (cv, v) = await send(
+        'POST',
+        '/v1/appointments/${appt['id']}/video',
+        token: patient,
+      );
+      expect(cv, 409);
+      expect((v['error'] as Map)['code'], 'too_early');
+
+      // Qabul vaqtida token beriladi va LiveKit formatida bo'ladi.
+      final a = appts.byId(appt['id'] as String)!;
+      final t = video.issue(
+        a,
+        userId: a.patientId,
+        role: 'patient',
+        now: a.startsAt,
+      );
+      final jwt = JWT.verify(t.token, SecretKey('s' * 40));
+      final grant = (jwt.payload as Map)['video'] as Map;
+      expect(grant['room'], 'medlink-${a.id}');
+      expect(grant['roomJoin'], isTrue);
+      expect(jwt.subject, a.patientId);
+      expect(jwt.issuer, 'APIkey');
+      expect(
+        () => video.issue(
+          a,
+          userId: 'x',
+          role: 'patient',
+          now: a.startsAt.add(const Duration(hours: 2)),
+        ),
+        throwsA(isA<ApiException>()),
+      );
+
+      // Xulosa: qabul boshlanmasdan — yo'q; boshlangach — yakunlanadi.
+      expect(
+        (await send(
+          'PUT',
+          '/v1/doctor/appointments/${appt['id']}/conclusion',
+          token: docT,
+          body: {'diagnosis': 'Insomniya'},
+        )).$1,
+        409,
+      );
+      final docUserId = doctors.byId(a.doctorId)!.userId;
+      await appts.setConclusion(a.id, docUserId, {
+        'diagnosis': 'Birlamchi insomniya',
+        'recommendations': 'Uyqu gigiyenasi, kofeinni kamaytirish.',
+        'prescriptions': [
+          {
+            'drug': 'Melatonin',
+            'dose': '3 mg',
+            'frequency': 'Kechqurun 1 marta',
+            'durationDays': 14,
+          },
+        ],
+        'followUpDays': 14,
+      }, now: a.startsAt.add(const Duration(minutes: 20)));
+      final (_, done) = await send(
+        'GET',
+        '/v1/appointments/${appt['id']}',
+        token: patient,
+      );
+      expect(done['status'], 'completed');
+      expect(done['myRole'], 'patient');
+      expect((done['conclusion'] as Map)['diagnosis'], 'Birlamchi insomniya');
+      expect(
+        ((done['conclusion'] as Map)['prescriptions'] as List).single['drug'],
+        'Melatonin',
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        push.sent.map((p) => p.$2.data['kind']),
+        contains('conclusionReady'),
+      );
+      // Xulosadan keyin 7 kun davomida savol berish mumkin.
+      expect(
+        (await send(
+          'POST',
+          '/v1/appointments/${appt['id']}/messages',
+          token: patient,
+          body: {'text': 'Rahmat!'},
+        )).$1,
+        201,
       );
     });
   });

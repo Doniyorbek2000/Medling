@@ -12,6 +12,9 @@ enum PushKind {
   appointmentReminder,
   doctorApproved,
   doctorRejected,
+  newMessage,
+  consultationStarted,
+  conclusionReady,
 }
 
 class Device {
@@ -105,6 +108,21 @@ class PushTemplates {
       'uz': ('Qabul eslatmasi', 'Qabulingiz soat {time} da. Kechikmang.'),
       'ru': ('Напоминание о приёме', 'Ваш приём в {time}. Не опаздывайте.'),
       'en': ('Visit reminder', 'Your visit is at {time}. Please be on time.'),
+    },
+    PushKind.newMessage: {
+      'uz': ('Yangi xabar', 'Qabul chatida yangi xabar bor.'),
+      'ru': ('Новое сообщение', 'В чате приёма новое сообщение.'),
+      'en': ('New message', 'You have a new message in your visit chat.'),
+    },
+    PushKind.consultationStarted: {
+      'uz': ('Shifokor kutmoqda', 'Onlayn qabul boshlandi. Ilovani oching.'),
+      'ru': ('Врач ожидает', 'Онлайн-приём начался. Откройте приложение.'),
+      'en': ('Your doctor is waiting', 'Your online visit has started.'),
+    },
+    PushKind.conclusionReady: {
+      'uz': ('Shifokor xulosasi', 'Qabul xulosasi tayyor. Ilovada ko\'ring.'),
+      'ru': ('Заключение врача', 'Заключение по приёму готово.'),
+      'en': ('Doctor\'s summary', 'Your visit summary is ready in the app.'),
     },
     PushKind.doctorApproved: {
       'uz': ('Ariza tasdiqlandi', 'Profilingiz endi bemorlarga ko\'rinadi.'),

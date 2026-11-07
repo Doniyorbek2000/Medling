@@ -70,6 +70,13 @@ Future<void> main() async {
     doctors: doctors,
     notifications: notifications,
   );
+  final chat = ChatService(appointments, enc);
+  wireConsultationNotifications(
+    appointments: appointments,
+    doctors: doctors,
+    chat: chat,
+    notifications: notifications,
+  );
   ReminderScheduler(
     appointments: appointments,
     doctors: doctors,
@@ -83,7 +90,15 @@ Future<void> main() async {
     auth: AuthService(
       jwtSecret: cfg.jwtSecret,
       encryption: enc,
-      otpSender: DevOtpSender(),
+      // ESKIZ_EMAIL berilsa — haqiqiy SMS, aks holda kod logga chiqadi.
+      otpSender: (env['ESKIZ_EMAIL'] ?? '').isEmpty
+          ? DevOtpSender()
+          : EskizOtpSender(
+              client: httpClient,
+              email: env['ESKIZ_EMAIL']!,
+              password: env['ESKIZ_PASSWORD'] ?? '',
+              from: env['ESKIZ_FROM'] ?? '4546',
+            ),
       adminPhones: (env['MEDLINK_ADMIN_PHONES'] ?? '')
           .split(',')
           .where((p) => p.isNotEmpty)
@@ -114,6 +129,12 @@ Future<void> main() async {
     profiles: MedicalProfileService(enc),
     devices: devices,
     notifications: notifications,
+    chat: chat,
+    video: VideoTokenIssuer(
+      url: env['LIVEKIT_URL'] ?? '',
+      apiKey: env['LIVEKIT_API_KEY'] ?? '',
+      apiSecret: env['LIVEKIT_API_SECRET'] ?? '',
+    ),
     publicBaseUrl: cfg.publicBaseUrl,
   );
 

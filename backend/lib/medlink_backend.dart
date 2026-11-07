@@ -17,3 +17,6 @@ export 'src/security/field_encryption.dart';
 export 'src/profile/medical_profile.dart';
 export 'src/notifications/notifications.dart';
 export 'src/notifications/reminders.dart';
+export 'src/consultations/chat.dart';
+export 'src/consultations/video.dart';
+export 'src/auth/eskiz.dart';

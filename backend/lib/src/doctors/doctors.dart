@@ -33,7 +33,9 @@ class DoctorProfile {
   final int experienceYears;
   final String clinic;
   final String city;
-  final int priceUzs;
+
+  /// Klinikadagi qabul narxi.
+  int priceUzs;
   final String bio;
   final List<String> languages;
 
@@ -47,6 +49,32 @@ class DoctorProfile {
   DateTime? moderatedAt;
   double rating;
   int reviewCount;
+
+  // ---- Ish jadvali va konsultatsiya turlari (shifokor o'zi sozlaydi) ----
+  bool clinicEnabled = true;
+  bool onlineEnabled = false;
+  int onlinePriceUzs = 0;
+
+  /// ISO hafta kunlari: 1 = dushanba ... 7 = yakshanba.
+  Set<int> workDays = {1, 2, 3, 4, 5, 6};
+
+  /// Toshkent vaqti bo'yicha ish soatlari [startHour, endHour).
+  int startHour = 9;
+  int endHour = 18;
+
+  int priceFor(String type) => type == 'online' ? onlinePriceUzs : priceUzs;
+
+  bool offers(String type) => type == 'online' ? onlineEnabled : clinicEnabled;
+
+  Map<String, dynamic> settingsJson() => {
+    'clinicEnabled': clinicEnabled,
+    'priceUzs': priceUzs,
+    'onlineEnabled': onlineEnabled,
+    'onlinePriceUzs': onlinePriceUzs,
+    'workDays': workDays.toList()..sort(),
+    'startHour': startHour,
+    'endHour': endHour,
+  };
 
   Map<String, dynamic> toPublicJson() => {
     'id': id,
@@ -62,6 +90,7 @@ class DoctorProfile {
     'rating': rating,
     'reviewCount': reviewCount,
     'verified': status == ModerationStatus.approved,
+    ...settingsJson(),
   };
 }
 
@@ -121,6 +150,40 @@ class DoctorService {
   }
 
   DoctorProfile? byId(String id) => _doctors[id];
+
+  /// Shifokor o'z jadvali va narxlarini o'zgartiradi.
+  DoctorProfile updateSettings(DoctorProfile d, Map<String, dynamic> j) {
+    final days = ((j['workDays'] as List?) ?? d.workDays.toList())
+        .whereType<int>()
+        .toSet();
+    final start = j['startHour'] as int? ?? d.startHour;
+    final end = j['endHour'] as int? ?? d.endHour;
+    final clinic = j['clinicEnabled'] as bool? ?? d.clinicEnabled;
+    final online = j['onlineEnabled'] as bool? ?? d.onlineEnabled;
+    final price = j['priceUzs'] as int? ?? d.priceUzs;
+    final onlinePrice = j['onlinePriceUzs'] as int? ?? d.onlinePriceUzs;
+    if (days.isEmpty || days.any((x) => x < 1 || x > 7)) {
+      throw ApiException(400, 'invalid_schedule', 'workDays');
+    }
+    if (start < 0 || end > 24 || start >= end) {
+      throw ApiException(400, 'invalid_schedule', 'hours');
+    }
+    if (!clinic && !online) {
+      throw ApiException(400, 'invalid_schedule', 'no_consultation_type');
+    }
+    if (price < 0 || onlinePrice < 0 || (online && onlinePrice == 0)) {
+      throw ApiException(400, 'invalid_price');
+    }
+    d
+      ..workDays = days
+      ..startHour = start
+      ..endHour = end
+      ..clinicEnabled = clinic
+      ..onlineEnabled = online
+      ..priceUzs = price
+      ..onlinePriceUzs = onlinePrice;
+    return d;
+  }
 
   /// Faqat ishlab chiqish rejimi uchun: tasdiqlangan demo shifokorlar.
   Future<void> seedDemo() async {
@@ -208,7 +271,10 @@ class DoctorService {
       d
         ..status = ModerationStatus.approved
         ..rating = rating
-        ..reviewCount = reviews;
+        ..reviewCount = reviews
+        // Ko'pchilik demo shifokorlar onlayn ham qabul qiladi.
+        ..onlineEnabled = spec != 'traumatologist'
+        ..onlinePriceUzs = (price * 0.8).round();
     }
   }
 

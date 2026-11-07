@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../appointments/appointments.dart';
 import '../doctors/doctors.dart';
+import '../consultations/chat.dart';
 import 'notifications.dart';
 
 /// Har daqiqada qabul boshlanishiga 1 soat qolganlarni topib, bemor va
@@ -89,5 +90,33 @@ void wireAppointmentNotifications({
         data: {'type': 'appointment', 'appointmentId': a.id},
       );
     }
+  };
+}
+
+/// Chat, video va xulosa hodisalarini bildirishnomalarga ulaydi.
+void wireConsultationNotifications({
+  required AppointmentService appointments,
+  required DoctorService doctors,
+  required ChatService chat,
+  required NotificationService notifications,
+}) {
+  chat.onMessage = (a, m) {
+    final doctorUser = doctors.byId(a.doctorId)?.userId;
+    final to = m.senderRole == 'patient' ? doctorUser : a.patientId;
+    if (to != null) {
+      // Matn emas — faqat "yangi xabar" (xabar mazmuni qulf ekranida yo'q).
+      notifications.notify(
+        to,
+        PushKind.newMessage,
+        data: {'type': 'chat', 'appointmentId': a.id},
+      );
+    }
+  };
+  appointments.onConclusion = (a) {
+    notifications.notify(
+      a.patientId,
+      PushKind.conclusionReady,
+      data: {'type': 'appointment', 'appointmentId': a.id},
+    );
   };
 }

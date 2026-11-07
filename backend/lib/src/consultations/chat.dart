@@ -1,0 +1,124 @@
+import 'package:uuid/uuid.dart';
+
+import '../appointments/appointments.dart';
+import '../core/http_utils.dart';
+import '../security/field_encryption.dart';
+
+class ChatMessage {
+  ChatMessage({
+    required this.id,
+    required this.appointmentId,
+    required this.senderId,
+    required this.senderRole,
+    required this.textEnc,
+    required this.seq,
+  });
+
+  final String id;
+  final String appointmentId;
+  final String senderId;
+  final String senderRole; // patient | doctor
+  final String textEnc;
+
+  /// Qabul ichida o'suvchi tartib raqami — mijoz `after=seq` bilan faqat
+  /// yangilarini so'raydi.
+  final int seq;
+  final DateTime at = DateTime.now().toUtc();
+}
+
+/// Bemor va shifokor o'rtasidagi qabul chati.
+///
+/// * Faqat shu qabul ishtirokchilari yoza va o'qiy oladi.
+/// * Chat qabul tasdiqlangandan boshlab, yakunlangandan keyin 7 kun davomida
+///   ochiq (savol-javob uchun), so'ng faqat o'qish mumkin.
+/// * Matn bazada AES-256-GCM bilan shifrlanadi.
+class ChatService {
+  ChatService(this.appointments, this.encryption);
+  final AppointmentService appointments;
+  final FieldEncryption encryption;
+
+  final _messages = <String, List<ChatMessage>>{};
+
+  static const maxLength = 2000;
+  static const followUpWindow = Duration(days: 7);
+
+  /// Yangi xabar (bildirishnoma uchun).
+  void Function(Appointment a, ChatMessage m)? onMessage;
+
+  bool canWrite(Appointment a, DateTime now) => switch (a.status) {
+    AppointmentStatus.confirmed => true,
+    AppointmentStatus.completed => now.isBefore(
+      (a.conclusionAt ?? a.startsAt).add(followUpWindow),
+    ),
+    _ => false,
+  };
+
+  Future<ChatMessage> send(
+    String appointmentId,
+    String userId,
+    String text,
+  ) async {
+    final a = appointments.requireParticipant(appointmentId, userId);
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed.length > maxLength) {
+      throw ApiException(400, 'invalid_message');
+    }
+    if (!canWrite(a, DateTime.now().toUtc())) {
+      throw ApiException(409, 'chat_closed');
+    }
+    final list = _messages.putIfAbsent(appointmentId, () => []);
+    final id = const Uuid().v4();
+    final m = ChatMessage(
+      id: id,
+      appointmentId: appointmentId,
+      senderId: userId,
+      senderRole: appointments.participantRole(a, userId)!,
+      textEnc: await encryption.encrypt(
+        trimmed,
+        aad: 'chat:$appointmentId:$id',
+      ),
+      seq: list.length + 1,
+    );
+    list.add(m);
+    onMessage?.call(a, m);
+    return m;
+  }
+
+  Future<Map<String, dynamic>> list(
+    String appointmentId,
+    String userId, {
+    int after = 0,
+  }) async {
+    final a = appointments.requireParticipant(appointmentId, userId);
+    final all = _messages[appointmentId] ?? const <ChatMessage>[];
+    return {
+      'canWrite': canWrite(a, DateTime.now().toUtc()),
+      'items': [
+        for (final m in all.where((m) => m.seq > after))
+          await toJson(m, userId),
+      ],
+    };
+  }
+
+  Future<Map<String, dynamic>> toJson(ChatMessage m, String viewerId) async => {
+    'id': m.id,
+    'seq': m.seq,
+    'senderRole': m.senderRole,
+    'mine': m.senderId == viewerId,
+    'text': await encryption.decrypt(
+      m.textEnc,
+      aad: 'chat:${m.appointmentId}:${m.id}',
+    ),
+    'at': m.at.toIso8601String(),
+  };
+
+  /// Eksport uchun: foydalanuvchi ishtirok etgan barcha xabarlar.
+  Future<List<Map<String, dynamic>>> exportFor(
+    String userId,
+    Iterable<String> appointmentIds,
+  ) async => [
+    for (final id in appointmentIds)
+      for (final m in _messages[id] ?? const <ChatMessage>[])
+        {'appointmentId': id, ...await toJson(m, userId)},
+  ];
+}

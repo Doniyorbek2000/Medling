@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
 
 import '../core/http_utils.dart';
@@ -15,6 +17,7 @@ class Appointment {
     required this.priceUzs,
     required this.reasonEnc,
     this.triageId,
+    this.type = 'clinic',
   });
 
   final String id;
@@ -24,12 +27,69 @@ class Appointment {
   final int priceUzs;
   final String reasonEnc;
   final String? triageId;
+
+  /// `clinic` — klinikada, `online` — video konsultatsiya.
+  final String type;
   AppointmentStatus status = AppointmentStatus.awaitingPayment;
   final DateTime createdAt = DateTime.now().toUtc();
   Review? review;
 
   /// Server push eslatmasi yuborilganmi (takror yubormaslik uchun).
   bool reminderSent = false;
+
+  /// Shifokor xulosasi (tashxis, tavsiyalar, retsept) — shifrlangan JSON.
+  String? conclusionEnc;
+  DateTime? conclusionAt;
+
+  /// Shifokor video xonaga birinchi marta kirganda bemorga xabar beriladi.
+  bool doctorJoinedVideo = false;
+
+  bool get isOnline => type == 'online';
+}
+
+/// Retseptdagi bitta dori.
+class Prescription {
+  Prescription({
+    required this.drug,
+    required this.dose,
+    required this.frequency,
+    required this.durationDays,
+    this.notes = '',
+  });
+
+  final String drug;
+  final String dose;
+  final String frequency;
+  final int durationDays;
+  final String notes;
+
+  static Prescription fromJson(Map<String, dynamic> j) {
+    String str(String k, int max) {
+      final v = (j[k] as String? ?? '').trim();
+      if (v.length > max) throw ApiException(400, 'invalid_conclusion', k);
+      return v;
+    }
+
+    final p = Prescription(
+      drug: str('drug', 120),
+      dose: str('dose', 60),
+      frequency: str('frequency', 120),
+      durationDays: j['durationDays'] as int? ?? 0,
+      notes: str('notes', 300),
+    );
+    if (p.drug.isEmpty || p.durationDays < 0 || p.durationDays > 365) {
+      throw ApiException(400, 'invalid_conclusion', 'prescription');
+    }
+    return p;
+  }
+
+  Map<String, dynamic> toJson() => {
+    'drug': drug,
+    'dose': dose,
+    'frequency': frequency,
+    'durationDays': durationDays,
+    'notes': notes,
+  };
 }
 
 class Review {
@@ -64,6 +124,7 @@ class AppointmentService {
   /// Bildirishnomalar uchun hodisalar (main/server'da ulanadi).
   void Function(Appointment a)? onConfirmed;
   void Function(Appointment a, String actorUserId)? onCancelled;
+  void Function(Appointment a)? onConclusion;
 
   static const slot = Duration(minutes: 30);
   static const holdFor = Duration(minutes: 15);
@@ -76,8 +137,11 @@ class AppointmentService {
       (a.status == AppointmentStatus.awaitingPayment &&
           DateTime.now().toUtc().difference(a.createdAt) < holdFor);
 
+  /// Shifokor jadvali bo'yicha bo'sh slotlar ([dayUtc] — Toshkent sanasi).
   List<DateTime> freeSlots(String doctorId, DateTime dayUtc) {
+    final d = doctors.byId(doctorId);
     final localDay = DateTime.utc(dayUtc.year, dayUtc.month, dayUtc.day);
+    if (d == null || !d.workDays.contains(localDay.weekday)) return const [];
     final taken = _items.values
         .where((a) => a.doctorId == doctorId && _blocks(a))
         .map((a) => a.startsAt)
@@ -85,8 +149,8 @@ class AppointmentService {
     final now = DateTime.now().toUtc();
     return [
       for (
-        var t = localDay.add(const Duration(hours: 9)).subtract(tashkent);
-        t.isBefore(localDay.add(const Duration(hours: 18)).subtract(tashkent));
+        var t = localDay.add(Duration(hours: d.startHour)).subtract(tashkent);
+        t.isBefore(localDay.add(Duration(hours: d.endHour)).subtract(tashkent));
         t = t.add(slot)
       )
         if (t.isAfter(now) && !taken.contains(t)) t,
@@ -99,10 +163,14 @@ class AppointmentService {
     required DateTime startsAt,
     required String reason,
     String? triageId,
+    String type = 'clinic',
   }) async {
     final d = doctors.byId(doctorId);
     if (d == null || d.status != ModerationStatus.approved) {
       throw ApiException(404, 'doctor_not_found');
+    }
+    if ((type != 'clinic' && type != 'online') || !d.offers(type)) {
+      throw ApiException(400, 'consultation_type_unavailable');
     }
     final t = startsAt.toUtc();
     if (!freeSlots(doctorId, t.add(tashkent)).contains(t)) {
@@ -114,8 +182,9 @@ class AppointmentService {
       patientId: patientId,
       doctorId: doctorId,
       startsAt: t,
-      priceUzs: d.priceUzs,
+      priceUzs: d.priceFor(type),
       triageId: triageId,
+      type: type,
       reasonEnc: await encryption.encrypt(reason, aad: 'appt:$id:reason'),
     );
     _items[id] = a;
@@ -128,6 +197,71 @@ class AppointmentService {
       a.status = AppointmentStatus.confirmed;
       onConfirmed?.call(a);
     }
+  }
+
+  /// Bemor yoki shu qabul shifokori bo'lsa — rolini qaytaradi.
+  String? participantRole(Appointment a, String userId) {
+    if (a.patientId == userId) return 'patient';
+    if (doctors.byId(a.doctorId)?.userId == userId) return 'doctor';
+    return null;
+  }
+
+  Appointment requireParticipant(String id, String userId) {
+    final a = _items[id] ?? (throw ApiException(404, 'not_found'));
+    if (participantRole(a, userId) == null) {
+      throw ApiException(403, 'forbidden');
+    }
+    return a;
+  }
+
+  /// Shifokor xulosasi. Qabul boshlangandan keyin yoziladi va qabulni
+  /// yakunlaydi. Xulosani faqat shu qabul shifokori o'zgartira oladi.
+  Future<void> setConclusion(
+    String id,
+    String doctorUserId,
+    Map<String, dynamic> j, {
+    DateTime? now,
+  }) async {
+    final a = _items[id] ?? (throw ApiException(404, 'not_found'));
+    if (doctors.byId(a.doctorId)?.userId != doctorUserId) {
+      throw ApiException(403, 'forbidden');
+    }
+    if (a.status != AppointmentStatus.confirmed &&
+        a.status != AppointmentStatus.completed) {
+      throw ApiException(409, 'not_confirmed');
+    }
+    if ((now ?? DateTime.now()).toUtc().isBefore(a.startsAt)) {
+      throw ApiException(409, 'not_started');
+    }
+    final diagnosis = (j['diagnosis'] as String? ?? '').trim();
+    final recommendations = (j['recommendations'] as String? ?? '').trim();
+    if (diagnosis.isEmpty ||
+        diagnosis.length > 500 ||
+        recommendations.length > 4000) {
+      throw ApiException(400, 'invalid_conclusion');
+    }
+    final prescriptions = [
+      for (final p in (j['prescriptions'] as List? ?? const []))
+        Prescription.fromJson(p as Map<String, dynamic>),
+    ];
+    if (prescriptions.length > 20) {
+      throw ApiException(400, 'invalid_conclusion', 'prescriptions');
+    }
+    final followUp = j['followUpDays'] as int?;
+    final payload = jsonEncode({
+      'diagnosis': diagnosis,
+      'recommendations': recommendations,
+      'prescriptions': [for (final p in prescriptions) p.toJson()],
+      'followUpDays': followUp,
+    });
+    a
+      ..conclusionEnc = await encryption.encrypt(
+        payload,
+        aad: 'appt:${a.id}:conclusion',
+      )
+      ..conclusionAt = DateTime.now().toUtc()
+      ..status = AppointmentStatus.completed;
+    onConclusion?.call(a);
   }
 
   /// Boshlanishiga [lead] dan kam qolgan, eslatma yuborilmagan qabullar.
@@ -219,5 +353,18 @@ class AppointmentService {
     'status': a.status.name,
     'reason': await encryption.decrypt(a.reasonEnc, aad: 'appt:${a.id}:reason'),
     'triageId': a.triageId,
+    'type': a.type,
+    'review': a.review?.toJson(),
+    'conclusion': a.conclusionEnc == null
+        ? null
+        : {
+            ...jsonDecode(
+              await encryption.decrypt(
+                a.conclusionEnc!,
+                aad: 'appt:${a.id}:conclusion',
+              ),
+            ) as Map<String, dynamic>,
+            'at': a.conclusionAt!.toIso8601String(),
+          },
   };
 }

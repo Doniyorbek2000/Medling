@@ -18,7 +18,8 @@ fun signingValue(key: String, env: String): String? =
 
 android {
     namespace = "uz.medlink.medlink"
-    compileSdk = flutter.compileSdkVersion
+    // androidx.core 1.19 (bildirishnoma plaginlari) compileSdk 37+ talab qiladi.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

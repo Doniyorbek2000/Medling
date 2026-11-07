@@ -286,6 +286,18 @@ Symptoms (patient's words): """${deidentify(i.symptoms)}"""
       },
   ];
 
+  /// Bitta tahlil (masalan, shifokor qabul oldidan ko'rishi uchun).
+  Future<Map<String, dynamic>?> byId(String userId, String id) async {
+    final r = (_store[userId] ?? const []).where((r) => r.id == id).firstOrNull;
+    if (r == null) return null;
+    return {
+      ...jsonDecode(
+        await encryption.decrypt(r.enc, aad: 'triage:$userId:${r.id}'),
+      ) as Map<String, dynamic>,
+      'at': r.at.toIso8601String(),
+    };
+  }
+
   /// "Unutilish huquqi": foydalanuvchi so'rovi bilan barcha tahlillar o'chiriladi.
   void deleteAll(String userId) => _store.remove(userId);
 }

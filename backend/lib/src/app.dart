@@ -15,6 +15,8 @@ import 'payments/click.dart';
 import 'payments/orders.dart';
 import 'payments/payme.dart';
 import 'payments/wallet.dart';
+import 'consultations/chat.dart';
+import 'consultations/video.dart';
 import 'notifications/notifications.dart';
 import 'profile/medical_profile.dart';
 
@@ -33,6 +35,8 @@ class MedLinkApi {
     required this.profiles,
     required this.devices,
     required this.notifications,
+    required this.chat,
+    required this.video,
     required this.publicBaseUrl,
   });
 
@@ -49,6 +53,8 @@ class MedLinkApi {
   final MedicalProfileService profiles;
   final DeviceRegistry devices;
   final NotificationService notifications;
+  final ChatService chat;
+  final VideoTokenIssuer video;
   final String publicBaseUrl;
 
   final _rate = <String, List<DateTime>>{};
@@ -368,6 +374,7 @@ class MedLinkApi {
           startsAt: DateTime.parse(j['startsAt'] as String),
           reason: (j['reason'] as String? ?? '').trim(),
           triageId: j['triageId'] as String?,
+          type: j['type'] as String? ?? 'clinic',
         );
         await _audit(u, 'appointment.create', 'appointment', a.id);
         return jsonOk(await appointments.toJson(a), status: 201);
@@ -382,6 +389,100 @@ class MedLinkApi {
               await appointments.toJson(a),
           ],
         });
+      })
+      // ---------------- Onlayn konsultatsiya ----------------
+      ..get('/v1/appointments/<id>', (Request req, String id) async {
+        final u = requireUser(req);
+        final a = appointments.requireParticipant(id, u.id);
+        await _audit(u, 'appointment.read', 'appointment', id);
+        return jsonOk({
+          ...await appointments.toJson(a),
+          'myRole': appointments.participantRole(a, u.id),
+          'videoAvailable': video.configured && a.isOnline,
+        });
+      })
+      ..get('/v1/appointments/<id>/messages', (Request req, String id) async {
+        final u = requireUser(req);
+        final after = int.tryParse(req.url.queryParameters['after'] ?? '') ?? 0;
+        final res = await chat.list(id, u.id, after: after);
+        if (after == 0) await _audit(u, 'chat.read', 'appointment', id);
+        return jsonOk(res);
+      })
+      ..post('/v1/appointments/<id>/messages', (Request req, String id) async {
+        final u = requireUser(req);
+        _limit(req, 'chat:${u.id}', 30, const Duration(minutes: 1));
+        final m = await chat.send(
+          id,
+          u.id,
+          '${(await readJson(req))['text'] ?? ''}',
+        );
+        await _audit(u, 'chat.send', 'appointment', id);
+        return jsonOk(await chat.toJson(m, u.id), status: 201);
+      })
+      ..post('/v1/appointments/<id>/video', (Request req, String id) async {
+        final u = requireUser(req);
+        final a = appointments.requireParticipant(id, u.id);
+        final role = appointments.participantRole(a, u.id)!;
+        final t = video.issue(a, userId: u.id, role: role);
+        if (role == 'doctor' && !a.doctorJoinedVideo) {
+          a.doctorJoinedVideo = true;
+          notifications.notify(
+            a.patientId,
+            PushKind.consultationStarted,
+            data: {'type': 'video', 'appointmentId': a.id},
+          );
+        }
+        await _audit(u, 'video.join', 'appointment', id);
+        return jsonOk({
+          'url': t.url,
+          'token': t.token,
+          'room': t.room,
+          'expiresAt': t.expiresAt.toIso8601String(),
+        });
+      })
+      ..get('/v1/doctor/appointments/<id>/patient', (
+        Request req,
+        String id,
+      ) async {
+        // Shifokor qabul oldidan bemorning tibbiy profili va AI tahlilini
+        // ko'radi (bemor "sog'liq ma'lumotlari" roziligida shu ko'zda tutilgan).
+        final u = requireUser(req, {Role.doctor});
+        final a = appointments.requireParticipant(id, u.id);
+        if (appointments.participantRole(a, u.id) != 'doctor' ||
+            a.status == AppointmentStatus.cancelled ||
+            a.status == AppointmentStatus.awaitingPayment) {
+          throw ApiException(403, 'forbidden');
+        }
+        await _audit(u, 'patient.read', 'appointment', id);
+        return jsonOk({
+          'profile': (await profiles.get(a.patientId)).toJson(),
+          'triage': a.triageId == null
+              ? null
+              : await triage.byId(a.patientId, a.triageId!),
+        });
+      })
+      ..put('/v1/doctor/appointments/<id>/conclusion', (
+        Request req,
+        String id,
+      ) async {
+        final u = requireUser(req, {Role.doctor});
+        await appointments.setConclusion(id, u.id, await readJson(req));
+        await _audit(u, 'conclusion.write', 'appointment', id);
+        return jsonOk(await appointments.toJson(appointments.byId(id)!));
+      })
+      ..get('/v1/doctor/settings', (Request req) {
+        final u = requireUser(req, {Role.doctor});
+        final d =
+            doctors.byUser(u.id) ?? (throw ApiException(404, 'not_found'));
+        return jsonOk(d.settingsJson());
+      })
+      ..put('/v1/doctor/settings', (Request req) async {
+        final u = requireUser(req, {Role.doctor});
+        final d =
+            doctors.byUser(u.id) ?? (throw ApiException(404, 'not_found'));
+        doctors.updateSettings(d, await readJson(req));
+        await _audit(u, 'doctor.settings', 'doctor', d.id);
+        return jsonOk(d.settingsJson());
       })
       ..post('/v1/appointments/<id>/review', (Request req, String id) async {
         final u = requireUser(req);
@@ -495,6 +596,10 @@ class MedLinkApi {
             for (final a in appointments.forPatient(u.id))
               await appointments.toJson(a),
           ],
+          'messages': await chat.exportFor(
+            u.id,
+            appointments.forPatient(u.id).map((a) => a.id),
+          ),
           'auditTrail': [
             for (final e in await audit.forActor(u.id)) e.toJson(),
           ],
