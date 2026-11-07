@@ -164,7 +164,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-            child: EmergencyBanner(text: l.chatEmergencyNote),
+            child: EmergencyBanner(text: l.chatEmergencyNote, compact: true),
           ),
           Expanded(child: _body(context)),
           _composer(context),
@@ -202,7 +202,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     for (final m in _messages) {
       final day = DateTime(m.at.year, m.at.month, m.at.day);
       if (lastDay != day) {
-        items.add(_DayChip(text: context.fmt.fullDate(m.at)));
+        final today = DateTime.now();
+        final isToday = day == DateTime(today.year, today.month, today.day);
+        items.add(
+          _DayChip(text: isToday ? l.today : context.fmt.fullDate(m.at)),
+        );
         lastDay = day;
       }
       items.add(_Bubble(message: m));

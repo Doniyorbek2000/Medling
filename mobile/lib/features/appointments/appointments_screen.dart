@@ -130,7 +130,13 @@ class _AppointmentTile extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.schedule_rounded, size: 16),
+                        Icon(
+                          a.isOnline
+                              ? Icons.videocam_rounded
+                              : Icons.schedule_rounded,
+                          size: 16,
+                          color: a.isOnline ? context.ink(Brand.teal) : null,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(

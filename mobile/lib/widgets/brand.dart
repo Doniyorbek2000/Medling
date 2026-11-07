@@ -90,8 +90,11 @@ class SplashScreen extends StatelessWidget {
 }
 
 class EmergencyBanner extends StatelessWidget {
-  const EmergencyBanner({super.key, this.text});
+  const EmergencyBanner({super.key, this.text, this.compact = false});
   final String? text;
+
+  /// Chat kabi ekranlarda — bir qatorli, kichik.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -106,11 +109,17 @@ class EmergencyBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: () => launchUrl(Uri.parse('tel:${AppConfig.emergencyPhone}')),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: compact
+                ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                : const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
-                const Icon(Icons.emergency, color: Brand.danger),
-                const SizedBox(width: 12),
+                Icon(
+                  Icons.emergency,
+                  color: Brand.danger,
+                  size: compact ? 18 : 24,
+                ),
+                SizedBox(width: compact ? 8 : 12),
                 Expanded(
                   child: Text(
                     text ?? l.emergencyBanner(AppConfig.emergencyPhone),
@@ -120,14 +129,19 @@ class EmergencyBanner extends StatelessWidget {
                         context.isDark ? 0.18 : 0.07,
                       ),
                       fontWeight: FontWeight.w600,
+                      fontSize: compact ? 12.5 : null,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                const CircleAvatar(
-                  radius: 18,
+                CircleAvatar(
+                  radius: compact ? 14 : 18,
                   backgroundColor: Brand.danger,
-                  child: Icon(Icons.call, color: Colors.white, size: 18),
+                  child: Icon(
+                    Icons.call,
+                    color: Colors.white,
+                    size: compact ? 15 : 18,
+                  ),
                 ),
               ],
             ),
