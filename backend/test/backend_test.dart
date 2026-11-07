@@ -93,6 +93,28 @@ void main() {
       expect((await t.history('u1')).single['id'], r.id);
     });
 
+    test('apostrof variantlari va yozilish usullaridan qat\'i nazar', () {
+      for (final text in [
+        "Ko'krakda kuchli og'riq",
+        'Ko‘krakda kuchli og‘riq',
+        'Koʻkragim siqilyapti',
+        'kokrakda ogriq bor',
+        'KO`KRAK OG`RIYAPTI',
+        'боль в груди',
+      ]) {
+        expect(
+          TriageService.detectRedFlags(text),
+          contains("Ko'krak qafasidagi og'riq"),
+          reason: text,
+        );
+      }
+      expect(TriageService.detectRedFlags('Boshim ogriyapti, tumov'), isEmpty);
+      expect(
+        TriageService.detectRedFlags('Bolada talvasa boshlandi'),
+        contains('Tutqanoq / talvasa'),
+      );
+    });
+
     test('model ishlamasa fallback', () async {
       final t = TriageService(
         model: _FakeModel('not json'),
@@ -272,6 +294,35 @@ void main() {
     });
   });
 
+  group('MedicalProfile', () {
+    test('shifrlangan saqlash va validatsiya', () async {
+      final svc = MedicalProfileService(FieldEncryption({'k1': _key}, 'k1'));
+      await svc.put('u1', {
+        'fullName': 'Aliyev Vali',
+        'birthDate': '1990-05-01',
+        'sex': 'male',
+        'bloodType': 'A+',
+        'allergies': ['Penitsillin'],
+      });
+      final p = await svc.get('u1');
+      expect(p.allergies, ['Penitsillin']);
+      expect(p.birthDate, DateTime(1990, 5, 1));
+      expect(
+        () => svc.put('u1', {'bloodType': 'Z'}),
+        throwsA(isA<ApiException>()),
+      );
+    });
+  });
+
+  group('Demo ma\'lumotlar', () {
+    test('seedDemo tasdiqlangan shifokorlarni yaratadi', () async {
+      final d = DoctorService(FieldEncryption({'k1': _key}, 'k1'));
+      await d.seedDemo();
+      expect(d.search(), hasLength(8));
+      expect(d.search(specialty: 'cardiologist').single.rating, 4.9);
+    });
+  });
+
   group('API oqimi', () {
     late MedLinkApi api;
     late Handler h;
@@ -316,6 +367,7 @@ void main() {
         ),
         wallet: _FakeWallet(),
         audit: InMemoryAuditLog(),
+        profiles: MedicalProfileService(enc),
         publicBaseUrl: 'http://localhost',
       );
       h = api.handler;
@@ -478,6 +530,31 @@ void main() {
       expect(order['amountUzs'], 200000);
       final (_, list) = await send('GET', '/v1/appointments', token: patient);
       expect((list['items'] as List).single['status'], 'confirmed');
+
+      // Qabul hali boshlanmagan — yakunlab bo'lmaydi.
+      final docToken = await login('+998901111111'); // rol endi doctor
+      expect(
+        (await send(
+          'POST',
+          '/v1/doctor/appointments/${appt['id']}/complete',
+          token: docToken,
+        )).$1,
+        409,
+      );
+      // Yakunlanmagan qabulga baho qo'yib bo'lmaydi.
+      expect(
+        (await send(
+          'POST',
+          '/v1/appointments/${appt['id']}/review',
+          token: patient,
+          body: {'rating': 5},
+        )).$1,
+        409,
+      );
+      expect(
+        (await send('GET', '/v1/me', token: docToken)).$2['role'],
+        'doctor',
+      );
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/l10n.dart';
 import '../../core/session.dart';
 import '../admin/moderation_screen.dart';
 import '../appointments/appointments_screen.dart';
@@ -8,6 +9,18 @@ import '../doctor_portal/doctor_schedule_screen.dart';
 import '../doctors/doctors_screen.dart';
 import '../profile/profile_screen.dart';
 import 'home_screen.dart';
+
+/// Tablar orasida o'tish uchun (masalan, bosh sahifadan "Shifokorlar"ga).
+class HomeTabs extends InheritedWidget {
+  const HomeTabs({super.key, required this.select, required super.child});
+  final void Function(String id) select;
+
+  static HomeTabs? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<HomeTabs>();
+
+  @override
+  bool updateShouldNotify(HomeTabs old) => false;
+}
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -17,70 +30,83 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
+  String _current = 'home';
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final role = context.watch<Session>().role;
-    final tabs = <(Widget, NavigationDestination)>[
+    final tabs = <(String, Widget, IconData, IconData, String)>[
       (
-        HomeScreen(onOpenDoctors: () => setState(() => _index = 1)),
-        const NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home),
-          label: 'Asosiy',
-        ),
+        'home',
+        const HomeScreen(),
+        Icons.home_outlined,
+        Icons.home_rounded,
+        l.tabHome,
       ),
       (
+        'doctors',
         const DoctorsScreen(),
-        const NavigationDestination(
-          icon: Icon(Icons.medical_services_outlined),
-          selectedIcon: Icon(Icons.medical_services),
-          label: 'Shifokorlar',
-        ),
+        Icons.medical_services_outlined,
+        Icons.medical_services_rounded,
+        l.tabDoctors,
       ),
       (
+        'appointments',
         const AppointmentsScreen(),
-        const NavigationDestination(
-          icon: Icon(Icons.event_note_outlined),
-          selectedIcon: Icon(Icons.event_note),
-          label: 'Qabullarim',
-        ),
+        Icons.event_note_outlined,
+        Icons.event_note_rounded,
+        l.tabAppointments,
       ),
       if (role == UserRole.doctor)
         (
+          'patients',
           const DoctorScheduleScreen(),
-          const NavigationDestination(
-            icon: Icon(Icons.badge_outlined),
-            selectedIcon: Icon(Icons.badge),
-            label: 'Bemorlarim',
-          ),
+          Icons.badge_outlined,
+          Icons.badge_rounded,
+          l.tabPatients,
         ),
       if (role == UserRole.admin)
         (
+          'moderation',
           const ModerationScreen(),
-          const NavigationDestination(
-            icon: Icon(Icons.verified_user_outlined),
-            selectedIcon: Icon(Icons.verified_user),
-            label: 'Moderatsiya',
-          ),
+          Icons.verified_user_outlined,
+          Icons.verified_user_rounded,
+          l.tabModeration,
         ),
       (
+        'profile',
         const ProfileScreen(),
-        const NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          selectedIcon: Icon(Icons.person),
-          label: 'Profil',
-        ),
+        Icons.person_outline_rounded,
+        Icons.person_rounded,
+        l.tabProfile,
       ),
     ];
-    final i = _index.clamp(0, tabs.length - 1);
-    return Scaffold(
-      body: IndexedStack(index: i, children: [for (final t in tabs) t.$1]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: i,
-        onDestinationSelected: (v) => setState(() => _index = v),
-        destinations: [for (final t in tabs) t.$2],
+    var index = tabs.indexWhere((t) => t.$1 == _current);
+    if (index < 0) index = 0;
+
+    return HomeTabs(
+      select: (id) => setState(() => _current = id),
+      child: Scaffold(
+        body: IndexedStack(
+          index: index,
+          children: [
+            for (final t in tabs)
+              KeyedSubtree(key: ValueKey(t.$1), child: t.$2),
+          ],
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: index,
+          onDestinationSelected: (i) => setState(() => _current = tabs[i].$1),
+          destinations: [
+            for (final t in tabs)
+              NavigationDestination(
+                icon: Icon(t.$3),
+                selectedIcon: Icon(t.$4),
+                label: t.$5,
+              ),
+          ],
+        ),
       ),
     );
   }

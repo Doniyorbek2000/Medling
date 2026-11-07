@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/session.dart';
-import '../../widgets/brand.dart';
-import '../doctors/doctors_screen.dart';
+import '../../core/l10n.dart';
+import '../../core/theme.dart';
+import '../../data/repository.dart';
+import '../../models/models.dart';
+import '../../widgets/states.dart';
+import '../doctors/specialty.dart';
 
 /// Shifokor sifatida ro'yxatdan o'tish arizasi. Ariza moderatorlar
 /// tomonidan tekshirilmaguncha profil bemorlarga ko'rinmaydi.
@@ -29,13 +32,28 @@ class _DoctorApplyScreenState extends State<DoctorApplyScreen> {
   bool _confirm = false;
   bool _busy = false;
 
-  Future<void> _submit() async {
-    if (!_form.currentState!.validate() || _specialty == null || !_confirm) {
-      return;
+  @override
+  void dispose() {
+    for (final c in [
+      _name,
+      _license,
+      _clinic,
+      _city,
+      _exp,
+      _price,
+      _bio,
+      _docs,
+    ]) {
+      c.dispose();
     }
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_form.currentState!.validate() || !_confirm) return;
     setState(() => _busy = true);
     try {
-      await context.read<Session>().api.post('/v1/doctors/apply', {
+      await context.read<MedLinkRepository>().applyAsDoctor({
         'fullName': _name.text.trim(),
         'specialty': _specialty,
         'licenseNumber': _license.text.trim(),
@@ -53,13 +71,7 @@ class _DoctorApplyScreenState extends State<DoctorApplyScreen> {
             .toList(),
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Ariza yuborildi. Moderatsiya 1–3 ish kuni davom etadi.',
-          ),
-        ),
-      );
+      showMessage(context, context.l10n.applicationSent);
       Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) showError(context, e);
@@ -68,78 +80,64 @@ class _DoctorApplyScreenState extends State<DoctorApplyScreen> {
     }
   }
 
-  String? _required(String? v) =>
-      (v == null || v.trim().isEmpty) ? 'Majburiy maydon' : null;
-
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
+    String? req(String? v) =>
+        (v == null || v.trim().isEmpty) ? l.requiredField : null;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Shifokor arizasi')),
+      appBar: AppBar(title: Text(l.doctorApplication)),
       body: Form(
         key: _form,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text(
-              'Arizangiz moderatorlar tomonidan tekshiriladi: diplom, '
-              'litsenziya (Sog\'liqni saqlash vazirligi reyestri) va shaxsni '
-              'tasdiqlovchi hujjat. Tasdiqlangandan so\'ng profilingiz '
-              '"tekshirilgan" belgisi bilan bemorlarga ko\'rinadi.',
+            SectionCard(
+              icon: Icons.verified_user_outlined,
+              title: l.moderationHowTitle,
+              child: Text(l.moderationHowBody),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _name,
-              validator: (v) => (v ?? '').trim().length < 5
-                  ? 'To\'liq F.I.Sh. kiriting'
-                  : null,
-              decoration: const InputDecoration(labelText: 'F.I.Sh.'),
+              textCapitalization: TextCapitalization.words,
+              validator: (v) =>
+                  (v ?? '').trim().length < 5 ? l.fullNameInvalid : null,
+              decoration: InputDecoration(labelText: l.fullName),
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _specialty,
-              decoration: const InputDecoration(labelText: 'Mutaxassislik'),
+              isExpanded: true,
+              decoration: InputDecoration(labelText: l.specialty),
               items: [
-                for (final code in const [
-                  'therapist',
-                  'pediatrician',
-                  'cardiologist',
-                  'neurologist',
-                  'gastroenterologist',
-                  'pulmonologist',
-                  'endocrinologist',
-                  'dermatologist',
-                  'ent',
-                  'ophthalmologist',
-                  'gynecologist',
-                  'urologist',
-                  'traumatologist',
-                  'psychiatrist',
-                ])
+                for (final code in specialtyCodes)
                   DropdownMenuItem(
                     value: code,
-                    child: Text(DoctorsScreen.specialtyLabel(code)),
+                    child: Text(specialtyName(l, code)),
                   ),
               ],
-              validator: (v) => v == null ? 'Tanlang' : null,
+              validator: (v) => v == null ? l.requiredField : null,
               onChanged: (v) => setState(() => _specialty = v),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _license,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Litsenziya raqami'),
+              validator: req,
+              decoration: InputDecoration(labelText: l.licenseNumber),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _clinic,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Klinika'),
+              validator: req,
+              decoration: InputDecoration(labelText: l.clinicLabel),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _city,
-              validator: _required,
-              decoration: const InputDecoration(labelText: 'Shahar'),
+              validator: req,
+              decoration: InputDecoration(labelText: l.city),
             ),
             const SizedBox(height: 12),
             Row(
@@ -148,10 +146,13 @@ class _DoctorApplyScreenState extends State<DoctorApplyScreen> {
                   child: TextFormField(
                     controller: _exp,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: _required,
-                    decoration: const InputDecoration(
-                      labelText: 'Tajriba (yil)',
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
+                    validator: req,
+                    decoration: InputDecoration(
+                      labelText: l.experienceYearsLabel,
                     ),
                   ),
                 ),
@@ -161,10 +162,8 @@ class _DoctorApplyScreenState extends State<DoctorApplyScreen> {
                     controller: _price,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: _required,
-                    decoration: const InputDecoration(
-                      labelText: 'Narx (so\'m)',
-                    ),
+                    validator: req,
+                    decoration: InputDecoration(labelText: l.priceUzsLabel),
                   ),
                 ),
               ],
@@ -173,35 +172,38 @@ class _DoctorApplyScreenState extends State<DoctorApplyScreen> {
             TextFormField(
               controller: _bio,
               maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'O\'zingiz haqingizda',
+              maxLength: 500,
+              decoration: InputDecoration(
+                labelText: l.aboutYou,
+                alignLabelWithHint: true,
               ),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _docs,
               maxLines: 3,
-              validator: _required,
-              decoration: const InputDecoration(
-                labelText: 'Hujjatlar (har qatorda bitta havola)',
-                helperText: 'Diplom, litsenziya, pasport nusxalari',
+              validator: req,
+              decoration: InputDecoration(
+                labelText: l.documents,
+                helperText: l.documentsHint,
+                helperMaxLines: 2,
+                alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             CheckboxListTile(
               value: _confirm,
+              activeColor: Brand.teal,
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               onChanged: (v) => setState(() => _confirm = v ?? false),
-              title: const Text(
-                'Ma\'lumotlar to\'g\'riligini tasdiqlayman va ular '
-                'tekshirilishiga roziman',
-              ),
+              title: Text(l.applicationConfirm),
             ),
             const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _confirm && !_busy ? _submit : null,
-              child: const Text('Arizani yuborish'),
+            ProgressButton(
+              label: l.sendApplication,
+              busy: _busy,
+              onPressed: _confirm ? _submit : null,
             ),
           ],
         ),

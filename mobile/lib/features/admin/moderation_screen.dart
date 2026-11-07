@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/format.dart';
-import '../../core/session.dart';
+import '../../core/l10n.dart';
 import '../../core/theme.dart';
+import '../../data/repository.dart';
 import '../../widgets/brand.dart';
-import '../doctors/doctors_screen.dart';
+import '../../widgets/states.dart';
+import '../doctors/specialty.dart';
 
 /// Admin: shifokor arizalarini tekshirish (tasdiqlash / rad etish).
 /// Har bir qaror serverda moderator ID'si va vaqti bilan audit jurnaliga yoziladi.
@@ -18,67 +20,31 @@ class ModerationScreen extends StatefulWidget {
 }
 
 class _ModerationScreenState extends State<ModerationScreen> {
-  List<Map<String, dynamic>>? _items;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final res = await context.read<Session>().api.get(
-        '/v1/admin/doctors/pending',
-      );
-      if (!mounted) return;
-      setState(
-        () => _items = (res['items'] as List).cast<Map<String, dynamic>>(),
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() => _items = const []);
-        showError(context, e);
-      }
-    }
-  }
+  int _version = 0;
 
   Future<void> _decide(Map<String, dynamic> d, String decision) async {
+    final l = context.l10n;
+    final repo = context.read<MedLinkRepository>();
     String? note;
     if (decision == 'rejected') {
-      final ctrl = TextEditingController();
-      note = await showDialog<String>(
+      note = await showModalBottomSheet<String>(
         context: context,
-        builder: (c) => AlertDialog(
-          title: const Text('Rad etish sababi'),
-          content: TextField(
-            controller: ctrl,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Masalan: litsenziya reyestrda topilmadi',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(c),
-              child: const Text('Bekor'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(c, ctrl.text.trim()),
-              child: const Text('Rad etish'),
-            ),
-          ],
-        ),
+        isScrollControlled: true,
+        builder: (c) => const _RejectSheet(),
       );
       if (note == null || note.isEmpty) return;
-    }
-    if (!mounted) return;
-    try {
-      await context.read<Session>().api.post(
-        '/v1/admin/doctors/${d['id']}/moderate',
-        {'decision': decision, 'note': ?note},
+    } else {
+      final ok = await confirmDialog(
+        context,
+        title: l.approve,
+        message: l.approveConfirm(d['fullName'] as String),
+        confirm: l.approve,
       );
-      _load();
+      if (!ok) return;
+    }
+    try {
+      await repo.moderate(d['id'] as String, decision, note: note);
+      if (mounted) setState(() => _version++);
     } catch (e) {
       if (mounted) showError(context, e);
     }
@@ -86,104 +52,173 @@ class _ModerationScreenState extends State<ModerationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final items = _items;
+    final l = context.l10n;
+    final repo = context.read<MedLinkRepository>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Moderatsiya')),
-      body: items == null
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: items.isEmpty
-                  ? ListView(
-                      children: const [
-                        SizedBox(height: 120),
-                        EmptyState(
-                          icon: Icons.task_alt,
-                          text: 'Tekshirilishi kerak bo\'lgan arizalar yo\'q',
-                        ),
-                      ],
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => _card(items[i]),
-                    ),
-            ),
+      appBar: AppBar(
+        title: Text(l.tabModeration),
+        automaticallyImplyLeading: false,
+      ),
+      body: AsyncList<Map<String, dynamic>>(
+        key: ValueKey(_version),
+        load: repo.pendingDoctors,
+        empty: EmptyView(icon: Icons.task_alt_rounded, title: l.noPending),
+        itemBuilder: (context, d, _) => _card(context, d),
+      ),
     );
   }
 
-  Widget _card(Map<String, dynamic> d) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            d['fullName'] as String,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-          ),
-          Text(DoctorsScreen.specialtyLabel(d['specialty'] as String)),
-          const SizedBox(height: 8),
-          _row('Litsenziya', d['licenseNumber'] as String),
-          _row('Klinika', '${d['clinic']}, ${d['city']}'),
-          _row('Tajriba', '${d['experienceYears']} yil'),
-          _row('Narx', formatUzs(d['priceUzs'] as int)),
-          const SizedBox(height: 6),
-          const Text(
-            'Hujjatlar:',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          for (final ref in (d['documentRefs'] as List).cast<String>())
-            InkWell(
-              onTap: () => launchUrl(Uri.parse(ref)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  ref,
-                  style: const TextStyle(
-                    color: Brand.blue,
-                    decoration: TextDecoration.underline,
+  Widget _card(BuildContext context, Map<String, dynamic> d) {
+    final l = context.l10n;
+    final name = d['fullName'] as String;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Avatar(
+                  initials: name.split(' ').take(2).map((p) => p[0]).join(),
+                  radius: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(specialtyName(l, d['specialty'] as String)),
+                    ],
                   ),
                 ),
-              ),
+              ],
             ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _decide(d, 'rejected'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Brand.danger,
+            const Divider(height: 24),
+            _row(l.licenseNumber, d['licenseNumber'] as String),
+            _row(l.clinicLabel, '${d['clinic']}, ${d['city']}'),
+            _row(l.experienceLabel, '${d['experienceYears']}'),
+            _row(l.priceLabel, context.fmt.money(d['priceUzs'] as int)),
+            const SizedBox(height: 8),
+            Text(
+              l.documents,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            for (final ref in (d['documentRefs'] as List).cast<String>())
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
+                ),
+                onPressed: () => launchUrl(Uri.parse(ref)),
+                icon: const Icon(Icons.description_outlined, size: 18),
+                label: Text(ref, overflow: TextOverflow.ellipsis),
+              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _decide(d, 'rejected'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Brand.danger,
+                    ),
+                    child: Text(l.reject),
                   ),
-                  child: const Text('Rad etish'),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => _decide(d, 'approved'),
-                  child: const Text('Tasdiqlash'),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => _decide(d, 'approved'),
+                    child: Text(l.approve),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _row(String k, String v) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
+    padding: const EdgeInsets.symmetric(vertical: 3),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(width: 90, child: Text(k)),
+        SizedBox(
+          width: 110,
+          child: Text(
+            k,
+            style: TextStyle(color: context.colors.onSurfaceVariant),
+          ),
+        ),
         Expanded(
-          child: Text(v, style: const TextStyle(fontWeight: FontWeight.w500)),
+          child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600)),
         ),
       ],
     ),
   );
+}
+
+class _RejectSheet extends StatefulWidget {
+  const _RejectSheet();
+
+  @override
+  State<_RejectSheet> createState() => _RejectSheetState();
+}
+
+class _RejectSheetState extends State<_RejectSheet> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        0,
+        20,
+        MediaQuery.viewInsetsOf(context).bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l.rejectReason,
+            style: context.text.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _ctrl,
+            autofocus: true,
+            maxLines: 3,
+            decoration: InputDecoration(hintText: l.rejectReasonHint),
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Brand.danger),
+            onPressed: () => Navigator.pop(context, _ctrl.text.trim()),
+            child: Text(l.reject),
+          ),
+        ],
+      ),
+    );
+  }
 }

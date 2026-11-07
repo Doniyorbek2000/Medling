@@ -1,27 +1,35 @@
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
-final _money = NumberFormat.decimalPattern('ru');
+import 'clinic_time.dart';
+import 'l10n.dart';
 
-String formatUzs(int amount) => '${_money.format(amount)} so\'m';
+/// Lokalga mos formatlash. `intl` o'zbek tilida oy nomlarini qo'llab-quvvatlaydi.
+///
+/// UTC belgili vaqtlar (qabullar, slotlar) Toshkent vaqtida, lokal vaqtlar
+/// (masalan, tahlil qilingan payt) qurilma vaqtida ko'rsatiladi.
+class Fmt {
+  Fmt(this.context);
+  final BuildContext context;
 
-const _months = [
-  'yanvar',
-  'fevral',
-  'mart',
-  'aprel',
-  'may',
-  'iyun',
-  'iyul',
-  'avgust',
-  'sentabr',
-  'oktabr',
-  'noyabr',
-  'dekabr',
-];
+  String get _locale => Localizations.localeOf(context).languageCode;
 
-String formatDate(DateTime d) => '${d.day}-${_months[d.month - 1]}';
+  String money(int amount) =>
+      context.l10n.priceUzs(NumberFormat.decimalPattern('ru').format(amount));
 
-String formatTime(DateTime d) =>
-    '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  String date(DateTime d) => DateFormat.MMMMd(_locale).format(_w(d));
 
-String formatDateTime(DateTime d) => '${formatDate(d)}, ${formatTime(d)}';
+  String weekdayShort(DateTime d) => DateFormat.E(_locale).format(_w(d));
+
+  String time(DateTime d) => DateFormat.Hm(_locale).format(_w(d));
+
+  String dateTime(DateTime d) => '${date(d)}, ${time(d)}';
+
+  String fullDate(DateTime d) => DateFormat.yMMMMd(_locale).format(_w(d));
+
+  DateTime _w(DateTime d) => d.isUtc ? clinicWall(d) : d;
+}
+
+extension FmtX on BuildContext {
+  Fmt get fmt => Fmt(this);
+}

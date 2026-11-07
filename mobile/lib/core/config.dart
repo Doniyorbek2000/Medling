@@ -9,6 +9,11 @@ class AppConfig {
 
   static const emergencyPhone = '103';
 
+  static const version = String.fromEnvironment(
+    'MEDLINK_VERSION',
+    defaultValue: '1.0.0',
+  );
+
   /// Foydalanuvchi faol bo'lmasa sessiya yopiladi.
   static const idleTimeout = Duration(minutes: 10);
 }

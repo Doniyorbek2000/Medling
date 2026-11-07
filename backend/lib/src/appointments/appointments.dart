@@ -26,6 +26,28 @@ class Appointment {
   final String? triageId;
   AppointmentStatus status = AppointmentStatus.awaitingPayment;
   final DateTime createdAt = DateTime.now().toUtc();
+  Review? review;
+}
+
+class Review {
+  Review({
+    required this.rating,
+    required this.comment,
+    required this.authorName,
+  });
+  final int rating;
+  final String comment;
+
+  /// Faqat ism (familiyasiz) ko'rsatiladi.
+  final String authorName;
+  final DateTime at = DateTime.now().toUtc();
+
+  Map<String, dynamic> toJson() => {
+    'rating': rating,
+    'comment': comment,
+    'authorName': authorName,
+    'at': at.toIso8601String(),
+  };
 }
 
 /// Qabullarni boshqarish. Slotlar 30 daqiqalik, ish vaqti 09:00–18:00
@@ -111,6 +133,53 @@ class AppointmentService {
     }
     a.status = AppointmentStatus.cancelled;
   }
+
+  /// Shifokor qabulni yakunlaydi (faqat to'langan va boshlangan qabul).
+  void complete(String id, String doctorUserId) {
+    final a = _items[id] ?? (throw ApiException(404, 'not_found'));
+    if (doctors.byId(a.doctorId)?.userId != doctorUserId) {
+      throw ApiException(403, 'forbidden');
+    }
+    if (a.status != AppointmentStatus.confirmed) {
+      throw ApiException(409, 'not_confirmed');
+    }
+    if (DateTime.now().toUtc().isBefore(a.startsAt)) {
+      throw ApiException(409, 'not_started');
+    }
+    a.status = AppointmentStatus.completed;
+  }
+
+  /// Bemor yakunlangan qabul uchun bir marta baho qoldiradi.
+  void addReview(
+    String id,
+    String patientId, {
+    required int rating,
+    required String comment,
+    required String authorName,
+  }) {
+    final a = _items[id] ?? (throw ApiException(404, 'not_found'));
+    if (a.patientId != patientId) throw ApiException(403, 'forbidden');
+    if (a.status != AppointmentStatus.completed) {
+      throw ApiException(409, 'not_completed');
+    }
+    if (a.review != null) throw ApiException(409, 'already_reviewed');
+    if (rating < 1 || rating > 5 || comment.length > 1000) {
+      throw ApiException(400, 'invalid_review');
+    }
+    a.review = Review(
+      rating: rating,
+      comment: comment.trim(),
+      authorName: authorName,
+    );
+    final d = doctors.byId(a.doctorId)!;
+    d.rating = (d.rating * d.reviewCount + rating) / (d.reviewCount + 1);
+    d.reviewCount++;
+  }
+
+  List<Review> reviewsFor(String doctorId) => [
+    for (final a in _items.values)
+      if (a.doctorId == doctorId && a.review != null) a.review!,
+  ]..sort((x, y) => y.at.compareTo(x.at));
 
   List<Appointment> forPatient(String userId) =>
       _items.values.where((a) => a.patientId == userId).toList()

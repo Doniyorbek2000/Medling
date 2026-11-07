@@ -121,6 +121,97 @@ class DoctorService {
   }
 
   DoctorProfile? byId(String id) => _doctors[id];
+
+  /// Faqat ishlab chiqish rejimi uchun: tasdiqlangan demo shifokorlar.
+  Future<void> seedDemo() async {
+    const demo = [
+      (
+        'Karimova Dilnoza Rustamovna',
+        'therapist',
+        12,
+        'Shifo Med',
+        150000,
+        4.8,
+        124,
+      ),
+      (
+        'Abdullayev Jasur Akmalovich',
+        'cardiologist',
+        18,
+        'Respublika kardiologiya markazi',
+        250000,
+        4.9,
+        210,
+      ),
+      (
+        'Yusupova Malika Botirovna',
+        'pediatrician',
+        9,
+        'Bolalar poliklinikasi №5',
+        140000,
+        4.7,
+        98,
+      ),
+      (
+        'Rahimov Sardor Ilhomovich',
+        'neurologist',
+        15,
+        'Neuro Clinic',
+        220000,
+        4.6,
+        76,
+      ),
+      (
+        'Tursunova Nigora Shavkatovna',
+        'gynecologist',
+        11,
+        'Ayollar salomatligi markazi',
+        200000,
+        4.8,
+        143,
+      ),
+      (
+        'Ergashev Bobur Hamidovich',
+        'dermatologist',
+        7,
+        'Derma Plus',
+        180000,
+        4.5,
+        51,
+      ),
+      ('Saidova Gulnora Anvarovna', 'ent', 14, 'LOR Klinika', 170000, 4.7, 88),
+      (
+        'Nazarov Otabek Farhodovich',
+        'gastroenterologist',
+        10,
+        'MedLife',
+        210000,
+        4.6,
+        64,
+      ),
+    ];
+    var i = 0;
+    for (final (name, spec, exp, clinic, price, rating, reviews) in demo) {
+      final d = await apply('demo-${i++}', {
+        'fullName': name,
+        'specialty': spec,
+        'licenseNumber': 'DEMO-${1000 + i}',
+        'documentRefs': ['demo://license'],
+        'experienceYears': exp,
+        'clinic': clinic,
+        'city': 'Toshkent',
+        'priceUzs': price,
+        'bio':
+            '$exp yillik tajribaga ega shifokor. O\'zbek va rus tillarida '
+            'qabul qiladi.',
+      });
+      d
+        ..status = ModerationStatus.approved
+        ..rating = rating
+        ..reviewCount = reviews;
+    }
+  }
+
   DoctorProfile? byUser(String userId) =>
       _doctors.values.where((d) => d.userId == userId).lastOrNull;
 

@@ -2,9 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/l10n.dart';
 import '../../core/session.dart';
+import '../../core/theme.dart';
 import '../../widgets/brand.dart';
+import '../../widgets/states.dart';
+import '../settings/language_picker.dart';
 import 'otp_screen.dart';
+
+/// "90 123 45 67" ko'rinishida formatlaydi.
+class UzPhoneFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final d = digits.length > 9 ? digits.substring(0, 9) : digits;
+    final b = StringBuffer();
+    for (var i = 0; i < d.length; i++) {
+      if (i == 2 || i == 5 || i == 7) b.write(' ');
+      b.write(d[i]);
+    }
+    final text = b.toString();
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
 
 class PhoneScreen extends StatefulWidget {
   const PhoneScreen({super.key});
@@ -17,8 +43,15 @@ class _PhoneScreenState extends State<PhoneScreen> {
   final _ctrl = TextEditingController();
   bool _busy = false;
 
-  String get _phone => '+998${_ctrl.text.replaceAll(RegExp(r'\D'), '')}';
-  bool get _valid => _ctrl.text.replaceAll(RegExp(r'\D'), '').length == 9;
+  String get _digits => _ctrl.text.replaceAll(RegExp(r'\D'), '');
+  String get _phone => '+998$_digits';
+  bool get _valid => _digits.length == 9;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     setState(() => _busy = true);
@@ -36,49 +69,75 @@ class _PhoneScreenState extends State<PhoneScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Scaffold(
-      backgroundColor: Colors.white,
+      appBar: AppBar(actions: const [LanguageButton(), SizedBox(width: 8)]),
       body: SafeArea(
+        top: false,
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           children: [
-            const SizedBox(height: 40),
-            const Center(child: MedLinkLogo(size: 110)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            const Center(child: MedLinkLogo(size: 104)),
+            const SizedBox(height: 16),
             Text(
-              'Sun\'iy intellekt yordamidagi tibbiy platforma',
+              l.tagline,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: context.text.bodyLarge?.copyWith(
+                color: context.colors.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 48),
             Text(
-              'Telefon raqamingiz',
-              style: Theme.of(context).textTheme.titleMedium,
+              l.phoneTitle,
+              style: context.text.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
+            Text(
+              l.phoneSubtitle,
+              style: context.text.bodyMedium?.copyWith(
+                color: context.colors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: _ctrl,
+              autofocus: true,
               keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.telephoneNumberNational],
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(9),
-              ],
+              inputFormatters: [UzPhoneFormatter()],
+              style: const TextStyle(fontSize: 20, letterSpacing: 1),
               onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                prefixText: '+998 ',
+              onSubmitted: (_) => _valid ? _submit() : null,
+              decoration: InputDecoration(
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.only(left: 16, right: 8),
+                  child: Text(
+                    '🇺🇿  +998',
+                    style: TextStyle(fontSize: 20, letterSpacing: 1),
+                  ),
+                ),
+                prefixIconConstraints: const BoxConstraints(),
                 hintText: '90 123 45 67',
+                semanticCounterText: l.phoneTitle,
               ),
             ),
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _valid && !_busy ? _submit : null,
-              child: _busy
-                  ? const SizedBox.square(
-                      dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('SMS kod olish'),
+            ProgressButton(
+              label: l.getCode,
+              busy: _busy,
+              onPressed: _valid ? _submit : null,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l.loginLegal,
+              textAlign: TextAlign.center,
+              style: context.text.bodySmall?.copyWith(
+                color: context.colors.onSurfaceVariant,
+              ),
             ),
           ],
         ),

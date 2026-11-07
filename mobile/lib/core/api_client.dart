@@ -12,18 +12,7 @@ class ApiError implements Exception {
 
   bool get consentRequired => status == 451;
 
-  /// Foydalanuvchiga ko'rsatiladigan xabar.
-  String get userMessage => switch (code) {
-    'otp_invalid' => 'Kod noto\'g\'ri',
-    'otp_expired' => 'Kod muddati o\'tgan. Qayta so\'rang',
-    'otp_attempts_exceeded' => 'Urinishlar soni tugadi. Qayta so\'rang',
-    'rate_limited' => 'Juda ko\'p so\'rov. Birozdan so\'ng urinib ko\'ring',
-    'consent_required' => 'Buning uchun rozilik kerak',
-    'slot_unavailable' => 'Bu vaqt band. Boshqa vaqtni tanlang',
-    'already_applied' => 'Siz allaqachon ariza topshirgansiz',
-    'network' => 'Internet aloqasi yo\'q',
-    _ => message ?? 'Xatolik yuz berdi ($code)',
-  };
+  bool get isNetwork => code == 'network';
 
   @override
   String toString() => 'ApiError($status, $code)';
@@ -54,6 +43,9 @@ class ApiClient {
 
   Future<Map<String, dynamic>> post(String path, [Object? body]) =>
       _send('POST', path, body: body);
+
+  Future<Map<String, dynamic>> put(String path, [Object? body]) =>
+      _send('PUT', path, body: body);
 
   Future<Map<String, dynamic>> delete(String path) => _send('DELETE', path);
 

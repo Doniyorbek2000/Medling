@@ -14,3 +14,4 @@ export 'src/payments/orders.dart';
 export 'src/payments/payme.dart';
 export 'src/payments/wallet.dart';
 export 'src/security/field_encryption.dart';
+export 'src/profile/medical_profile.dart';

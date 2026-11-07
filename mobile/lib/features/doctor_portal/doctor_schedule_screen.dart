@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/format.dart';
-import '../../core/session.dart';
+import '../../core/l10n.dart';
+import '../../data/repository.dart';
 import '../../models/models.dart';
-import '../../widgets/brand.dart';
-import '../appointments/appointments_screen.dart';
-import '../doctors/doctors_screen.dart';
+import '../../widgets/states.dart';
+import '../appointments/appointment_status.dart';
 
 /// Tasdiqlangan shifokor uchun: unga yozilgan bemorlar ro'yxati.
 class DoctorScheduleScreen extends StatefulWidget {
@@ -17,79 +17,80 @@ class DoctorScheduleScreen extends StatefulWidget {
 }
 
 class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
-  List<Appointment>? _items;
+  int _version = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
+  Future<void> _complete(Appointment a) async {
+    final l = context.l10n;
+    final ok = await confirmDialog(
+      context,
+      title: l.completeVisit,
+      message: l.completeVisitConfirm,
+      confirm: l.completeVisit,
+    );
+    if (!ok || !mounted) return;
     try {
-      final res = await context.read<Session>().api.get(
-        '/v1/doctor/appointments',
-      );
-      if (!mounted) return;
-      setState(
-        () => _items = [
-          for (final a in res['items'] as List)
-            Appointment.fromJson(a as Map<String, dynamic>),
-        ],
-      );
+      await context.read<MedLinkRepository>().completeAppointment(a.id);
+      setState(() => _version++);
     } catch (e) {
-      if (mounted) {
-        setState(() => _items = const []);
-        showError(context, e);
-      }
+      if (mounted) showError(context, e);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final items = _items;
+    final l = context.l10n;
+    final repo = context.read<MedLinkRepository>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Bemorlarim')),
-      body: items == null
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: items.isEmpty
-                  ? ListView(
-                      children: const [
-                        SizedBox(height: 120),
-                        EmptyState(
-                          icon: Icons.event_available,
-                          text: 'Hozircha yozilgan bemorlar yo\'q',
+      appBar: AppBar(
+        title: Text(l.tabPatients),
+        automaticallyImplyLeading: false,
+      ),
+      body: AsyncList<Appointment>(
+        key: ValueKey(_version),
+        load: repo.doctorAppointments,
+        empty: EmptyView(
+          icon: Icons.event_available_rounded,
+          title: l.noPatients,
+        ),
+        itemBuilder: (context, a, _) {
+          final (label, color) = appointmentStatus(l, a.status);
+          final canComplete =
+              a.status == 'confirmed' && a.startsAt.isBefore(DateTime.now());
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule_rounded, size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          context.fmt.dateTime(a.startsAt),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
-                      ],
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: items.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) {
-                        final a = items[i];
-                        final (label, color) =
-                            appointmentStatusLabels[a.status] ??
-                            (a.status, Colors.grey);
-                        return Card(
-                          child: ListTile(
-                            title: Text(formatDateTime(a.startsAt)),
-                            subtitle: Text(
-                              a.reason.isEmpty
-                                  ? 'Sabab ko\'rsatilmagan'
-                                  : a.reason,
-                            ),
-                            trailing: Text(
-                              label,
-                              style: TextStyle(color: color),
-                            ),
-                          ),
-                        );
-                      },
+                      ),
+                      StatusChip(label: label, color: color),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(a.reason.isEmpty ? l.noReason : a.reason),
+                  if (canComplete) ...[
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () => _complete(a),
+                      icon: const Icon(Icons.task_alt_rounded),
+                      label: Text(l.completeVisit),
                     ),
+                  ],
+                ],
+              ),
             ),
+          );
+        },
+      ),
     );
   }
 }

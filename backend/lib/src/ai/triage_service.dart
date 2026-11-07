@@ -108,30 +108,48 @@ class TriageService {
   /// userId -> shifrlangan natijalar (ishlab chiqish uchun xotirada).
   final _store = <String, List<({String id, String enc, DateTime at})>>{};
 
+  /// Qizil bayroq qoidalari [normalizeForRules] dan o'tgan matnga qo'llanadi:
+  /// kichik harf, apostroflar olib tashlangan (o', o‘, oʻ, o` va apostrofsiz
+  /// yozilganlar bir xil bo'ladi), o'zbek kirill harflari lotinga o'girilgan.
   static final _redFlags = <RegExp, String>{
     RegExp(
-      r"ko'krak.{0,20}(og'ri|siqil)|chest pain|боль в груди",
-      caseSensitive: false,
+      r'kokra[kg].{0,25}(ogri|siqil|bosil|achish)|yurak.{0,15}(ogri|siqil)'
+      r'|chest pain|боль в груди|давит в груди',
     ): "Ko'krak qafasidagi og'riq",
     RegExp(
-      r"nafas.{0,15}(qis|ololmay|yetishmay)|задыха|can't breathe",
-      caseSensitive: false,
+      r'nafas.{0,15}(qis|ololmay|yetishmay|bogil)|bogilyap|задыха'
+      r'|не могу дышать|cant breathe|shortness of breath',
     ): 'Nafas olish qiyinlashgan',
     RegExp(
-      r"hushini yo'qot|hushdan ket|без сознания|unconscious",
-      caseSensitive: false,
+      r'hush.{0,10}(yoqot|ket)|hushsiz|без сознания|потерял сознание'
+      r'|unconscious|fainted',
     ): "Hushni yo'qotish",
     RegExp(
-      r"(yuz|qo'l).{0,20}(qiyshay|uvush|falaj)|nutq.{0,10}buzil",
-      caseSensitive: false,
+      r'(yuz|qol|oyoq).{0,20}(qiyshay|uvush|falaj|sezmay)'
+      r'|nutq.{0,10}buzil|gapira olmay|перекосило|онемел',
     ): 'Insult belgilari',
     RegExp(
-      r"o'z joniga qasd|o'zimni o'ldir|суицид|suicid",
-      caseSensitive: false,
+      r'ozini? (joniga qasd|oldir)|ozimni oldir|yashashni xohlamay'
+      r'|суицид|покончить с собой|suicid|kill myself',
     ): "O'z joniga qasd qilish fikrlari",
-    RegExp(r"kuchli qon ket|qon qus|кровотечение", caseSensitive: false):
-        'Kuchli qon ketish',
+    RegExp(
+      r'kuchli qon ket|qon qus|qon ketyapti|кровотечение|рвота кровью'
+      r'|vomiting blood',
+    ): 'Kuchli qon ketish',
+    RegExp(r'tutqanoq|talvasa|судорог|seizure'): 'Tutqanoq / talvasa',
+    RegExp(r'anafilak|tomoq shish|lab.{0,10}shish|отек квинке|отёк'):
+        'Kuchli allergik reaksiya',
   };
+
+  /// Faqat o'zbekka xos kirill harflari (rus so'zlariga ta'sir qilmaydi).
+  static const _cyrUz = {'ў': 'o', 'ғ': 'g', 'қ': 'q', 'ҳ': 'h'};
+
+  /// Qoidalar uchun matnni normallashtiradi.
+  static String normalizeForRules(String text) {
+    var t = text.toLowerCase().replaceAll(RegExp("['‘’ʻʼ`´]"), '');
+    _cyrUz.forEach((k, v) => t = t.replaceAll(k, v));
+    return t;
+  }
 
   static final _piiPatterns = [
     RegExp(r'\+?\d[\d\s\-()]{8,}\d'), // telefon raqamlari
@@ -148,10 +166,13 @@ class TriageService {
     return out;
   }
 
-  static List<String> detectRedFlags(String text) => [
-    for (final e in _redFlags.entries)
-      if (e.key.hasMatch(text)) e.value,
-  ];
+  static List<String> detectRedFlags(String text) {
+    final t = normalizeForRules(text);
+    return [
+      for (final e in _redFlags.entries)
+        if (e.key.hasMatch(t)) e.value,
+    ];
+  }
 
   String buildPrompt(TriageInput i) =>
       '''

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
-import '../core/api_client.dart';
-import '../core/config.dart';
-import '../core/theme.dart';
-
 import 'package:url_launcher/url_launcher.dart';
+
+import '../core/config.dart';
+import '../core/l10n.dart';
+import '../core/theme.dart';
 
 class MedLinkLogo extends StatelessWidget {
   const MedLinkLogo({super.key, this.size = 96, this.showName = true});
@@ -13,22 +12,37 @@ class MedLinkLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(size * 0.22),
-          child: Image.asset(
-            'assets/brand/medlink_icon.png',
+    return Semantics(
+      label: 'MedLink',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
             width: size,
             height: size,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(size * 0.24),
+              boxShadow: [
+                BoxShadow(
+                  color: Brand.blue.withValues(alpha: 0.12),
+                  blurRadius: size * 0.25,
+                  offset: Offset(0, size * 0.06),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.all(size * 0.04),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(size * 0.2),
+              child: Image.asset('assets/brand/medlink_icon.png'),
+            ),
           ),
-        ),
-        if (showName) ...[
-          const SizedBox(height: 12),
-          const BrandName(fontSize: 30),
+          if (showName) ...[
+            SizedBox(height: size * 0.14),
+            BrandName(fontSize: size * 0.3),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -43,20 +57,25 @@ class BrandName extends StatelessWidget {
     final style = TextStyle(
       fontSize: fontSize,
       fontWeight: FontWeight.w800,
-      letterSpacing: 1.2,
+      letterSpacing: fontSize * 0.05,
+      height: 1.1,
     );
-    return Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: 'MED',
-            style: style.copyWith(color: Brand.blue),
-          ),
-          TextSpan(
-            text: 'LINK',
-            style: style.copyWith(color: Brand.teal),
-          ),
-        ],
+    return ExcludeSemantics(
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: 'MED',
+              style: style.copyWith(
+                color: context.isDark ? const Color(0xFF6FA8FF) : Brand.blue,
+              ),
+            ),
+            TextSpan(
+              text: 'LINK',
+              style: style.copyWith(color: Brand.teal),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -66,10 +85,8 @@ class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    backgroundColor: Colors.white,
-    body: Center(child: MedLinkLogo(size: 120)),
-  );
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: MedLinkLogo(size: 120)));
 }
 
 class EmergencyBanner extends StatelessWidget {
@@ -78,31 +95,39 @@ class EmergencyBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Brand.danger.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () => launchUrl(Uri.parse('tel:${AppConfig.emergencyPhone}')),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              const Icon(Icons.emergency, color: Brand.danger),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  text ??
-                      'Hayot uchun xavfli holatda darhol '
-                          '${AppConfig.emergencyPhone} ga qo\'ng\'iroq qiling',
-                  style: const TextStyle(
-                    color: Brand.danger,
-                    fontWeight: FontWeight.w600,
+    final l = context.l10n;
+    return Semantics(
+      button: true,
+      label: l.callEmergency(AppConfig.emergencyPhone),
+      child: Material(
+        color: Brand.danger.withValues(alpha: context.isDark ? 0.18 : 0.07),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => launchUrl(Uri.parse('tel:${AppConfig.emergencyPhone}')),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                const Icon(Icons.emergency, color: Brand.danger),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text ?? l.emergencyBanner(AppConfig.emergencyPhone),
+                    style: const TextStyle(
+                      color: Brand.danger,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-              const Icon(Icons.call, color: Brand.danger),
-            ],
+                const SizedBox(width: 8),
+                const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Brand.danger,
+                  child: Icon(Icons.call, color: Colors.white, size: 18),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -110,9 +135,55 @@ class EmergencyBanner extends StatelessWidget {
   }
 }
 
-void showError(BuildContext context, Object e) {
-  final msg = e is ApiError ? e.userMessage : 'Xatolik yuz berdi';
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(msg)));
+class Avatar extends StatelessWidget {
+  const Avatar({super.key, required this.initials, this.radius = 28});
+  final String initials;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: radius * 2,
+    height: radius * 2,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          Brand.blue.withValues(alpha: 0.16),
+          Brand.teal.withValues(alpha: 0.16),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(radius * 0.6),
+    ),
+    child: Text(
+      initials,
+      style: TextStyle(
+        color: context.colors.primary,
+        fontWeight: FontWeight.w800,
+        fontSize: radius * 0.6,
+      ),
+    ),
+  );
+}
+
+class RatingStars extends StatelessWidget {
+  const RatingStars({super.key, required this.rating, this.size = 16});
+  final double rating;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (var i = 1; i <= 5; i++)
+        Icon(
+          rating >= i
+              ? Icons.star_rounded
+              : rating >= i - 0.5
+              ? Icons.star_half_rounded
+              : Icons.star_outline_rounded,
+          color: const Color(0xFFFFB300),
+          size: size,
+        ),
+    ],
+  );
 }

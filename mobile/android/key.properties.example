@@ -1,0 +1,8 @@
+# Nusxa oling: cp key.properties.example key.properties  (git'ga qo'shilmaydi)
+# Kalit yaratish:
+#   keytool -genkey -v -keystore ~/medlink-release.jks -keyalg RSA -keysize 4096 \
+#           -validity 10000 -alias medlink
+storeFile=/absolute/path/to/medlink-release.jks
+storePassword=CHANGE_ME
+keyAlias=medlink
+keyPassword=CHANGE_ME

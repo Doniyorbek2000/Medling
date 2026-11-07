@@ -48,6 +48,7 @@ Future<void> main() async {
         );
 
   final doctors = DoctorService(enc);
+  if (env['MEDLINK_SEED_DEMO'] != 'false') await doctors.seedDemo();
   final appointments = AppointmentService(doctors, enc);
   final orders = OrderRepository();
   void paid(PaymentOrder o) => appointments.markPaid(o.appointmentId);
@@ -86,6 +87,7 @@ Future<void> main() async {
     ),
     wallet: StripeWalletGateway(httpClient, cfg.stripeSecretKey),
     audit: InMemoryAuditLog(),
+    profiles: MedicalProfileService(enc),
     publicBaseUrl: cfg.publicBaseUrl,
   );
 

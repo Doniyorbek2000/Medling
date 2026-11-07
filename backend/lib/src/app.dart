@@ -15,6 +15,7 @@ import 'payments/click.dart';
 import 'payments/orders.dart';
 import 'payments/payme.dart';
 import 'payments/wallet.dart';
+import 'profile/medical_profile.dart';
 
 class MedLinkApi {
   MedLinkApi({
@@ -28,6 +29,7 @@ class MedLinkApi {
     required this.payme,
     required this.wallet,
     required this.audit,
+    required this.profiles,
     required this.publicBaseUrl,
   });
 
@@ -41,6 +43,7 @@ class MedLinkApi {
   final PaymeMerchant payme;
   final WalletGateway wallet;
   final AuditLog audit;
+  final MedicalProfileService profiles;
   final String publicBaseUrl;
 
   final _rate = <String, List<DateTime>>{};
@@ -114,6 +117,30 @@ class MedLinkApi {
       ..post('/v1/auth/refresh', (Request req) {
         final u = requireUser(req);
         return jsonOk({'token': auth.issueToken(u)});
+      })
+      ..get('/v1/me', (Request req) async {
+        final u = requireUser(req);
+        return jsonOk({
+          'id': u.id,
+          'role': u.role.name,
+          'missingConsents': (await consents.missing(u.id))
+              .map((s) => s.name)
+              .toList(),
+        });
+      })
+      // ---------------- Tibbiy profil ----------------
+      ..get('/v1/me/profile', (Request req) async {
+        final u = requireUser(req);
+        await _requireConsents(u);
+        await _audit(u, 'profile.read', 'profile', u.id);
+        return jsonOk((await profiles.get(u.id)).toJson());
+      })
+      ..put('/v1/me/profile', (Request req) async {
+        final u = requireUser(req);
+        await _requireConsents(u);
+        final p = await profiles.put(u.id, await readJson(req));
+        await _audit(u, 'profile.update', 'profile', u.id);
+        return jsonOk(p.toJson());
       })
       // ---------------- Rozilik ----------------
       ..get('/v1/consents', (Request req) async {
@@ -231,6 +258,12 @@ class MedLinkApi {
         }
         return jsonOk(d.toPublicJson());
       })
+      ..get(
+        '/v1/doctors/<id>/reviews',
+        (Request req, String id) => jsonOk({
+          'items': [for (final r in appointments.reviewsFor(id)) r.toJson()],
+        }),
+      )
       ..get('/v1/doctors/<id>/slots', (Request req, String id) {
         final date = DateTime.parse(
           req.url.queryParameters['date'] ?? (throw const FormatException()),
@@ -254,6 +287,15 @@ class MedLinkApi {
                 await appointments.toJson(a),
           ],
         });
+      })
+      ..post('/v1/doctor/appointments/<id>/complete', (
+        Request req,
+        String id,
+      ) async {
+        final u = requireUser(req, {Role.doctor});
+        appointments.complete(id, u.id);
+        await _audit(u, 'appointment.complete', 'appointment', id);
+        return jsonOk({'id': id, 'status': 'completed'});
       })
       // ---------------- Moderatsiya (admin) ----------------
       ..get('/v1/admin/doctors/pending', (Request req) async {
@@ -307,6 +349,21 @@ class MedLinkApi {
               await appointments.toJson(a),
           ],
         });
+      })
+      ..post('/v1/appointments/<id>/review', (Request req, String id) async {
+        final u = requireUser(req);
+        final j = await readJson(req);
+        final name = (await profiles.get(u.id)).fullName.split(' ');
+        appointments.addReview(
+          id,
+          u.id,
+          rating: j['rating'] as int,
+          comment: j['comment'] as String? ?? '',
+          // Familiya emas, faqat ism ko'rsatiladi.
+          authorName: name.length > 1 ? name[1] : 'Bemor',
+        );
+        await _audit(u, 'appointment.review', 'appointment', id);
+        return jsonOk({'ok': true});
       })
       ..post('/v1/appointments/<id>/cancel', (Request req, String id) async {
         final u = requireUser(req);
@@ -396,6 +453,7 @@ class MedLinkApi {
         await _audit(u, 'me.export', 'user', u.id);
         return jsonOk({
           'user': {'id': u.id, 'role': u.role.name},
+          'medicalProfile': (await profiles.get(u.id)).toJson(),
           'consents': [
             for (final c in await consents.history(u.id)) c.toJson(),
           ],
@@ -412,6 +470,7 @@ class MedLinkApi {
       ..delete('/v1/me/health-data', (Request req) async {
         final u = requireUser(req);
         triage.deleteAll(u.id);
+        profiles.delete(u.id);
         await _audit(u, 'me.delete_health_data', 'user', u.id);
         return jsonOk({'deleted': true});
       });

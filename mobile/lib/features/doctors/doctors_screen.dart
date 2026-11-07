@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/format.dart';
-import '../../core/session.dart';
+import '../../core/l10n.dart';
 import '../../core/theme.dart';
+import '../../data/repository.dart';
 import '../../models/models.dart';
 import '../../widgets/brand.dart';
+import '../../widgets/states.dart';
 import 'doctor_detail_screen.dart';
+import 'specialty.dart';
 
 class DoctorsScreen extends StatefulWidget {
   const DoctorsScreen({
@@ -20,26 +23,9 @@ class DoctorsScreen extends StatefulWidget {
 
   final String? initialSpecialty;
   final String? triageId;
+
+  /// true — alohida sahifa (orqaga tugmasi bilan), false — tab.
   final bool standalone;
-
-  static const _labels = {
-    'therapist': 'Terapevt',
-    'pediatrician': 'Pediatr',
-    'cardiologist': 'Kardiolog',
-    'neurologist': 'Nevrolog',
-    'gastroenterologist': 'Gastroenterolog',
-    'pulmonologist': 'Pulmonolog',
-    'endocrinologist': 'Endokrinolog',
-    'dermatologist': 'Dermatolog',
-    'ent': 'LOR',
-    'ophthalmologist': 'Oftalmolog',
-    'gynecologist': 'Ginekolog',
-    'urologist': 'Urolog',
-    'traumatologist': 'Travmatolog',
-    'psychiatrist': 'Psixiatr',
-  };
-
-  static String specialtyLabel(String code) => _labels[code] ?? code;
 
   @override
   State<DoctorsScreen> createState() => _DoctorsScreenState();
@@ -49,63 +35,59 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
   String? _specialty;
   String _query = '';
   Timer? _debounce;
-  List<Doctor>? _doctors;
-  Object? _error;
+  final _search = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _specialty = widget.initialSpecialty;
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _error = null);
-    try {
-      final res = await context.read<Session>().api.get('/v1/doctors', {
-        'specialty': ?_specialty,
-        if (_query.isNotEmpty) 'q': _query,
-      });
-      if (!mounted) return;
-      setState(
-        () => _doctors = [
-          for (final d in res['items'] as List)
-            Doctor.fromJson(d as Map<String, dynamic>),
-        ],
-      );
-    } catch (e) {
-      if (mounted) setState(() => _error = e);
-    }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _search.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final doctors = _doctors;
+    final l = context.l10n;
+    final repo = context.read<MedLinkRepository>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shifokorlar'),
+        title: Text(
+          widget.standalone && _specialty != null
+              ? specialtyName(l, _specialty!)
+              : l.tabDoctors,
+        ),
         automaticallyImplyLeading: widget.standalone,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
             child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Ism yoki klinika',
+              controller: _search,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: l.searchDoctors,
+                suffixIcon: _search.text.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: l.clear,
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () {
+                          _search.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
               ),
               onChanged: (v) {
                 _debounce?.cancel();
                 _debounce = Timer(const Duration(milliseconds: 400), () {
-                  _query = v.trim();
-                  _load();
+                  if (mounted) setState(() => _query = v.trim());
                 });
               },
             ),
@@ -116,45 +98,33 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                _chip(null, 'Barchasi'),
-                for (final e in DoctorsScreen._labels.entries)
-                  _chip(e.key, e.value),
+                _chip(null, l.all),
+                for (final code in specialtyCodes)
+                  _chip(code, specialtyName(l, code)),
               ],
             ),
           ),
           Expanded(
-            child: _error != null
-                ? Center(
-                    child: TextButton(
-                      onPressed: _load,
-                      child: const Text('Qayta urinish'),
-                    ),
-                  )
-                : doctors == null
-                ? const Center(child: CircularProgressIndicator())
-                : doctors.isEmpty
-                ? const Center(
-                    child: Text('Tasdiqlangan shifokorlar topilmadi'),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _load,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: doctors.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) => DoctorCard(
-                        doctor: doctors[i],
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => DoctorDetailScreen(
-                              doctor: doctors[i],
-                              triageId: widget.triageId,
-                            ),
-                          ),
-                        ),
-                      ),
+            child: AsyncList<Doctor>(
+              key: ValueKey('$_specialty|$_query'),
+              load: () => repo.doctors(specialty: _specialty, query: _query),
+              empty: EmptyView(
+                icon: Icons.person_search_rounded,
+                title: l.noDoctorsFound,
+                subtitle: l.noDoctorsFoundHint,
+              ),
+              itemBuilder: (context, d, _) => DoctorCard(
+                doctor: d,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => DoctorDetailScreen(
+                      doctor: d,
+                      triageId: widget.triageId,
                     ),
                   ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -166,13 +136,7 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
     child: ChoiceChip(
       label: Text(label),
       selected: _specialty == code,
-      onSelected: (_) {
-        setState(() {
-          _specialty = code;
-          _doctors = null;
-        });
-        _load();
-      },
+      onSelected: (_) => setState(() => _specialty = code),
     ),
   );
 }
@@ -184,25 +148,16 @@ class DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     return Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Brand.blue.withValues(alpha: 0.1),
-                child: Text(
-                  doctor.initials,
-                  style: const TextStyle(
-                    color: Brand.blue,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              Avatar(initials: doctor.initials),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -213,6 +168,7 @@ class DoctorCard extends StatelessWidget {
                         Flexible(
                           child: Text(
                             doctor.fullName,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
@@ -222,10 +178,10 @@ class DoctorCard extends StatelessWidget {
                         ),
                         if (doctor.verified) ...[
                           const SizedBox(width: 4),
-                          const Tooltip(
-                            message: 'Litsenziya tekshirilgan',
-                            child: Icon(
-                              Icons.verified,
+                          Tooltip(
+                            message: l.verifiedLicense,
+                            child: const Icon(
+                              Icons.verified_rounded,
                               color: Brand.teal,
                               size: 18,
                             ),
@@ -235,33 +191,55 @@ class DoctorCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${doctor.specialtyName} · ${doctor.experienceYears} yil tajriba',
+                      specialtyName(l, doctor.specialty),
+                      style: TextStyle(
+                        color: context.colors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
-                      doctor.clinic,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      '${l.yearsExperience(doctor.experienceYears)} · ${doctor.clinic}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodySmall?.copyWith(
+                        color: context.colors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFFFFB300),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          doctor.rating.toStringAsFixed(1),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          ' (${doctor.reviewCount})',
+                          style: context.text.bodySmall,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            context.fmt.money(doctor.priceUzs),
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: context.colors.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      Text(doctor.rating.toStringAsFixed(1)),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    formatUzs(doctor.priceUzs),
-                    style: const TextStyle(
-                      color: Brand.blue,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -269,25 +247,4 @@ class DoctorCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Bo'sh holatlar uchun.
-class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.text});
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 56, color: Brand.teal),
-        const SizedBox(height: 12),
-        Text(text, textAlign: TextAlign.center),
-        const SizedBox(height: 60),
-        const MedLinkLogo(size: 40, showName: false),
-      ],
-    ),
-  );
 }

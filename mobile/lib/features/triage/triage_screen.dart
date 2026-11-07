@@ -3,9 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/api_client.dart';
+import '../../core/l10n.dart';
 import '../../core/session.dart';
-import '../../models/models.dart';
+import '../../core/theme.dart';
+import '../../data/repository.dart';
 import '../../widgets/brand.dart';
+import '../../widgets/states.dart';
 import '../consent/consent_screen.dart';
 import 'triage_result_screen.dart';
 
@@ -21,34 +24,68 @@ class _TriageScreenState extends State<TriageScreen> {
   final _age = TextEditingController();
   final _days = TextEditingController();
   String _sex = 'female';
+  List<String> _chronic = const [];
   bool _busy = false;
+  bool _prefilled = false;
 
-  bool get _valid =>
-      _symptoms.text.trim().length >= 5 && int.tryParse(_age.text) != null;
+  @override
+  void initState() {
+    super.initState();
+    _prefill();
+  }
+
+  /// Tibbiy profil to'ldirilgan bo'lsa — yosh, jins va surunkali
+  /// kasalliklar avtomatik qo'yiladi.
+  Future<void> _prefill() async {
+    try {
+      final p = await context.read<MedLinkRepository>().profile();
+      if (!mounted) return;
+      setState(() {
+        if (p.ageYears != null) _age.text = '${p.ageYears}';
+        if (p.sex != null) _sex = p.sex!;
+        _chronic = p.chronicConditions;
+        _prefilled = p.ageYears != null;
+      });
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _symptoms.dispose();
+    _age.dispose();
+    _days.dispose();
+    super.dispose();
+  }
+
+  bool get _valid {
+    final age = int.tryParse(_age.text);
+    return _symptoms.text.trim().length >= 5 &&
+        age != null &&
+        age >= 0 &&
+        age <= 120;
+  }
 
   Future<void> _analyze() async {
+    FocusScope.of(context).unfocus();
     final session = context.read<Session>();
     setState(() => _busy = true);
     try {
-      final res = await session.api.post('/v1/triage', {
-        'symptoms': _symptoms.text.trim(),
-        'ageYears': int.parse(_age.text),
-        'sex': _sex,
-        if (int.tryParse(_days.text) != null)
-          'durationDays': int.parse(_days.text),
-      });
+      final result = await context.read<MedLinkRepository>().analyze(
+        symptoms: _symptoms.text.trim(),
+        ageYears: int.parse(_age.text),
+        sex: _sex,
+        durationDays: int.tryParse(_days.text),
+        chronicConditions: _chronic,
+      );
       if (!mounted) return;
+      HapticFeedback.mediumImpact();
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) =>
-              TriageResultScreen(result: TriageResult.fromJson(res)),
-        ),
+        MaterialPageRoute(builder: (_) => TriageResultScreen(result: result)),
       );
     } on ApiError catch (e) {
-      if (!mounted) return;
       if (e.consentRequired) {
-        await session.refreshConsents();
-      } else {
+        await session.reloadMe();
+      } else if (mounted) {
         showError(context, e);
       }
     } finally {
@@ -58,35 +95,29 @@ class _TriageScreenState extends State<TriageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final missing = context.watch<Session>().missingConsents;
+    final l = context.l10n;
+    final session = context.watch<Session>();
     final needsAiConsent =
-        missing.contains('aiProcessing') ||
-        missing.contains('crossBorderTransfer');
+        !session.hasConsent('aiProcessing') ||
+        !session.hasConsent('crossBorderTransfer');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AI alomatlar tahlili')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const EmergencyBanner(),
-          const SizedBox(height: 16),
-          if (needsAiConsent)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+      appBar: AppBar(title: Text(l.triageTitle)),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const EmergencyBanner(),
+            const SizedBox(height: 16),
+            if (needsAiConsent)
+              SectionCard(
+                title: l.aiConsentNeededTitle,
+                icon: Icons.privacy_tip_outlined,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'AI tahlili uchun rozilik kerak',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '"Sun\'iy intellekt tahlili" va "Ma\'lumotni xorijga '
-                      'uzatish" bandlariga rozilik bering. Bu ixtiyoriy — '
-                      'usiz ham shifokorga yozilishingiz mumkin.',
-                    ),
+                    Text(l.aiConsentNeededBody),
                     const SizedBox(height: 12),
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).push(
@@ -94,92 +125,135 @@ class _TriageScreenState extends State<TriageScreen> {
                           builder: (_) => const ConsentScreen(),
                         ),
                       ),
-                      child: const Text('Rozilik sozlamalari'),
+                      child: Text(l.consentSettings),
                     ),
                   ],
                 ),
-              ),
-            )
-          else ...[
-            Text(
-              'Nima bezovta qilyapti?',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _symptoms,
-              minLines: 4,
-              maxLines: 8,
-              maxLength: 2000,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                hintText:
-                    'Masalan: 3 kundan beri harorat 38.5, tomoq og\'riyapti, '
-                    'yutishda og\'riq bor...',
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Ism, telefon yoki pasport ma\'lumotlarini yozmang.',
-              style: TextStyle(fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _age,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(3),
-                    ],
-                    onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(labelText: 'Yosh'),
-                  ),
+              )
+            else ...[
+              Text(
+                l.symptomsQuestion,
+                style: context.text.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _days,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: const InputDecoration(
-                      labelText: 'Necha kundan beri',
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _symptoms,
+                minLines: 5,
+                maxLines: 10,
+                maxLength: 2000,
+                textCapitalization: TextCapitalization.sentences,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(hintText: l.symptomsHint),
+              ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l.noPiiHint,
+                      style: context.text.bodySmall?.copyWith(
+                        color: context.colors.onSurfaceVariant,
+                      ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _age,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(labelText: l.age),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _days,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(4),
+                      ],
+                      decoration: InputDecoration(labelText: l.durationDays),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<String>(
+                  showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(
+                      value: 'female',
+                      label: Text(l.female),
+                      icon: const Icon(Icons.female),
+                    ),
+                    ButtonSegment(
+                      value: 'male',
+                      label: Text(l.male),
+                      icon: const Icon(Icons.male),
+                    ),
+                  ],
+                  selected: {_sex},
+                  onSelectionChanged: (s) => setState(() => _sex = s.first),
+                ),
+              ),
+              if (_prefilled || _chronic.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.assignment_ind_outlined,
+                      size: 16,
+                      color: Brand.teal,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _chronic.isEmpty
+                            ? l.prefilledFromProfile
+                            : l.chronicIncluded(_chronic.join(', ')),
+                        style: context.text.bodySmall,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-            const SizedBox(height: 16),
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'female', label: Text('Ayol')),
-                ButtonSegment(value: 'male', label: Text('Erkak')),
-              ],
-              selected: {_sex},
-              onSelectionChanged: (s) => setState(() => _sex = s.first),
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _valid && !_busy ? _analyze : null,
-              icon: _busy
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.auto_awesome),
-              label: Text(_busy ? 'Tahlil qilinmoqda...' : 'Tahlil qilish'),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Tahlil Google Med-PaLM 2 modeli yordamida bajariladi va '
-              'tashxis hisoblanmaydi.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+              const SizedBox(height: 24),
+              ProgressButton(
+                label: _busy ? l.analyzing : l.analyze,
+                icon: Icons.auto_awesome_rounded,
+                busy: _busy,
+                onPressed: _valid ? _analyze : null,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l.triagePoweredBy,
+                textAlign: TextAlign.center,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

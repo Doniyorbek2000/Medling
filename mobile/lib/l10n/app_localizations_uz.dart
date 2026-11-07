@@ -1,0 +1,894 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Uzbek (`uz`).
+class AppLocalizationsUz extends AppLocalizations {
+  AppLocalizationsUz([String locale = 'uz']) : super(locale);
+
+  @override
+  String get appName => 'MedLink';
+
+  @override
+  String get tagline => 'Sun\'iy intellekt yordamidagi tibbiy platforma';
+
+  @override
+  String get onb1Title => 'Alomatlaringizni AI tahlil qiladi';
+
+  @override
+  String get onb1Body =>
+      'Nima bezovta qilayotganini yozing — Google Med-PaLM 2 qanchalik shoshilinchligini va qaysi shifokorga borishni aytadi.';
+
+  @override
+  String get onb2Title => 'Faqat tekshirilgan shifokorlar';
+
+  @override
+  String get onb2Body =>
+      'Har bir shifokorning diplomi va litsenziyasi moderatorlar tomonidan tekshiriladi. Qabulga bir necha bosishda yoziling.';
+
+  @override
+  String get onb3Title => 'Ma\'lumotlaringiz himoyalangan';
+
+  @override
+  String get onb3Body =>
+      'Tibbiy ma\'lumotlar shifrlanadi, faqat sizning roziligingiz bilan ishlatiladi va istalgan vaqtda o\'chiriladi.';
+
+  @override
+  String get skip => 'O\'tkazish';
+
+  @override
+  String get next => 'Keyingi';
+
+  @override
+  String get getStarted => 'Boshlash';
+
+  @override
+  String get phoneTitle => 'Telefon raqamingiz';
+
+  @override
+  String get phoneSubtitle => 'Kirish uchun SMS orqali kod yuboramiz';
+
+  @override
+  String get getCode => 'Kod olish';
+
+  @override
+  String get loginLegal =>
+      'Davom etish orqali siz foydalanish shartlari va maxfiylik siyosati bilan tanishishga rozilik bildirasiz.';
+
+  @override
+  String get otpTitle => 'Kodni kiriting';
+
+  @override
+  String otpSubtitle(String phone) {
+    return '$phone raqamiga 6 xonali kod yuborildi';
+  }
+
+  @override
+  String get login => 'Kirish';
+
+  @override
+  String get resendCode => 'Kodni qayta yuborish';
+
+  @override
+  String resendIn(int seconds) {
+    return 'Qayta yuborish: $seconds s';
+  }
+
+  @override
+  String get cancel => 'Bekor qilish';
+
+  @override
+  String get save => 'Saqlash';
+
+  @override
+  String get saved => 'Saqlandi';
+
+  @override
+  String get delete => 'O\'chirish';
+
+  @override
+  String get deleted => 'O\'chirildi';
+
+  @override
+  String get retry => 'Qayta urinish';
+
+  @override
+  String get loading => 'Yuklanmoqda';
+
+  @override
+  String get submit => 'Yuborish';
+
+  @override
+  String get add => 'Qo\'shish';
+
+  @override
+  String get clear => 'Tozalash';
+
+  @override
+  String get all => 'Barchasi';
+
+  @override
+  String get seeAll => 'Barchasi';
+
+  @override
+  String get required => 'majburiy';
+
+  @override
+  String get requiredField => 'Majburiy maydon';
+
+  @override
+  String get logout => 'Chiqish';
+
+  @override
+  String get logoutConfirm => 'Hisobingizdan chiqmoqchimisiz?';
+
+  @override
+  String get systemDefault => 'Tizim bo\'yicha';
+
+  @override
+  String get today => 'Bugun';
+
+  @override
+  String get errorGeneric => 'Xatolik yuz berdi. Qayta urinib ko\'ring';
+
+  @override
+  String get errorNetwork => 'Internet aloqasi yo\'q';
+
+  @override
+  String get errorOtpInvalid => 'Kod noto\'g\'ri';
+
+  @override
+  String get errorOtpExpired => 'Kod muddati o\'tgan. Qayta so\'rang';
+
+  @override
+  String get errorOtpAttempts => 'Urinishlar soni tugadi. Yangi kod so\'rang';
+
+  @override
+  String get errorRateLimited =>
+      'Juda ko\'p so\'rov. Birozdan so\'ng urinib ko\'ring';
+
+  @override
+  String get errorConsentRequired => 'Buning uchun rozilik kerak';
+
+  @override
+  String get errorSlotUnavailable => 'Bu vaqt band. Boshqa vaqtni tanlang';
+
+  @override
+  String get errorAlreadyApplied => 'Siz allaqachon ariza topshirgansiz';
+
+  @override
+  String get errorNotPayable => 'Bu qabulni to\'lab bo\'lmaydi';
+
+  @override
+  String get errorNotStarted => 'Qabul hali boshlanmagan';
+
+  @override
+  String get errorAlreadyReviewed => 'Siz allaqachon baho qoldirgansiz';
+
+  @override
+  String get consentScreenTitle => 'Rozilik va maxfiylik';
+
+  @override
+  String get consentIntro =>
+      'Ma\'lumotlaringiz qanday ishlatilishini o\'qib chiqing va har bir band bo\'yicha alohida qaror qabul qiling. Majburiy bandlarsiz xizmat ishlamaydi.';
+
+  @override
+  String consentFooter(String version) {
+    return 'Versiya: $version. Qaroringiz vaqti va qurilma ma\'lumoti dalil sifatida saqlanadi.';
+  }
+
+  @override
+  String get agreeContinue => 'Roziman, davom etish';
+
+  @override
+  String get consentSettings => 'Rozilik sozlamalari';
+
+  @override
+  String get withdrawTitle => 'Rozilikni qaytarib olish';
+
+  @override
+  String get withdrawMessage =>
+      'Majburiy rozilikni qaytarib olsangiz, xizmatdan foydalana olmaysiz. Davom etasizmi?';
+
+  @override
+  String get withdrawConfirm => 'Ha, qaytarib olaman';
+
+  @override
+  String get consentTermsTitle => 'Foydalanish shartlari';
+
+  @override
+  String get consentTermsSummary => 'MedLink xizmatidan foydalanish qoidalari.';
+
+  @override
+  String get consentTermsBody =>
+      'MedLink — bemorlarni litsenziyaga ega shifokorlar bilan bog\'lovchi axborot platformasi. Platforma tibbiy yordam ko\'rsatmaydi va shoshilinch tibbiy yordam o\'rnini bosmaydi. Hayot uchun xavfli holatlarda 103 raqamiga qo\'ng\'iroq qiling. Shifokorlarning diplomi va litsenziyasi moderatorlar tomonidan tekshiriladi.';
+
+  @override
+  String get consentPersonalTitle => 'Shaxsga doir ma\'lumotlar';
+
+  @override
+  String get consentPersonalSummary =>
+      'Telefon raqamingiz va profil ma\'lumotlaringizni saqlash.';
+
+  @override
+  String get consentPersonalBody =>
+      '\"Shaxsga doir ma\'lumotlar to\'g\'risida\"gi Qonunga muvofiq telefon raqamingiz, ism-familiyangiz va qabullar tarixi xizmat ko\'rsatish maqsadida qayta ishlanadi va shifrlangan holda saqlanadi. Siz istalgan vaqtda ma\'lumotlaringiz nusxasini olishingiz, ularni o\'zgartirish yoki o\'chirishni talab qilishingiz mumkin.';
+
+  @override
+  String get consentHealthTitle => 'Sog\'liq haqidagi ma\'lumotlar';
+
+  @override
+  String get consentHealthSummary =>
+      'Alomatlar, qabul sababi va tibbiy profilni saqlash.';
+
+  @override
+  String get consentHealthBody =>
+      'Sog\'lig\'ingiz haqidagi ma\'lumotlar alohida toifadagi ma\'lumot hisoblanadi. Ular AES-256 bilan shifrlanadi, faqat siz va siz tanlagan shifokor ko\'ra oladi. Har bir murojaat audit jurnalida qayd etiladi. Ma\'lumotlar reklama maqsadida uchinchi shaxslarga berilmaydi.';
+
+  @override
+  String get consentAiTitle => 'Sun\'iy intellekt tahlili';
+
+  @override
+  String get consentAiSummary =>
+      'Alomatlaringizni Google Med-PaLM 2 orqali tahlil qilish.';
+
+  @override
+  String get consentAiBody =>
+      'AI tahlilidan foydalansangiz, kiritgan matningiz, yoshingiz va jinsingiz modelga yuboriladi. Ism, telefon va boshqa identifikatorlar yuborilmaydi. Natija tashxis emas. Rozilikni qaytarib olsangiz, AI tahlillari tarixi o\'chiriladi. Bu rozilik ixtiyoriy.';
+
+  @override
+  String get consentTransferTitle => 'Ma\'lumotni xorijga uzatish';
+
+  @override
+  String get consentTransferSummary =>
+      'AI tahlili uchun shaxssizlashtirilgan matn Google Cloud\'ga uzatiladi.';
+
+  @override
+  String get consentTransferBody =>
+      'AI modeli O\'zbekistondan tashqaridagi Google Cloud serverlarida ishlaydi. Tahlil uchun shaxssizlashtirilgan alomatlar matni shifrlangan kanal (TLS) orqali uzatiladi. AI tahlilidan foydalanish uchun bu rozilik zarur.';
+
+  @override
+  String get consentMarketingTitle => 'Xabarnomalar va aksiyalar';
+
+  @override
+  String get consentMarketingSummary =>
+      'Yangiliklar va maxsus takliflar haqida xabarlar.';
+
+  @override
+  String get consentMarketingBody =>
+      'Ixtiyoriy. Istalgan vaqtda sozlamalarda o\'chirishingiz mumkin.';
+
+  @override
+  String get tabHome => 'Asosiy';
+
+  @override
+  String get tabDoctors => 'Shifokorlar';
+
+  @override
+  String get tabAppointments => 'Qabullarim';
+
+  @override
+  String get tabPatients => 'Bemorlarim';
+
+  @override
+  String get tabModeration => 'Moderatsiya';
+
+  @override
+  String get tabProfile => 'Profil';
+
+  @override
+  String get goodMorning => 'Xayrli tong!';
+
+  @override
+  String get goodAfternoon => 'Xayrli kun!';
+
+  @override
+  String get goodEvening => 'Xayrli kech!';
+
+  @override
+  String get homeSubtitle => 'Bugun sog\'lig\'ingiz uchun nima qila olamiz?';
+
+  @override
+  String get aiCardTitle => 'Alomatlarni tahlil qilish';
+
+  @override
+  String get aiCardBody =>
+      'Nima bezovta qilayotganini yozing — AI qaysi shifokorga borishni aytadi.';
+
+  @override
+  String get nextAppointment => 'Navbatdagi qabul';
+
+  @override
+  String get specialists => 'Mutaxassislar';
+
+  @override
+  String emergencyBanner(String phone) {
+    return 'Hayot uchun xavfli holatda darhol $phone ga qo\'ng\'iroq qiling';
+  }
+
+  @override
+  String callEmergency(String phone) {
+    return '$phone ga qo\'ng\'iroq qilish';
+  }
+
+  @override
+  String get triageTitle => 'AI alomatlar tahlili';
+
+  @override
+  String get triageHistory => 'Tahlillar tarixi';
+
+  @override
+  String get triageHistoryEmpty => 'Hali tahlil o\'tkazilmagan';
+
+  @override
+  String get aiConsentNeededTitle => 'AI tahlili uchun rozilik kerak';
+
+  @override
+  String get aiConsentNeededBody =>
+      '\"Sun\'iy intellekt tahlili\" va \"Ma\'lumotni xorijga uzatish\" bandlariga rozilik bering. Bu ixtiyoriy — usiz ham shifokorga yozilishingiz mumkin.';
+
+  @override
+  String get symptomsQuestion => 'Nima bezovta qilyapti?';
+
+  @override
+  String get symptomsHint =>
+      'Masalan: 3 kundan beri harorat 38.5, tomoq og\'riyapti, yutishda og\'riq bor...';
+
+  @override
+  String get noPiiHint => 'Ism, telefon yoki pasport ma\'lumotlarini yozmang.';
+
+  @override
+  String get age => 'Yosh';
+
+  @override
+  String get durationDays => 'Davomiyligi (kun)';
+
+  @override
+  String get female => 'Ayol';
+
+  @override
+  String get male => 'Erkak';
+
+  @override
+  String get prefilledFromProfile =>
+      'Ma\'lumotlar tibbiy profilingizdan olindi';
+
+  @override
+  String chronicIncluded(String list) {
+    return 'Hisobga olinadi: $list';
+  }
+
+  @override
+  String get analyze => 'Tahlil qilish';
+
+  @override
+  String get analyzing => 'Tahlil qilinmoqda...';
+
+  @override
+  String get triagePoweredBy =>
+      'Tahlil Google Med-PaLM 2 yordamida bajariladi va tashxis hisoblanmaydi.';
+
+  @override
+  String get resultTitle => 'Tahlil natijasi';
+
+  @override
+  String get urgencyEmergency => 'Shoshilinch yordam kerak';
+
+  @override
+  String urgencyEmergencyBody(String phone) {
+    return 'Darhol $phone ga qo\'ng\'iroq qiling yoki eng yaqin shifoxonaga boring.';
+  }
+
+  @override
+  String get urgencyUrgent => 'Tez orada shifokorga ko\'rining';
+
+  @override
+  String get urgencyUrgentBody =>
+      'Bugun yoki ertaga shifokor qabuliga yoziling.';
+
+  @override
+  String get urgencyRoutine => 'Rejali qabul';
+
+  @override
+  String get urgencyRoutineBody =>
+      'Yaqin kunlarda shifokor ko\'rigidan o\'ting.';
+
+  @override
+  String get urgencySelfCare => 'Uyda kuzatish';
+
+  @override
+  String get urgencySelfCareBody =>
+      'Holat yomonlashsa, shifokorga murojaat qiling.';
+
+  @override
+  String get redFlags => 'Xavfli belgilar';
+
+  @override
+  String get possibleCauses => 'Ehtimoliy sabablar';
+
+  @override
+  String get likelihoodHigh => 'Yuqori';
+
+  @override
+  String get likelihoodMedium => 'O\'rtacha';
+
+  @override
+  String get likelihoodLow => 'Past';
+
+  @override
+  String get advice => 'Tavsiya';
+
+  @override
+  String get whichDoctor => 'Qaysi shifokorga borish kerak';
+
+  @override
+  String findSpecialist(String specialty) {
+    return '$specialty topish';
+  }
+
+  @override
+  String get disclaimer =>
+      'Bu tahlil tashxis emas va shifokor ko\'rigining o\'rnini bosmaydi.';
+
+  @override
+  String get searchDoctors => 'Shifokor yoki klinika';
+
+  @override
+  String get noDoctorsFound => 'Shifokorlar topilmadi';
+
+  @override
+  String get noDoctorsFoundHint =>
+      'Boshqa mutaxassislik yoki so\'rovni sinab ko\'ring';
+
+  @override
+  String get verifiedLicense => 'Litsenziya tekshirilgan';
+
+  @override
+  String yearsExperience(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count yil tajriba',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get experienceLabel => 'Yil tajriba';
+
+  @override
+  String get rating => 'Reyting';
+
+  @override
+  String get reviews => 'Sharhlar';
+
+  @override
+  String get about => 'Haqida';
+
+  @override
+  String consultationPrice(String price) {
+    return 'Qabul narxi: $price';
+  }
+
+  @override
+  String get patientReviews => 'Bemorlar sharhlari';
+
+  @override
+  String get chooseDay => 'Kunni tanlang';
+
+  @override
+  String get chooseTime => 'Vaqtni tanlang';
+
+  @override
+  String get morning => 'Ertalab';
+
+  @override
+  String get afternoon => 'Tushdan keyin';
+
+  @override
+  String get noSlots => 'Bu kunda bo\'sh vaqt yo\'q';
+
+  @override
+  String get visitReason => 'Murojaat sababi';
+
+  @override
+  String get visitReasonHint => 'Faqat shifokor ko\'radi';
+
+  @override
+  String bookFor(String when, String price) {
+    return 'Yozilish · $when · $price';
+  }
+
+  @override
+  String get holdNotice =>
+      'Vaqt 15 daqiqa band qilinadi — shu muddatda to\'lang.';
+
+  @override
+  String priceUzs(String amount) {
+    return '$amount so\'m';
+  }
+
+  @override
+  String get payment => 'To\'lov';
+
+  @override
+  String get paymentMethod => 'To\'lov usuli';
+
+  @override
+  String get localCards => 'Uzcard, Humo';
+
+  @override
+  String get intlCards => 'Visa, Mastercard';
+
+  @override
+  String payAmount(String price) {
+    return 'To\'lash · $price';
+  }
+
+  @override
+  String get pay => 'To\'lash';
+
+  @override
+  String get checkPayment => 'To\'lovni tekshirish';
+
+  @override
+  String get paymentNotYet =>
+      'To\'lov hali tasdiqlanmadi. Birozdan so\'ng tekshiring.';
+
+  @override
+  String get paymentFailed => 'To\'lov amalga oshmadi';
+
+  @override
+  String get cardSafety =>
+      'Karta ma\'lumotlari MedLink serverlarida saqlanmaydi.';
+
+  @override
+  String holdLeft(String time) {
+    return 'Bron muddati: $time';
+  }
+
+  @override
+  String get holdExpired => 'Bron muddati tugadi. Vaqtni qayta tanlang.';
+
+  @override
+  String get appointmentConfirmed => 'Qabul tasdiqlandi!';
+
+  @override
+  String get backToHome => 'Bosh sahifaga';
+
+  @override
+  String get upcoming => 'Kelgusi';
+
+  @override
+  String get past => 'O\'tgan';
+
+  @override
+  String get noUpcoming => 'Kelgusi qabullar yo\'q';
+
+  @override
+  String get noPast => 'O\'tgan qabullar yo\'q';
+
+  @override
+  String get findDoctor => 'Shifokor topish';
+
+  @override
+  String get statusAwaitingPayment => 'To\'lov kutilmoqda';
+
+  @override
+  String get statusConfirmed => 'Tasdiqlangan';
+
+  @override
+  String get statusCompleted => 'Yakunlangan';
+
+  @override
+  String get statusCancelled => 'Bekor qilingan';
+
+  @override
+  String get appointmentDetails => 'Qabul tafsilotlari';
+
+  @override
+  String get dateLabel => 'Sana';
+
+  @override
+  String get timeLabel => 'Vaqt';
+
+  @override
+  String get clinicLabel => 'Klinika';
+
+  @override
+  String get priceLabel => 'Narx';
+
+  @override
+  String get cancelAppointment => 'Qabulni bekor qilish';
+
+  @override
+  String get cancelAppointmentConfirm =>
+      'Haqiqatan ham qabulni bekor qilmoqchimisiz?';
+
+  @override
+  String get rateDoctor => 'Shifokorni baholash';
+
+  @override
+  String get reviewHint => 'Tajribangiz haqida yozing (ixtiyoriy)';
+
+  @override
+  String get yourReview => 'Sizning bahoyingiz';
+
+  @override
+  String get doctorApplication => 'Shifokor arizasi';
+
+  @override
+  String get moderationHowTitle => 'Moderatsiya qanday o\'tadi';
+
+  @override
+  String get moderationHowBody =>
+      'Diplom, litsenziya (Sog\'liqni saqlash vazirligi reyestri) va shaxsni tasdiqlovchi hujjat tekshiriladi. Tasdiqlangandan so\'ng profilingiz \"tekshirilgan\" belgisi bilan bemorlarga ko\'rinadi. Odatda 1–3 ish kuni.';
+
+  @override
+  String get fullName => 'F.I.Sh.';
+
+  @override
+  String get fullNameInvalid => 'To\'liq F.I.Sh. kiriting';
+
+  @override
+  String get specialty => 'Mutaxassislik';
+
+  @override
+  String get licenseNumber => 'Litsenziya raqami';
+
+  @override
+  String get city => 'Shahar';
+
+  @override
+  String get experienceYearsLabel => 'Tajriba (yil)';
+
+  @override
+  String get priceUzsLabel => 'Narx (so\'m)';
+
+  @override
+  String get aboutYou => 'O\'zingiz haqingizda';
+
+  @override
+  String get documents => 'Hujjatlar';
+
+  @override
+  String get documentsHint =>
+      'Diplom, litsenziya, pasport nusxalariga havolalar (har qatorda bittadan)';
+
+  @override
+  String get applicationConfirm =>
+      'Ma\'lumotlar to\'g\'riligini tasdiqlayman va ular tekshirilishiga roziman';
+
+  @override
+  String get sendApplication => 'Arizani yuborish';
+
+  @override
+  String get applicationSent =>
+      'Ariza yuborildi. Moderatsiya 1–3 ish kuni davom etadi.';
+
+  @override
+  String get noPatients => 'Hozircha yozilgan bemorlar yo\'q';
+
+  @override
+  String get noReason => 'Sabab ko\'rsatilmagan';
+
+  @override
+  String get completeVisit => 'Qabulni yakunlash';
+
+  @override
+  String get completeVisitConfirm =>
+      'Qabul o\'tkazilganini tasdiqlaysizmi? Shundan so\'ng bemor baho qoldira oladi.';
+
+  @override
+  String get noPending => 'Tekshirilishi kerak bo\'lgan arizalar yo\'q';
+
+  @override
+  String get approve => 'Tasdiqlash';
+
+  @override
+  String approveConfirm(String name) {
+    return '$name arizasini tasdiqlaysizmi? Profil bemorlarga ko\'rinadi.';
+  }
+
+  @override
+  String get reject => 'Rad etish';
+
+  @override
+  String get rejectReason => 'Rad etish sababi';
+
+  @override
+  String get rejectReasonHint => 'Masalan: litsenziya reyestrda topilmadi';
+
+  @override
+  String get patient => 'Bemor';
+
+  @override
+  String get rolePatient => 'Bemor';
+
+  @override
+  String get roleDoctor => 'Shifokor';
+
+  @override
+  String get roleAdmin => 'Administrator';
+
+  @override
+  String get health => 'Sog\'liq';
+
+  @override
+  String get medicalProfile => 'Tibbiy profil';
+
+  @override
+  String get medicalProfileSubtitle =>
+      'Allergiyalar, surunkali kasalliklar, dorilar';
+
+  @override
+  String get medicalProfileNote =>
+      'Ma\'lumotlar shifrlangan holda saqlanadi va AI tahliliga avtomatik qo\'shiladi.';
+
+  @override
+  String get birthDate => 'Tug\'ilgan sana';
+
+  @override
+  String get bloodType => 'Qon guruhi';
+
+  @override
+  String get heightCm => 'Bo\'y (sm)';
+
+  @override
+  String get weightKg => 'Vazn (kg)';
+
+  @override
+  String get allergies => 'Allergiyalar';
+
+  @override
+  String get allergiesHint => 'Masalan: penitsillin';
+
+  @override
+  String get chronicConditions => 'Surunkali kasalliklar';
+
+  @override
+  String get chronicHint => 'Masalan: qandli diabet 2-tur';
+
+  @override
+  String get medications => 'Doimiy dorilar';
+
+  @override
+  String get medicationsHint => 'Masalan: metformin 500 mg';
+
+  @override
+  String get forDoctors => 'Shifokorlar uchun';
+
+  @override
+  String get becomeDoctor => 'Shifokor sifatida qo\'shilish';
+
+  @override
+  String get becomeDoctorSubtitle =>
+      'Ariza topshiring va moderatsiyadan o\'ting';
+
+  @override
+  String get applicationPending => 'Ariza ko\'rib chiqilmoqda';
+
+  @override
+  String get applicationApproved => 'Tasdiqlangan shifokor';
+
+  @override
+  String get applicationRejected => 'Ariza rad etilgan';
+
+  @override
+  String get applicationSuspended => 'Profil to\'xtatilgan';
+
+  @override
+  String moderatorNote(String note) {
+    return 'Moderator izohi: $note';
+  }
+
+  @override
+  String get reapply => 'Qayta ariza topshirish';
+
+  @override
+  String get settings => 'Sozlamalar';
+
+  @override
+  String get language => 'Til';
+
+  @override
+  String get theme => 'Mavzu';
+
+  @override
+  String get themeLight => 'Yorug\'';
+
+  @override
+  String get themeDark => 'Qorong\'i';
+
+  @override
+  String get biometricLock => 'Biometrik qulf';
+
+  @override
+  String get biometricLockSubtitle => 'Face ID / barmoq izi bilan ochish';
+
+  @override
+  String get biometricReason =>
+      'MedLink\'ni ochish uchun shaxsingizni tasdiqlang';
+
+  @override
+  String get lockedTitle => 'MedLink qulflangan';
+
+  @override
+  String get unlock => 'Ochish';
+
+  @override
+  String get privacy => 'Maxfiylik';
+
+  @override
+  String get exportData => 'Ma\'lumotlarim nusxasi';
+
+  @override
+  String get exportDataSubtitle => 'Saqlangan barcha ma\'lumotlarni olish';
+
+  @override
+  String get exportCopied => 'Ma\'lumotlaringiz nusxasi buferga ko\'chirildi';
+
+  @override
+  String get deleteHealthData => 'Tibbiy ma\'lumotlarni o\'chirish';
+
+  @override
+  String get deleteHealthDataConfirm =>
+      'AI tahlillari va tibbiy profil qaytarib bo\'lmaydigan tarzda o\'chiriladi. Qabullar tarixi qonunda belgilangan muddat saqlanadi.';
+
+  @override
+  String get emergencyNumber => 'Tez yordam';
+
+  @override
+  String get version => 'Versiya';
+
+  @override
+  String get specTherapist => 'Terapevt';
+
+  @override
+  String get specPediatrician => 'Pediatr';
+
+  @override
+  String get specCardiologist => 'Kardiolog';
+
+  @override
+  String get specNeurologist => 'Nevrolog';
+
+  @override
+  String get specGastroenterologist => 'Gastroenterolog';
+
+  @override
+  String get specPulmonologist => 'Pulmonolog';
+
+  @override
+  String get specEndocrinologist => 'Endokrinolog';
+
+  @override
+  String get specDermatologist => 'Dermatolog';
+
+  @override
+  String get specEnt => 'LOR';
+
+  @override
+  String get specOphthalmologist => 'Oftalmolog';
+
+  @override
+  String get specGynecologist => 'Ginekolog';
+
+  @override
+  String get specUrologist => 'Urolog';
+
+  @override
+  String get specTraumatologist => 'Travmatolog';
+
+  @override
+  String get specPsychiatrist => 'Psixiatr';
+
+  @override
+  String get tashkentTime => 'Toshkent vaqti bilan (UTC+5)';
+
+  @override
+  String get completeProfile => 'Profilni to\'ldiring';
+}

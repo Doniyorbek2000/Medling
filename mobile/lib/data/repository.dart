@@ -1,0 +1,197 @@
+import '../core/api_client.dart';
+import '../models/models.dart';
+
+/// Ilovaning barcha server so'rovlari shu yerda — ekranlar HTTP yo'llarini
+/// bilmaydi, testlarda esa repozitoriyni almashtirish oson.
+class MedLinkRepository {
+  MedLinkRepository(this.api);
+  final ApiClient api;
+
+  // ---- Rozilik ----
+  Future<List<ConsentDoc>> consents() async {
+    final res = await api.get('/v1/consents');
+    return [
+      for (final d in res['documents'] as List)
+        ConsentDoc.fromJson(d as Map<String, dynamic>),
+    ];
+  }
+
+  /// Qaytaradi: hali berilmagan rozilik bandlari.
+  Future<List<String>> saveConsents(Iterable<ConsentDoc> docs) async {
+    final res = await api.post('/v1/consents', {
+      'decisions': [
+        for (final d in docs)
+          {'scope': d.scope, 'version': d.version, 'granted': d.granted},
+      ],
+    });
+    return (res['missingConsents'] as List).cast<String>();
+  }
+
+  // ---- Tibbiy profil ----
+  Future<MedicalProfile> profile() async =>
+      MedicalProfile.fromJson(await api.get('/v1/me/profile'));
+
+  Future<MedicalProfile> saveProfile(MedicalProfile p) async =>
+      MedicalProfile.fromJson(await api.put('/v1/me/profile', p.toJson()));
+
+  Future<Map<String, dynamic>> exportData() => api.get('/v1/me/export');
+
+  Future<void> deleteHealthData() => api.delete('/v1/me/health-data');
+
+  // ---- AI triaj ----
+  Future<TriageResult> analyze({
+    required String symptoms,
+    required int ageYears,
+    required String sex,
+    int? durationDays,
+    List<String> chronicConditions = const [],
+  }) async => TriageResult.fromJson(
+    await api.post('/v1/triage', {
+      'symptoms': symptoms,
+      'ageYears': ageYears,
+      'sex': sex,
+      'durationDays': ?durationDays,
+      'chronicConditions': chronicConditions,
+    }),
+  );
+
+  Future<List<TriageHistoryItem>> triageHistory() async {
+    final res = await api.get('/v1/triage/history');
+    return [
+      for (final i in (res['items'] as List).reversed)
+        TriageHistoryItem.fromJson(i as Map<String, dynamic>),
+    ];
+  }
+
+  // ---- Shifokorlar ----
+  Future<List<Doctor>> doctors({String? specialty, String? query}) async {
+    final res = await api.get('/v1/doctors', {
+      'specialty': ?specialty,
+      if (query != null && query.isNotEmpty) 'q': query,
+    });
+    return [
+      for (final d in res['items'] as List)
+        Doctor.fromJson(d as Map<String, dynamic>),
+    ];
+  }
+
+  Future<Doctor> doctor(String id) async =>
+      Doctor.fromJson(await api.get('/v1/doctors/$id'));
+
+  Future<List<Review>> reviews(String doctorId) async {
+    final res = await api.get('/v1/doctors/$doctorId/reviews');
+    return [
+      for (final r in res['items'] as List)
+        Review.fromJson(r as Map<String, dynamic>),
+    ];
+  }
+
+  /// [day] — Toshkent bo'yicha sana. Qaytaradi: UTC vaqtlar.
+  Future<List<DateTime>> slots(String doctorId, DateTime day) async {
+    final date =
+        '${day.year}-${day.month.toString().padLeft(2, '0')}-'
+        '${day.day.toString().padLeft(2, '0')}';
+    final res = await api.get('/v1/doctors/$doctorId/slots', {'date': date});
+    return [
+      for (final s in res['items'] as List) DateTime.parse(s as String).toUtc(),
+    ];
+  }
+
+  // ---- Qabullar ----
+  Future<Appointment> book({
+    required String doctorId,
+    required DateTime startsAt,
+    required String reason,
+    String? triageId,
+  }) async => Appointment.fromJson(
+    await api.post('/v1/appointments', {
+      'doctorId': doctorId,
+      'startsAt': startsAt.toUtc().toIso8601String(),
+      'reason': reason,
+      'triageId': ?triageId,
+    }),
+  );
+
+  Future<List<Appointment>> appointments() async {
+    final res = await api.get('/v1/appointments');
+    return [
+      for (final a in res['items'] as List)
+        Appointment.fromJson(a as Map<String, dynamic>),
+    ];
+  }
+
+  Future<void> cancelAppointment(String id) =>
+      api.post('/v1/appointments/$id/cancel');
+
+  Future<void> review(String appointmentId, int rating, String comment) =>
+      api.post('/v1/appointments/$appointmentId/review', {
+        'rating': rating,
+        'comment': comment,
+      });
+
+  // ---- To'lovlar ----
+  Future<({String orderId, Uri checkoutUrl})> checkout(
+    String appointmentId,
+    String provider,
+  ) async {
+    final res = await api.post('/v1/payments/checkout', {
+      'appointmentId': appointmentId,
+      'provider': provider,
+    });
+    return (
+      orderId: res['id'] as String,
+      checkoutUrl: Uri.parse(res['checkoutUrl'] as String),
+    );
+  }
+
+  Future<bool> payWithWallet(
+    String appointmentId,
+    String provider,
+    String token,
+  ) async {
+    final res = await api.post('/v1/payments/wallet', {
+      'appointmentId': appointmentId,
+      'provider': provider,
+      'token': token,
+    });
+    return res['status'] == 'paid';
+  }
+
+  Future<String> orderStatus(String orderId) async =>
+      (await api.get('/v1/payments/$orderId'))['status'] as String;
+
+  // ---- Shifokor portali ----
+  Future<DoctorApplication?> myApplication() async {
+    try {
+      return DoctorApplication.fromJson(await api.get('/v1/doctors/me'));
+    } on ApiError catch (e) {
+      if (e.status == 404) return null;
+      rethrow;
+    }
+  }
+
+  Future<void> applyAsDoctor(Map<String, dynamic> body) =>
+      api.post('/v1/doctors/apply', body);
+
+  Future<List<Appointment>> doctorAppointments() async {
+    final res = await api.get('/v1/doctor/appointments');
+    return [
+      for (final a in res['items'] as List)
+        Appointment.fromJson(a as Map<String, dynamic>),
+    ];
+  }
+
+  Future<void> completeAppointment(String id) =>
+      api.post('/v1/doctor/appointments/$id/complete');
+
+  // ---- Admin ----
+  Future<List<Map<String, dynamic>>> pendingDoctors() async =>
+      ((await api.get('/v1/admin/doctors/pending'))['items'] as List)
+          .cast<Map<String, dynamic>>();
+
+  Future<void> moderate(String doctorId, String decision, {String? note}) =>
+      api.post('/v1/admin/doctors/$doctorId/moderate', {
+        'decision': decision,
+        'note': ?note,
+      });
+}
