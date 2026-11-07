@@ -17,8 +17,24 @@ class StripeWalletGateway implements WalletGateway {
   final http.Client client;
   final String secretKey;
 
+  /// Apple Pay: qurilmadan kelgan `PKPaymentToken.paymentData` avval Stripe
+  /// kartasi tokeniga aylantiriladi. Google Pay (Stripe gateway) esa tayyor
+  /// `tok_...` beradi.
+  Future<String?> _toStripeToken(PaymentOrder order, String token) async {
+    if (order.provider != PaymentProvider.applePay) return token;
+    final res = await client.post(
+      Uri.parse('https://api.stripe.com/v1/tokens'),
+      headers: {'authorization': 'Bearer $secretKey'},
+      body: {'pk_token': utf8.decode(base64.decode(token))},
+    );
+    if (res.statusCode != 200) return null;
+    return (jsonDecode(res.body) as Map<String, dynamic>)['id'] as String?;
+  }
+
   @override
   Future<bool> charge(PaymentOrder order, String token) async {
+    final stripeToken = await _toStripeToken(order, token);
+    if (stripeToken == null) return false;
     final res = await client.post(
       Uri.parse('https://api.stripe.com/v1/payment_intents'),
       headers: {
@@ -32,7 +48,7 @@ class StripeWalletGateway implements WalletGateway {
         'currency': 'uzs',
         'confirm': 'true',
         'payment_method_data[type]': 'card',
-        'payment_method_data[card][token]': token,
+        'payment_method_data[card][token]': stripeToken,
         'metadata[order_id]': order.id,
         'description': 'MedLink qabul',
       },

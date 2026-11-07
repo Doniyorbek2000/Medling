@@ -1,0 +1,11 @@
+{
+  "provider": "apple_pay",
+  "data": {
+    "merchantIdentifier": "merchant.uz.medlink",
+    "displayName": "MedLink",
+    "merchantCapabilities": ["3DS", "debit", "credit"],
+    "supportedNetworks": ["visa", "masterCard"],
+    "countryCode": "UZ",
+    "currencyCode": "UZS"
+  }
+}
