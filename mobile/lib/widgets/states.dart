@@ -21,6 +21,12 @@ String errorText(BuildContext context, Object e) {
     'not_payable' => l.errorNotPayable,
     'not_started' => l.errorNotStarted,
     'already_reviewed' => l.errorAlreadyReviewed,
+    'chat_closed' => l.errorChatClosed,
+    'too_early' => l.errorTooEarly,
+    'too_late' => l.errorTooLate,
+    'video_unavailable' => l.errorVideoUnavailable,
+    'consultation_type_unavailable' => l.errorTypeUnavailable,
+    'invalid_schedule' || 'invalid_price' => l.errorInvalidSchedule,
     _ => l.errorGeneric,
   };
 }

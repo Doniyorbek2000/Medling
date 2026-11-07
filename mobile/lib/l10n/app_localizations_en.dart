@@ -923,4 +923,305 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remindersEnabled => 'Reminders are on';
+
+  @override
+  String get online => 'Online';
+
+  @override
+  String get inClinic => 'In clinic';
+
+  @override
+  String get onlineAvailable => 'Online visits';
+
+  @override
+  String get onlineOnly => 'Online visits only';
+
+  @override
+  String get consultationType => 'Visit type';
+
+  @override
+  String get consultationTypes => 'Visit types';
+
+  @override
+  String get onlineHowItWorks =>
+      'A video call opens in the app at your visit time. Prepare a stable connection and a quiet place.';
+
+  @override
+  String onlinePriceLabel(String price) {
+    return 'Online visit: $price';
+  }
+
+  @override
+  String get onlineConsultation => 'Online consultation';
+
+  @override
+  String get joinVideo => 'Join video call';
+
+  @override
+  String get videoReady => 'The room is open. Join to connect.';
+
+  @override
+  String get videoReadyShort => 'Video ready';
+
+  @override
+  String videoOpensAt(String time) {
+    return 'Video opens at $time (10 minutes before the visit).';
+  }
+
+  @override
+  String get videoClosed =>
+      'The video window has ended. Use the chat for questions.';
+
+  @override
+  String get videoNotConfigured =>
+      'Video is not set up yet. Please use the chat.';
+
+  @override
+  String get videoTips => 'Tip: use headphones and sit in a well-lit place.';
+
+  @override
+  String get callConnecting => 'Connecting...';
+
+  @override
+  String get callWaiting => 'Waiting for the other side to join...';
+
+  @override
+  String get callReconnecting => 'Connection lost, reconnecting...';
+
+  @override
+  String get callEnded => 'Call ended';
+
+  @override
+  String get callFailed =>
+      'Could not connect. Check your internet and try again.';
+
+  @override
+  String get callPermissionDenied =>
+      'Camera or microphone access denied. Allow it for MedLink in settings.';
+
+  @override
+  String get callEncrypted => 'Encrypted · not recorded';
+
+  @override
+  String get mute => 'Mute';
+
+  @override
+  String get unmute => 'Unmute';
+
+  @override
+  String get cameraOff => 'Camera off';
+
+  @override
+  String get cameraOn => 'Camera on';
+
+  @override
+  String get switchCamera => 'Flip';
+
+  @override
+  String get endCall => 'End';
+
+  @override
+  String get endCallConfirm => 'End the call?';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get chat => 'Chat';
+
+  @override
+  String get chatSubtitle => 'Ask your doctor';
+
+  @override
+  String get chatSubtitleDoctor => 'Messages with the patient';
+
+  @override
+  String get chatHint => 'Type a message...';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get sending => 'Sending';
+
+  @override
+  String get chatEmptyTitle => 'No messages yet';
+
+  @override
+  String get chatEmptyBody =>
+      'Ask a question about your visit. The doctor replies during working hours.';
+
+  @override
+  String get chatClosed => 'Chat closed: 7 days have passed since the visit.';
+
+  @override
+  String get chatEmergencyNote =>
+      'Chat is not for emergencies — call 103 if your life is at risk';
+
+  @override
+  String get patientInfo => 'Patient information';
+
+  @override
+  String get patientInfoSubtitle => 'Medical profile and AI check';
+
+  @override
+  String get aiPreTriage => 'Pre-visit AI check';
+
+  @override
+  String get viewDetails => 'View details';
+
+  @override
+  String get sex => 'Sex';
+
+  @override
+  String get heightWeight => 'Height / weight';
+
+  @override
+  String get patientReview => 'Patient review';
+
+  @override
+  String get conclusion => 'Doctor\'s summary';
+
+  @override
+  String get writeConclusion => 'Write summary';
+
+  @override
+  String get editConclusion => 'Edit summary';
+
+  @override
+  String get saveConclusion => 'Save summary';
+
+  @override
+  String get saveConclusionConfirm =>
+      'The summary will be sent to the patient and the visit completed. Continue?';
+
+  @override
+  String get conclusionSaved => 'Summary saved and sent to the patient';
+
+  @override
+  String get diagnosis => 'Diagnosis';
+
+  @override
+  String get diagnosisHint => 'E.g.: Acute respiratory infection (J06.9)';
+
+  @override
+  String get recommendations => 'Recommendations';
+
+  @override
+  String get prescription => 'Prescription';
+
+  @override
+  String get addMedication => 'Add medication';
+
+  @override
+  String get noPrescription => 'No medication prescribed';
+
+  @override
+  String get medication => 'Medication';
+
+  @override
+  String get drugName => 'Drug name';
+
+  @override
+  String get dose => 'Dose';
+
+  @override
+  String get frequency => 'How to take';
+
+  @override
+  String get frequencyHint => 'E.g.: twice a day after meals';
+
+  @override
+  String get notes => 'Notes';
+
+  @override
+  String get followUp => 'Follow-up';
+
+  @override
+  String get followUpNone => 'Not needed';
+
+  @override
+  String inDays(int days) {
+    return 'in $days days';
+  }
+
+  @override
+  String forDays(int days) {
+    return '$days days';
+  }
+
+  @override
+  String followUpIn(int days) {
+    return 'Follow-up in $days days';
+  }
+
+  @override
+  String get conclusionPrivacy =>
+      'The summary is stored encrypted and visible only to the patient.';
+
+  @override
+  String get conclusionDisclaimer =>
+      'Take medication only as prescribed. If you feel worse, call 103.';
+
+  @override
+  String get scheduleAndPrices => 'Schedule and prices';
+
+  @override
+  String get scheduleAndPricesSubtitle => 'Work days, hours, online visits';
+
+  @override
+  String get workDays => 'Work days';
+
+  @override
+  String get workHours => 'Working hours (Tashkent time)';
+
+  @override
+  String get from => 'From';
+
+  @override
+  String get to => 'To';
+
+  @override
+  String slotsPerDay(int count) {
+    return '$count 30-minute visits per day';
+  }
+
+  @override
+  String get clinicPrice => 'Clinic visit price';
+
+  @override
+  String get onlinePrice => 'Online visit price';
+
+  @override
+  String get onlineSubtitle => 'Via video call and chat';
+
+  @override
+  String get scheduleNote =>
+      'Changes apply to new bookings only. Existing visits are kept.';
+
+  @override
+  String get chooseConsultationType => 'Enable at least one visit type';
+
+  @override
+  String get onlinePriceRequired => 'Enter the online visit price';
+
+  @override
+  String get errorChatClosed => 'Chat is closed';
+
+  @override
+  String get errorTooEarly =>
+      'Video is not open yet — it opens 10 minutes before the visit';
+
+  @override
+  String get errorTooLate => 'The video window has ended';
+
+  @override
+  String get errorVideoUnavailable => 'Video is temporarily unavailable';
+
+  @override
+  String get errorTypeUnavailable =>
+      'The doctor does not offer this visit type';
+
+  @override
+  String get errorInvalidSchedule => 'Invalid schedule: check days and hours';
 }

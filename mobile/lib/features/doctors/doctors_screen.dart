@@ -33,6 +33,9 @@ class DoctorsScreen extends StatefulWidget {
 
 class _DoctorsScreenState extends State<DoctorsScreen> {
   String? _specialty;
+
+  /// Faqat onlayn qabul qiladiganlar.
+  bool _onlineOnly = false;
   String _query = '';
   Timer? _debounce;
   final _search = TextEditingController();
@@ -98,6 +101,16 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    avatar: const Icon(Icons.videocam_outlined, size: 18),
+                    label: Text(l.online),
+                    selected: _onlineOnly,
+                    showCheckmark: false,
+                    onSelected: (v) => setState(() => _onlineOnly = v),
+                  ),
+                ),
                 _chip(null, l.all),
                 for (final code in specialtyCodes)
                   _chip(code, specialtyName(l, code)),
@@ -106,8 +119,16 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
           ),
           Expanded(
             child: AsyncList<Doctor>(
-              key: ValueKey('$_specialty|$_query'),
-              load: () => repo.doctors(specialty: _specialty, query: _query),
+              key: ValueKey('$_specialty|$_query|$_onlineOnly'),
+              load: () async {
+                final list = await repo.doctors(
+                  specialty: _specialty,
+                  query: _query,
+                );
+                return _onlineOnly
+                    ? list.where((d) => d.onlineEnabled).toList()
+                    : list;
+              },
               empty: EmptyView(
                 icon: Icons.person_search_rounded,
                 title: l.noDoctorsFound,
@@ -120,6 +141,7 @@ class _DoctorsScreenState extends State<DoctorsScreen> {
                     builder: (_) => DoctorDetailScreen(
                       doctor: d,
                       triageId: widget.triageId,
+                      initialType: _onlineOnly ? 'online' : null,
                     ),
                   ),
                 ),
@@ -202,6 +224,28 @@ class DoctorCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
+                    if (doctor.onlineEnabled)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2, bottom: 2),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.videocam_rounded,
+                              size: 15,
+                              color: context.ink(Brand.teal),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              l.onlineAvailable,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: context.ink(Brand.teal),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     Text(
                       '${l.yearsExperience(doctor.experienceYears)} · ${doctor.clinic}',
                       maxLines: 1,

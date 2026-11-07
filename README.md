@@ -29,6 +29,11 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
   surunkali kasalliklar, doimiy dorilar.
 - Shifokorlar bazasi: mutaxassislik bo'yicha filtr, qidiruv, reyting, sharhlar.
   Faqat moderatsiyadan o'tganlar ko'rinadi.
+- **Onlayn konsultatsiya:** qabul turini tanlash (klinikada yoki onlayn),
+  qabul vaqtida video qo'ng'iroq (LiveKit/WebRTC, shifrlangan, yozib
+  olinmaydi), shifokor bilan chat (qabul tasdiqlangandan to xulosadan 7 kun
+  keyingacha), shifokor xulosasi va retsept (tashxis, tavsiyalar, dorilar,
+  qayta ko'rik muddati).
 - Qabulga yozilish: 14 kunlik kalendar, ertalab va tushdan keyingi slotlar
   (har doim Toshkent vaqtida), 15 daqiqalik to'lov broni taymer bilan.
 - To'lov: Click, Payme (ilovaga deep link orqali qaytadi), Google Pay
@@ -48,6 +53,9 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 - Ariza: F.I.Sh., mutaxassislik, litsenziya, hujjatlar.
 - Holat: `pending` → `approved` / `rejected` (sababi bilan) → `suspended`.
   Rad etilsa, qayta ariza topshirish mumkin.
+- Ish jadvali: ish kunlari, soatlari, klinika va onlayn qabul narxlari.
+- Onlayn qabul: video qo'ng'iroq, chat, qabul oldidan bemorning tibbiy
+  profili va AI tahlilini ko'rish (audit bilan), xulosa va retsept yozish.
 - Push: yangi bemor yozildi, qabul bekor qilindi, qabul eslatmasi, ariza
   natijasi.
 - Tasdiqlangandan keyin "Bemorlarim" bo'limi ochiladi (rol ilova qayta
@@ -72,6 +80,23 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 | To'lov hamyoni | Google Pay | Apple Pay (entitlement) |
 | Deep link | `medlink://payment-result` | `medlink://payment-result` |
 | Release | R8 minify + shrink, imzo `key.properties` yoki CI secret'lari orqali | `--no-codesign` CI build, imzolash Xcode'da |
+
+## Onlayn konsultatsiya
+
+| | |
+|---|---|
+| Video | LiveKit (open-source WebRTC SFU). Serverni O'zbekistondagi data-markazga o'rnatish mumkin, bu ma'lumotlarni lokalizatsiya qilish talabiga mos keladi. Media DTLS-SRTP bilan shifrlanadi, yozib olish o'chirilgan |
+| Kirish | Token faqat shu qabulning bemori va shifokoriga beriladi. Qabul onlayn va to'langan bo'lishi kerak, vaqt oralig'i qabuldan 10 daqiqa oldindan 60 daqiqa keyingacha. Xona nomi va ko'rinadigan ismda shaxsiy ma'lumot yo'q |
+| Chat | Xabarlar AES-256-GCM bilan shifrlanadi. Faqat ishtirokchilar ko'radi. Push'da matn ko'rsatilmaydi ("Yangi xabar"). Xabar yuborish daqiqasiga 30 ta bilan cheklangan |
+| Xulosa | Tashxis, tavsiyalar, retsept (dori, doza, tartib, muddat), qayta ko'rik. Shifrlangan holda saqlanadi, bemorga push yuboriladi, qabul yakunlanadi |
+| Shifokor uchun | Qabul oldidan bemorning tibbiy profili (allergiyalar alohida ajratilgan) va AI tahlili. Har bir ko'rish audit jurnaliga yoziladi |
+
+Backend sozlamalari: `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
+Ular berilmasa, video tugmasi o'rnida "video ulanmagan, chatdan foydalaning"
+xabari chiqadi. LiveKit'ni o'rnatish: https://docs.livekit.io/home/self-hosting/
+
+**SMS:** `ESKIZ_EMAIL` va `ESKIZ_PASSWORD` berilsa, OTP Eskiz.uz orqali
+yuboriladi. SMS shablonini Eskiz kabinetida oldindan tasdiqlatish kerak.
 
 ## Push-bildirishnomalar
 
@@ -209,5 +234,5 @@ chiqarishdan oldin hal qilinishi shart:
    ishlaydi.
 9. **Qurilmada sinash.** APK, AAB va iOS build CI'da muvaffaqiyatli yig'iladi,
    lekin ilova haqiqiy telefonda ishga tushirib ko'rilmagan. Google Pay, Apple
-   Pay, Face ID, push-bildirishnomalar va deep link'larni haqiqiy qurilmada
-   sinab ko'ring.
+   Pay, Face ID, push-bildirishnomalar, video qo'ng'iroq va deep link'larni
+   haqiqiy qurilmada sinab ko'ring.

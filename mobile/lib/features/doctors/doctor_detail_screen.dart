@@ -14,9 +14,17 @@ import '../payments/payment_screen.dart';
 import 'specialty.dart';
 
 class DoctorDetailScreen extends StatefulWidget {
-  const DoctorDetailScreen({super.key, required this.doctor, this.triageId});
+  const DoctorDetailScreen({
+    super.key,
+    required this.doctor,
+    this.triageId,
+    this.initialType,
+  });
   final Doctor doctor;
   final String? triageId;
+
+  /// Ro'yxatda "Onlayn" filtri tanlangan bo'lsa — darhol onlayn.
+  final String? initialType;
 
   @override
   State<DoctorDetailScreen> createState() => _DoctorDetailScreenState();
@@ -31,6 +39,10 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
   List<Review>? _reviews;
   final _reason = TextEditingController();
   bool _busy = false;
+
+  /// Qabul turi: shifokor qaysilarini taklif qilsa, shulardan.
+  late String _type =
+      widget.initialType ?? (widget.doctor.clinicEnabled ? 'clinic' : 'online');
 
   MedLinkRepository get _repo => context.read<MedLinkRepository>();
 
@@ -86,6 +98,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
         startsAt: _selected!,
         reason: _reason.text.trim(),
         triageId: widget.triageId,
+        type: _type,
       );
       if (!mounted) return;
       HapticFeedback.lightImpact();
@@ -134,11 +147,14 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                             size: 16,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            l.verifiedLicense,
-                            style: TextStyle(
-                              color: context.ink(Brand.teal),
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              l.verifiedLicense,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: context.ink(Brand.teal),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -169,10 +185,18 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                 const SizedBox(height: 8),
                 _InfoRow(icon: Icons.local_hospital_outlined, text: d.clinic),
                 _InfoRow(icon: Icons.location_on_outlined, text: d.city),
-                _InfoRow(
-                  icon: Icons.payments_outlined,
-                  text: l.consultationPrice(context.fmt.money(d.priceUzs)),
-                ),
+                if (d.clinicEnabled)
+                  _InfoRow(
+                    icon: Icons.payments_outlined,
+                    text: l.consultationPrice(context.fmt.money(d.priceUzs)),
+                  ),
+                if (d.onlineEnabled)
+                  _InfoRow(
+                    icon: Icons.videocam_outlined,
+                    text: l.onlinePriceLabel(
+                      context.fmt.money(d.onlinePriceUzs),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -211,6 +235,48 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
             ),
           ],
           // ---- Bron ----
+          if (d.clinicEnabled && d.onlineEnabled) ...[
+            const SizedBox(height: 20),
+            Text(
+              l.consultationType,
+              style: context.text.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<String>(
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: 'clinic',
+                    icon: const Icon(Icons.local_hospital_outlined),
+                    label: Text(l.inClinic),
+                  ),
+                  ButtonSegment(
+                    value: 'online',
+                    icon: const Icon(Icons.videocam_outlined),
+                    label: Text(l.online),
+                  ),
+                ],
+                selected: {_type},
+                onSelectionChanged: (v) => setState(() => _type = v.first),
+              ),
+            ),
+            if (_type == 'online') ...[
+              const SizedBox(height: 8),
+              Text(
+                l.onlineHowItWorks,
+                style: context.text.bodySmall?.copyWith(
+                  color: context.colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ] else if (d.onlineEnabled) ...[
+            const SizedBox(height: 12),
+            StatusChip(label: l.onlineOnly, color: Brand.teal),
+          ],
           const SizedBox(height: 20),
           Text(
             l.chooseDay,
@@ -327,7 +393,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
                     ? l.chooseTime
                     : l.bookFor(
                         context.fmt.dateTime(_selected!),
-                        context.fmt.money(d.priceUzs),
+                        context.fmt.money(d.priceFor(_type)),
                       ),
                 busy: _busy,
                 onPressed: _selected == null ? null : _book,

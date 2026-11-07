@@ -17,6 +17,7 @@ import '../../widgets/brand.dart';
 import '../../widgets/states.dart';
 import '../consent/consent_screen.dart';
 import '../doctor_portal/doctor_apply_screen.dart';
+import '../doctor_portal/doctor_settings_screen.dart';
 import '../medical_profile/medical_profile_screen.dart';
 import '../settings/language_picker.dart';
 import '../triage/triage_history_screen.dart';
@@ -368,6 +369,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ].join('\n'),
         ),
       ),
+      if (app.status == 'approved' && session.role == UserRole.doctor)
+        _tile(
+          Icons.tune_rounded,
+          l.scheduleAndPrices,
+          subtitle: l.scheduleAndPricesSubtitle,
+          onTap: () => _push(const DoctorSettingsScreen()),
+        ),
       if (app.status == 'rejected')
         _tile(
           Icons.refresh_rounded,

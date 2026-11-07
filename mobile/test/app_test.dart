@@ -130,7 +130,10 @@ void main() {
     await t.pumpAndSettle();
     expect(find.textContaining('Abdullayev Jasur Akmalovich'), findsOneWidget);
 
-    await t.tap(find.widgetWithText(ChoiceChip, 'Terapevt'));
+    final chip = find.widgetWithText(ChoiceChip, 'Terapevt');
+    await t.ensureVisible(chip);
+    await t.pumpAndSettle();
+    await t.tap(chip);
     await t.pumpAndSettle();
     expect(lastSpecialty, 'therapist');
     expect(find.textContaining('Abdullayev Jasur Akmalovich'), findsNothing);

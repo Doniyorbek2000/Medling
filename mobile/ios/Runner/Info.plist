@@ -5,7 +5,12 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>audio</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>MedLink onlayn qabul paytida shifokor bilan video aloqa uchun kameradan foydalanadi.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MedLink onlayn qabul paytida shifokor bilan gaplashish uchun mikrofondan foydalanadi.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>MedLink tibbiy ma'lumotlaringizni himoya qilish uchun Face ID'dan foydalanadi.</string>
 	<key>FlutterDeepLinkingEnabled</key>

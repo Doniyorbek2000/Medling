@@ -121,8 +121,10 @@ class MedLinkRepository {
     required DateTime startsAt,
     required String reason,
     String? triageId,
+    String type = 'clinic',
   }) async => Appointment.fromJson(
     await api.post('/v1/appointments', {
+      'type': type,
       'doctorId': doctorId,
       'startsAt': startsAt.toUtc().toIso8601String(),
       'reason': reason,
@@ -139,6 +141,60 @@ class MedLinkRepository {
     onAppointments?.call(list);
     return list;
   }
+
+  /// Bitta qabul (bemor yoki shifokor uchun, `myRole` bilan).
+  Future<Appointment> appointment(String id) async =>
+      Appointment.fromJson(await api.get('/v1/appointments/$id'));
+
+  // ---- Onlayn konsultatsiya ----
+  Future<({bool canWrite, List<ChatMessage> items})> messages(
+    String appointmentId, {
+    int after = 0,
+  }) async {
+    final res = await api.get('/v1/appointments/$appointmentId/messages', {
+      'after': '$after',
+    });
+    return (
+      canWrite: res['canWrite'] as bool,
+      items: [
+        for (final m in res['items'] as List)
+          ChatMessage.fromJson(m as Map<String, dynamic>),
+      ],
+    );
+  }
+
+  Future<ChatMessage> sendMessage(String appointmentId, String text) async =>
+      ChatMessage.fromJson(
+        await api.post('/v1/appointments/$appointmentId/messages', {
+          'text': text,
+        }),
+      );
+
+  Future<({String url, String token})> videoToken(String appointmentId) async {
+    final res = await api.post('/v1/appointments/$appointmentId/video');
+    return (url: res['url'] as String, token: res['token'] as String);
+  }
+
+  Future<PatientInfo> patientInfo(String appointmentId) async =>
+      PatientInfo.fromJson(
+        await api.get('/v1/doctor/appointments/$appointmentId/patient'),
+      );
+
+  Future<Appointment> saveConclusion(
+    String appointmentId,
+    Conclusion c,
+  ) async => Appointment.fromJson(
+    await api.put(
+      '/v1/doctor/appointments/$appointmentId/conclusion',
+      c.toJson(),
+    ),
+  );
+
+  Future<DoctorSettings> doctorSettings() async =>
+      DoctorSettings.fromJson(await api.get('/v1/doctor/settings'));
+
+  Future<DoctorSettings> saveDoctorSettings(DoctorSettings s) async =>
+      DoctorSettings.fromJson(await api.put('/v1/doctor/settings', s.toJson()));
 
   Future<void> cancelAppointment(String id) =>
       api.post('/v1/appointments/$id/cancel');

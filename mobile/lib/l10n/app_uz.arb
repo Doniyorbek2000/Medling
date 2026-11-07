@@ -407,5 +407,139 @@
   "enableRemindersTitle": "Qabulni unutmang",
   "enableRemindersBody": "Qabuldan 1 kun va 1 soat oldin eslatma yuboramiz. Matnda tibbiy ma'lumot ko'rsatilmaydi.",
   "enableReminders": "Eslatmalarni yoqish",
-  "remindersEnabled": "Eslatmalar yoqildi"
+  "remindersEnabled": "Eslatmalar yoqildi",
+  "online": "Onlayn",
+  "inClinic": "Klinikada",
+  "onlineAvailable": "Onlayn qabul bor",
+  "onlineOnly": "Faqat onlayn qabul",
+  "consultationType": "Qabul turi",
+  "consultationTypes": "Qabul turlari",
+  "onlineHowItWorks": "Qabul vaqtida ilovada video qo'ng'iroq ochiladi. Barqaror internet va tinch joy tayyorlang.",
+  "onlinePriceLabel": "Onlayn qabul: {price}",
+  "@onlinePriceLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineConsultation": "Onlayn konsultatsiya",
+  "joinVideo": "Video qo'ng'iroqqa kirish",
+  "videoReady": "Xona ochiq. Shifokor bilan bog'lanish uchun kiring.",
+  "videoReadyShort": "Video tayyor",
+  "videoOpensAt": "Video soat {time} da ochiladi (qabuldan 10 daqiqa oldin).",
+  "@videoOpensAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "videoClosed": "Video qabul vaqti tugadi. Savollarni chatda yozing.",
+  "videoNotConfigured": "Video xizmati hozircha ulanmagan. Shifokor bilan chat orqali bog'laning.",
+  "videoTips": "Maslahat: quloqchin ishlating, yorug' joyda o'tiring.",
+  "callConnecting": "Ulanmoqda...",
+  "callWaiting": "Suhbatdosh hali kirmadi. Kuting...",
+  "callReconnecting": "Aloqa uzildi, qayta ulanmoqda...",
+  "callEnded": "Qo'ng'iroq tugadi",
+  "callFailed": "Ulanib bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
+  "callPermissionDenied": "Kamera yoki mikrofonga ruxsat berilmagan. Telefon sozlamalaridan MedLink uchun ruxsat bering.",
+  "callEncrypted": "Shifrlangan aloqa · yozib olinmaydi",
+  "mute": "Ovozni o'chirish",
+  "unmute": "Ovozni yoqish",
+  "cameraOff": "Kamerani o'chirish",
+  "cameraOn": "Kamerani yoqish",
+  "switchCamera": "Almashtirish",
+  "endCall": "Tugatish",
+  "endCallConfirm": "Qo'ng'iroqni tugatmoqchimisiz?",
+  "close": "Yopish",
+  "chat": "Chat",
+  "chatSubtitle": "Shifokorga savol bering",
+  "chatSubtitleDoctor": "Bemor bilan yozishma",
+  "chatHint": "Xabar yozing...",
+  "send": "Yuborish",
+  "sending": "Yuborilmoqda",
+  "chatEmptyTitle": "Hali xabarlar yo'q",
+  "chatEmptyBody": "Qabul bo'yicha savolingizni yozing. Shifokor ish vaqtida javob beradi.",
+  "chatClosed": "Chat yopilgan: qabuldan keyin 7 kun o'tdi.",
+  "chatEmergencyNote": "Chat shoshilinch yordam uchun emas — xavfli holatda 103 ga qo'ng'iroq qiling",
+  "patientInfo": "Bemor ma'lumotlari",
+  "patientInfoSubtitle": "Tibbiy profil va AI tahlili",
+  "aiPreTriage": "Qabul oldidan AI tahlili",
+  "viewDetails": "Batafsil ko'rish",
+  "sex": "Jins",
+  "heightWeight": "Bo'y / vazn",
+  "patientReview": "Bemor bahosi",
+  "conclusion": "Shifokor xulosasi",
+  "writeConclusion": "Xulosa yozish",
+  "editConclusion": "Xulosani tahrirlash",
+  "saveConclusion": "Xulosani saqlash",
+  "saveConclusionConfirm": "Xulosa bemorga yuboriladi va qabul yakunlanadi. Davom etasizmi?",
+  "conclusionSaved": "Xulosa saqlandi va bemorga yuborildi",
+  "diagnosis": "Tashxis",
+  "diagnosisHint": "Masalan: O'tkir respirator infeksiya (J06.9)",
+  "recommendations": "Tavsiyalar",
+  "prescription": "Retsept",
+  "addMedication": "Dori qo'shish",
+  "noPrescription": "Dori tayinlanmagan",
+  "medication": "Dori",
+  "drugName": "Dori nomi",
+  "dose": "Doza",
+  "frequency": "Qabul qilish tartibi",
+  "frequencyHint": "Masalan: kuniga 2 marta, ovqatdan keyin",
+  "notes": "Izoh",
+  "followUp": "Qayta ko'rik",
+  "followUpNone": "Shart emas",
+  "inDays": "{days} kundan keyin",
+  "@inDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forDays": "{days} kun",
+  "@forDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "followUpIn": "Qayta ko'rik: {days} kundan keyin",
+  "@followUpIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "conclusionPrivacy": "Xulosa shifrlangan holda saqlanadi va faqat bemorga ko'rinadi.",
+  "conclusionDisclaimer": "Dorilarni faqat shifokor ko'rsatmasiga ko'ra qabul qiling. Ahvolingiz yomonlashsa — 103.",
+  "scheduleAndPrices": "Jadval va narxlar",
+  "scheduleAndPricesSubtitle": "Ish kunlari, soatlar, onlayn qabul",
+  "workDays": "Ish kunlari",
+  "workHours": "Ish vaqti (Toshkent vaqti)",
+  "from": "Boshlanishi",
+  "to": "Tugashi",
+  "slotsPerDay": "Kuniga {count} ta 30 daqiqalik qabul",
+  "@slotsPerDay": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clinicPrice": "Klinikadagi qabul narxi",
+  "onlinePrice": "Onlayn qabul narxi",
+  "onlineSubtitle": "Video qo'ng'iroq va chat orqali",
+  "scheduleNote": "O'zgarishlar faqat yangi bronlarga ta'sir qiladi. Mavjud qabullar saqlanadi.",
+  "chooseConsultationType": "Kamida bitta qabul turini yoqing",
+  "onlinePriceRequired": "Onlayn qabul narxini kiriting",
+  "errorChatClosed": "Chat yopilgan",
+  "errorTooEarly": "Video hali ochilmagan — qabuldan 10 daqiqa oldin ochiladi",
+  "errorTooLate": "Video qabul vaqti tugagan",
+  "errorVideoUnavailable": "Video xizmati vaqtincha ishlamayapti",
+  "errorTypeUnavailable": "Shifokor bu turdagi qabulni o'tkazmaydi",
+  "errorInvalidSchedule": "Jadval noto'g'ri: ish vaqti va kunlarini tekshiring"
 }

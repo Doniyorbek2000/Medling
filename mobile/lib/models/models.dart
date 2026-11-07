@@ -11,7 +11,15 @@ class Doctor {
       bio = j['bio'] as String? ?? '',
       rating = (j['rating'] as num? ?? 0).toDouble(),
       reviewCount = j['reviewCount'] as int? ?? 0,
-      verified = j['verified'] as bool? ?? false;
+      verified = j['verified'] as bool? ?? false,
+      clinicEnabled = j['clinicEnabled'] as bool? ?? true,
+      onlineEnabled = j['onlineEnabled'] as bool? ?? false,
+      onlinePriceUzs = j['onlinePriceUzs'] as int? ?? 0,
+      workDays = (j['workDays'] as List? ?? const [1, 2, 3, 4, 5, 6])
+          .cast<int>()
+          .toSet(),
+      startHour = j['startHour'] as int? ?? 9,
+      endHour = j['endHour'] as int? ?? 18;
 
   final String id;
   final String fullName;
@@ -25,6 +33,14 @@ class Doctor {
   final double rating;
   final int reviewCount;
   final bool verified;
+  final bool clinicEnabled;
+  final bool onlineEnabled;
+  final int onlinePriceUzs;
+  final Set<int> workDays;
+  final int startHour;
+  final int endHour;
+
+  int priceFor(String type) => type == 'online' ? onlinePriceUzs : priceUzs;
 
   String get initials => fullName
       .split(' ')
@@ -97,7 +113,13 @@ class Appointment {
       reason = j['reason'] as String? ?? '',
       review = j['review'] == null
           ? null
-          : Review.fromJson(j['review'] as Map<String, dynamic>);
+          : Review.fromJson(j['review'] as Map<String, dynamic>),
+      type = j['type'] as String? ?? 'clinic',
+      conclusion = j['conclusion'] == null
+          ? null
+          : Conclusion.fromJson(j['conclusion'] as Map<String, dynamic>),
+      myRole = j['myRole'] as String?,
+      videoAvailable = j['videoAvailable'] as bool? ?? false;
 
   final String id;
   final Doctor? doctor;
@@ -106,6 +128,26 @@ class Appointment {
   final String status;
   final String reason;
   final Review? review;
+
+  /// `clinic` yoki `online`.
+  final String type;
+  final Conclusion? conclusion;
+
+  /// `patient` | `doctor` — faqat GET /v1/appointments/{id} javobida.
+  final String? myRole;
+  final bool videoAvailable;
+
+  bool get isOnline => type == 'online';
+
+  /// Video xona ochiq bo'ladigan oraliq (server bilan bir xil).
+  static const earlyJoin = Duration(minutes: 10);
+  static const lateJoin = Duration(minutes: 60);
+
+  bool videoOpenAt(DateTime now) =>
+      isOnline &&
+      status == 'confirmed' &&
+      !now.isBefore(startsAt.subtract(earlyJoin)) &&
+      now.isBefore(startsAt.add(lateJoin));
 
   bool get isUpcoming =>
       (status == 'confirmed' || status == 'awaitingPayment') &&
@@ -219,4 +261,140 @@ class ConsentDoc {
   final bool required;
   final String version;
   bool granted;
+}
+
+class Prescription {
+  Prescription({
+    required this.drug,
+    this.dose = '',
+    this.frequency = '',
+    this.durationDays = 0,
+    this.notes = '',
+  });
+
+  Prescription.fromJson(Map<String, dynamic> j)
+    : drug = j['drug'] as String? ?? '',
+      dose = j['dose'] as String? ?? '',
+      frequency = j['frequency'] as String? ?? '',
+      durationDays = j['durationDays'] as int? ?? 0,
+      notes = j['notes'] as String? ?? '';
+
+  final String drug;
+  final String dose;
+  final String frequency;
+  final int durationDays;
+  final String notes;
+
+  Map<String, dynamic> toJson() => {
+    'drug': drug,
+    'dose': dose,
+    'frequency': frequency,
+    'durationDays': durationDays,
+    'notes': notes,
+  };
+}
+
+/// Shifokor xulosasi: tashxis, tavsiyalar, retsept.
+class Conclusion {
+  Conclusion({
+    required this.diagnosis,
+    this.recommendations = '',
+    this.prescriptions = const [],
+    this.followUpDays,
+    this.at,
+  });
+
+  Conclusion.fromJson(Map<String, dynamic> j)
+    : diagnosis = j['diagnosis'] as String? ?? '',
+      recommendations = j['recommendations'] as String? ?? '',
+      prescriptions = [
+        for (final p in (j['prescriptions'] as List? ?? const []))
+          Prescription.fromJson(p as Map<String, dynamic>),
+      ],
+      followUpDays = j['followUpDays'] as int?,
+      at = j['at'] == null ? null : DateTime.parse(j['at'] as String).toLocal();
+
+  final String diagnosis;
+  final String recommendations;
+  final List<Prescription> prescriptions;
+  final int? followUpDays;
+  final DateTime? at;
+
+  Map<String, dynamic> toJson() => {
+    'diagnosis': diagnosis,
+    'recommendations': recommendations,
+    'prescriptions': [for (final p in prescriptions) p.toJson()],
+    'followUpDays': ?followUpDays,
+  };
+}
+
+class ChatMessage {
+  ChatMessage.fromJson(Map<String, dynamic> j)
+    : id = j['id'] as String,
+      seq = j['seq'] as int,
+      senderRole = j['senderRole'] as String,
+      mine = j['mine'] as bool,
+      text = j['text'] as String,
+      at = DateTime.parse(j['at'] as String).toLocal();
+
+  final String id;
+  final int seq;
+  final String senderRole;
+  final bool mine;
+  final String text;
+  final DateTime at;
+}
+
+/// Shifokor ish jadvali va konsultatsiya turlari.
+class DoctorSettings {
+  DoctorSettings({
+    required this.clinicEnabled,
+    required this.priceUzs,
+    required this.onlineEnabled,
+    required this.onlinePriceUzs,
+    required this.workDays,
+    required this.startHour,
+    required this.endHour,
+  });
+
+  DoctorSettings.fromJson(Map<String, dynamic> j)
+    : clinicEnabled = j['clinicEnabled'] as bool,
+      priceUzs = j['priceUzs'] as int,
+      onlineEnabled = j['onlineEnabled'] as bool,
+      onlinePriceUzs = j['onlinePriceUzs'] as int,
+      workDays = (j['workDays'] as List).cast<int>().toSet(),
+      startHour = j['startHour'] as int,
+      endHour = j['endHour'] as int;
+
+  bool clinicEnabled;
+  int priceUzs;
+  bool onlineEnabled;
+  int onlinePriceUzs;
+  Set<int> workDays;
+  int startHour;
+  int endHour;
+
+  Map<String, dynamic> toJson() => {
+    'clinicEnabled': clinicEnabled,
+    'priceUzs': priceUzs,
+    'onlineEnabled': onlineEnabled,
+    'onlinePriceUzs': onlinePriceUzs,
+    'workDays': workDays.toList()..sort(),
+    'startHour': startHour,
+    'endHour': endHour,
+  };
+}
+
+/// Shifokor uchun: qabul oldidan bemor haqida ma'lumot.
+class PatientInfo {
+  PatientInfo.fromJson(Map<String, dynamic> j)
+    : profile = MedicalProfile.fromJson(j['profile'] as Map<String, dynamic>),
+      triage = j['triage'] == null
+          ? null
+          : TriageResult.fromJson(j['triage'] as Map<String, dynamic>),
+      triageInput = (j['triage'] as Map<String, dynamic>?)?['input'] as String?;
+
+  final MedicalProfile profile;
+  final TriageResult? triage;
+  final String? triageInput;
 }

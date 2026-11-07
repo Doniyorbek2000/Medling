@@ -931,4 +931,307 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get remindersEnabled => 'Eslatmalar yoqildi';
+
+  @override
+  String get online => 'Onlayn';
+
+  @override
+  String get inClinic => 'Klinikada';
+
+  @override
+  String get onlineAvailable => 'Onlayn qabul bor';
+
+  @override
+  String get onlineOnly => 'Faqat onlayn qabul';
+
+  @override
+  String get consultationType => 'Qabul turi';
+
+  @override
+  String get consultationTypes => 'Qabul turlari';
+
+  @override
+  String get onlineHowItWorks =>
+      'Qabul vaqtida ilovada video qo\'ng\'iroq ochiladi. Barqaror internet va tinch joy tayyorlang.';
+
+  @override
+  String onlinePriceLabel(String price) {
+    return 'Onlayn qabul: $price';
+  }
+
+  @override
+  String get onlineConsultation => 'Onlayn konsultatsiya';
+
+  @override
+  String get joinVideo => 'Video qo\'ng\'iroqqa kirish';
+
+  @override
+  String get videoReady =>
+      'Xona ochiq. Shifokor bilan bog\'lanish uchun kiring.';
+
+  @override
+  String get videoReadyShort => 'Video tayyor';
+
+  @override
+  String videoOpensAt(String time) {
+    return 'Video soat $time da ochiladi (qabuldan 10 daqiqa oldin).';
+  }
+
+  @override
+  String get videoClosed =>
+      'Video qabul vaqti tugadi. Savollarni chatda yozing.';
+
+  @override
+  String get videoNotConfigured =>
+      'Video xizmati hozircha ulanmagan. Shifokor bilan chat orqali bog\'laning.';
+
+  @override
+  String get videoTips =>
+      'Maslahat: quloqchin ishlating, yorug\' joyda o\'tiring.';
+
+  @override
+  String get callConnecting => 'Ulanmoqda...';
+
+  @override
+  String get callWaiting => 'Suhbatdosh hali kirmadi. Kuting...';
+
+  @override
+  String get callReconnecting => 'Aloqa uzildi, qayta ulanmoqda...';
+
+  @override
+  String get callEnded => 'Qo\'ng\'iroq tugadi';
+
+  @override
+  String get callFailed =>
+      'Ulanib bo\'lmadi. Internetni tekshirib, qayta urinib ko\'ring.';
+
+  @override
+  String get callPermissionDenied =>
+      'Kamera yoki mikrofonga ruxsat berilmagan. Telefon sozlamalaridan MedLink uchun ruxsat bering.';
+
+  @override
+  String get callEncrypted => 'Shifrlangan aloqa · yozib olinmaydi';
+
+  @override
+  String get mute => 'Ovozni o\'chirish';
+
+  @override
+  String get unmute => 'Ovozni yoqish';
+
+  @override
+  String get cameraOff => 'Kamerani o\'chirish';
+
+  @override
+  String get cameraOn => 'Kamerani yoqish';
+
+  @override
+  String get switchCamera => 'Almashtirish';
+
+  @override
+  String get endCall => 'Tugatish';
+
+  @override
+  String get endCallConfirm => 'Qo\'ng\'iroqni tugatmoqchimisiz?';
+
+  @override
+  String get close => 'Yopish';
+
+  @override
+  String get chat => 'Chat';
+
+  @override
+  String get chatSubtitle => 'Shifokorga savol bering';
+
+  @override
+  String get chatSubtitleDoctor => 'Bemor bilan yozishma';
+
+  @override
+  String get chatHint => 'Xabar yozing...';
+
+  @override
+  String get send => 'Yuborish';
+
+  @override
+  String get sending => 'Yuborilmoqda';
+
+  @override
+  String get chatEmptyTitle => 'Hali xabarlar yo\'q';
+
+  @override
+  String get chatEmptyBody =>
+      'Qabul bo\'yicha savolingizni yozing. Shifokor ish vaqtida javob beradi.';
+
+  @override
+  String get chatClosed => 'Chat yopilgan: qabuldan keyin 7 kun o\'tdi.';
+
+  @override
+  String get chatEmergencyNote =>
+      'Chat shoshilinch yordam uchun emas — xavfli holatda 103 ga qo\'ng\'iroq qiling';
+
+  @override
+  String get patientInfo => 'Bemor ma\'lumotlari';
+
+  @override
+  String get patientInfoSubtitle => 'Tibbiy profil va AI tahlili';
+
+  @override
+  String get aiPreTriage => 'Qabul oldidan AI tahlili';
+
+  @override
+  String get viewDetails => 'Batafsil ko\'rish';
+
+  @override
+  String get sex => 'Jins';
+
+  @override
+  String get heightWeight => 'Bo\'y / vazn';
+
+  @override
+  String get patientReview => 'Bemor bahosi';
+
+  @override
+  String get conclusion => 'Shifokor xulosasi';
+
+  @override
+  String get writeConclusion => 'Xulosa yozish';
+
+  @override
+  String get editConclusion => 'Xulosani tahrirlash';
+
+  @override
+  String get saveConclusion => 'Xulosani saqlash';
+
+  @override
+  String get saveConclusionConfirm =>
+      'Xulosa bemorga yuboriladi va qabul yakunlanadi. Davom etasizmi?';
+
+  @override
+  String get conclusionSaved => 'Xulosa saqlandi va bemorga yuborildi';
+
+  @override
+  String get diagnosis => 'Tashxis';
+
+  @override
+  String get diagnosisHint => 'Masalan: O\'tkir respirator infeksiya (J06.9)';
+
+  @override
+  String get recommendations => 'Tavsiyalar';
+
+  @override
+  String get prescription => 'Retsept';
+
+  @override
+  String get addMedication => 'Dori qo\'shish';
+
+  @override
+  String get noPrescription => 'Dori tayinlanmagan';
+
+  @override
+  String get medication => 'Dori';
+
+  @override
+  String get drugName => 'Dori nomi';
+
+  @override
+  String get dose => 'Doza';
+
+  @override
+  String get frequency => 'Qabul qilish tartibi';
+
+  @override
+  String get frequencyHint => 'Masalan: kuniga 2 marta, ovqatdan keyin';
+
+  @override
+  String get notes => 'Izoh';
+
+  @override
+  String get followUp => 'Qayta ko\'rik';
+
+  @override
+  String get followUpNone => 'Shart emas';
+
+  @override
+  String inDays(int days) {
+    return '$days kundan keyin';
+  }
+
+  @override
+  String forDays(int days) {
+    return '$days kun';
+  }
+
+  @override
+  String followUpIn(int days) {
+    return 'Qayta ko\'rik: $days kundan keyin';
+  }
+
+  @override
+  String get conclusionPrivacy =>
+      'Xulosa shifrlangan holda saqlanadi va faqat bemorga ko\'rinadi.';
+
+  @override
+  String get conclusionDisclaimer =>
+      'Dorilarni faqat shifokor ko\'rsatmasiga ko\'ra qabul qiling. Ahvolingiz yomonlashsa — 103.';
+
+  @override
+  String get scheduleAndPrices => 'Jadval va narxlar';
+
+  @override
+  String get scheduleAndPricesSubtitle => 'Ish kunlari, soatlar, onlayn qabul';
+
+  @override
+  String get workDays => 'Ish kunlari';
+
+  @override
+  String get workHours => 'Ish vaqti (Toshkent vaqti)';
+
+  @override
+  String get from => 'Boshlanishi';
+
+  @override
+  String get to => 'Tugashi';
+
+  @override
+  String slotsPerDay(int count) {
+    return 'Kuniga $count ta 30 daqiqalik qabul';
+  }
+
+  @override
+  String get clinicPrice => 'Klinikadagi qabul narxi';
+
+  @override
+  String get onlinePrice => 'Onlayn qabul narxi';
+
+  @override
+  String get onlineSubtitle => 'Video qo\'ng\'iroq va chat orqali';
+
+  @override
+  String get scheduleNote =>
+      'O\'zgarishlar faqat yangi bronlarga ta\'sir qiladi. Mavjud qabullar saqlanadi.';
+
+  @override
+  String get chooseConsultationType => 'Kamida bitta qabul turini yoqing';
+
+  @override
+  String get onlinePriceRequired => 'Onlayn qabul narxini kiriting';
+
+  @override
+  String get errorChatClosed => 'Chat yopilgan';
+
+  @override
+  String get errorTooEarly =>
+      'Video hali ochilmagan — qabuldan 10 daqiqa oldin ochiladi';
+
+  @override
+  String get errorTooLate => 'Video qabul vaqti tugagan';
+
+  @override
+  String get errorVideoUnavailable => 'Video xizmati vaqtincha ishlamayapti';
+
+  @override
+  String get errorTypeUnavailable => 'Shifokor bu turdagi qabulni o\'tkazmaydi';
+
+  @override
+  String get errorInvalidSchedule =>
+      'Jadval noto\'g\'ri: ish vaqti va kunlarini tekshiring';
 }

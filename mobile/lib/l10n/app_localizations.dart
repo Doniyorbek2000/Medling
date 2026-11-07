@@ -1773,6 +1773,558 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Eslatmalar yoqildi'**
   String get remindersEnabled;
+
+  /// No description provided for @online.
+  ///
+  /// In uz, this message translates to:
+  /// **'Onlayn'**
+  String get online;
+
+  /// No description provided for @inClinic.
+  ///
+  /// In uz, this message translates to:
+  /// **'Klinikada'**
+  String get inClinic;
+
+  /// No description provided for @onlineAvailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'Onlayn qabul bor'**
+  String get onlineAvailable;
+
+  /// No description provided for @onlineOnly.
+  ///
+  /// In uz, this message translates to:
+  /// **'Faqat onlayn qabul'**
+  String get onlineOnly;
+
+  /// No description provided for @consultationType.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul turi'**
+  String get consultationType;
+
+  /// No description provided for @consultationTypes.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul turlari'**
+  String get consultationTypes;
+
+  /// No description provided for @onlineHowItWorks.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul vaqtida ilovada video qo\'ng\'iroq ochiladi. Barqaror internet va tinch joy tayyorlang.'**
+  String get onlineHowItWorks;
+
+  /// No description provided for @onlinePriceLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Onlayn qabul: {price}'**
+  String onlinePriceLabel(String price);
+
+  /// No description provided for @onlineConsultation.
+  ///
+  /// In uz, this message translates to:
+  /// **'Onlayn konsultatsiya'**
+  String get onlineConsultation;
+
+  /// No description provided for @joinVideo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video qo\'ng\'iroqqa kirish'**
+  String get joinVideo;
+
+  /// No description provided for @videoReady.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xona ochiq. Shifokor bilan bog\'lanish uchun kiring.'**
+  String get videoReady;
+
+  /// No description provided for @videoReadyShort.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video tayyor'**
+  String get videoReadyShort;
+
+  /// No description provided for @videoOpensAt.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video soat {time} da ochiladi (qabuldan 10 daqiqa oldin).'**
+  String videoOpensAt(String time);
+
+  /// No description provided for @videoClosed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video qabul vaqti tugadi. Savollarni chatda yozing.'**
+  String get videoClosed;
+
+  /// No description provided for @videoNotConfigured.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video xizmati hozircha ulanmagan. Shifokor bilan chat orqali bog\'laning.'**
+  String get videoNotConfigured;
+
+  /// No description provided for @videoTips.
+  ///
+  /// In uz, this message translates to:
+  /// **'Maslahat: quloqchin ishlating, yorug\' joyda o\'tiring.'**
+  String get videoTips;
+
+  /// No description provided for @callConnecting.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ulanmoqda...'**
+  String get callConnecting;
+
+  /// No description provided for @callWaiting.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suhbatdosh hali kirmadi. Kuting...'**
+  String get callWaiting;
+
+  /// No description provided for @callReconnecting.
+  ///
+  /// In uz, this message translates to:
+  /// **'Aloqa uzildi, qayta ulanmoqda...'**
+  String get callReconnecting;
+
+  /// No description provided for @callEnded.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qo\'ng\'iroq tugadi'**
+  String get callEnded;
+
+  /// No description provided for @callFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ulanib bo\'lmadi. Internetni tekshirib, qayta urinib ko\'ring.'**
+  String get callFailed;
+
+  /// No description provided for @callPermissionDenied.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kamera yoki mikrofonga ruxsat berilmagan. Telefon sozlamalaridan MedLink uchun ruxsat bering.'**
+  String get callPermissionDenied;
+
+  /// No description provided for @callEncrypted.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shifrlangan aloqa · yozib olinmaydi'**
+  String get callEncrypted;
+
+  /// No description provided for @mute.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ovozni o\'chirish'**
+  String get mute;
+
+  /// No description provided for @unmute.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ovozni yoqish'**
+  String get unmute;
+
+  /// No description provided for @cameraOff.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kamerani o\'chirish'**
+  String get cameraOff;
+
+  /// No description provided for @cameraOn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kamerani yoqish'**
+  String get cameraOn;
+
+  /// No description provided for @switchCamera.
+  ///
+  /// In uz, this message translates to:
+  /// **'Almashtirish'**
+  String get switchCamera;
+
+  /// No description provided for @endCall.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tugatish'**
+  String get endCall;
+
+  /// No description provided for @endCallConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qo\'ng\'iroqni tugatmoqchimisiz?'**
+  String get endCallConfirm;
+
+  /// No description provided for @close.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yopish'**
+  String get close;
+
+  /// No description provided for @chat.
+  ///
+  /// In uz, this message translates to:
+  /// **'Chat'**
+  String get chat;
+
+  /// No description provided for @chatSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shifokorga savol bering'**
+  String get chatSubtitle;
+
+  /// No description provided for @chatSubtitleDoctor.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bemor bilan yozishma'**
+  String get chatSubtitleDoctor;
+
+  /// No description provided for @chatHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xabar yozing...'**
+  String get chatHint;
+
+  /// No description provided for @send.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuborish'**
+  String get send;
+
+  /// No description provided for @sending.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuborilmoqda'**
+  String get sending;
+
+  /// No description provided for @chatEmptyTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hali xabarlar yo\'q'**
+  String get chatEmptyTitle;
+
+  /// No description provided for @chatEmptyBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul bo\'yicha savolingizni yozing. Shifokor ish vaqtida javob beradi.'**
+  String get chatEmptyBody;
+
+  /// No description provided for @chatClosed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Chat yopilgan: qabuldan keyin 7 kun o\'tdi.'**
+  String get chatClosed;
+
+  /// No description provided for @chatEmergencyNote.
+  ///
+  /// In uz, this message translates to:
+  /// **'Chat shoshilinch yordam uchun emas — xavfli holatda 103 ga qo\'ng\'iroq qiling'**
+  String get chatEmergencyNote;
+
+  /// No description provided for @patientInfo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bemor ma\'lumotlari'**
+  String get patientInfo;
+
+  /// No description provided for @patientInfoSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tibbiy profil va AI tahlili'**
+  String get patientInfoSubtitle;
+
+  /// No description provided for @aiPreTriage.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul oldidan AI tahlili'**
+  String get aiPreTriage;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In uz, this message translates to:
+  /// **'Batafsil ko\'rish'**
+  String get viewDetails;
+
+  /// No description provided for @sex.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jins'**
+  String get sex;
+
+  /// No description provided for @heightWeight.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bo\'y / vazn'**
+  String get heightWeight;
+
+  /// No description provided for @patientReview.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bemor bahosi'**
+  String get patientReview;
+
+  /// No description provided for @conclusion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shifokor xulosasi'**
+  String get conclusion;
+
+  /// No description provided for @writeConclusion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xulosa yozish'**
+  String get writeConclusion;
+
+  /// No description provided for @editConclusion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xulosani tahrirlash'**
+  String get editConclusion;
+
+  /// No description provided for @saveConclusion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xulosani saqlash'**
+  String get saveConclusion;
+
+  /// No description provided for @saveConclusionConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xulosa bemorga yuboriladi va qabul yakunlanadi. Davom etasizmi?'**
+  String get saveConclusionConfirm;
+
+  /// No description provided for @conclusionSaved.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xulosa saqlandi va bemorga yuborildi'**
+  String get conclusionSaved;
+
+  /// No description provided for @diagnosis.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tashxis'**
+  String get diagnosis;
+
+  /// No description provided for @diagnosisHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Masalan: O\'tkir respirator infeksiya (J06.9)'**
+  String get diagnosisHint;
+
+  /// No description provided for @recommendations.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tavsiyalar'**
+  String get recommendations;
+
+  /// No description provided for @prescription.
+  ///
+  /// In uz, this message translates to:
+  /// **'Retsept'**
+  String get prescription;
+
+  /// No description provided for @addMedication.
+  ///
+  /// In uz, this message translates to:
+  /// **'Dori qo\'shish'**
+  String get addMedication;
+
+  /// No description provided for @noPrescription.
+  ///
+  /// In uz, this message translates to:
+  /// **'Dori tayinlanmagan'**
+  String get noPrescription;
+
+  /// No description provided for @medication.
+  ///
+  /// In uz, this message translates to:
+  /// **'Dori'**
+  String get medication;
+
+  /// No description provided for @drugName.
+  ///
+  /// In uz, this message translates to:
+  /// **'Dori nomi'**
+  String get drugName;
+
+  /// No description provided for @dose.
+  ///
+  /// In uz, this message translates to:
+  /// **'Doza'**
+  String get dose;
+
+  /// No description provided for @frequency.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul qilish tartibi'**
+  String get frequency;
+
+  /// No description provided for @frequencyHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Masalan: kuniga 2 marta, ovqatdan keyin'**
+  String get frequencyHint;
+
+  /// No description provided for @notes.
+  ///
+  /// In uz, this message translates to:
+  /// **'Izoh'**
+  String get notes;
+
+  /// No description provided for @followUp.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qayta ko\'rik'**
+  String get followUp;
+
+  /// No description provided for @followUpNone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shart emas'**
+  String get followUpNone;
+
+  /// No description provided for @inDays.
+  ///
+  /// In uz, this message translates to:
+  /// **'{days} kundan keyin'**
+  String inDays(int days);
+
+  /// No description provided for @forDays.
+  ///
+  /// In uz, this message translates to:
+  /// **'{days} kun'**
+  String forDays(int days);
+
+  /// No description provided for @followUpIn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qayta ko\'rik: {days} kundan keyin'**
+  String followUpIn(int days);
+
+  /// No description provided for @conclusionPrivacy.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xulosa shifrlangan holda saqlanadi va faqat bemorga ko\'rinadi.'**
+  String get conclusionPrivacy;
+
+  /// No description provided for @conclusionDisclaimer.
+  ///
+  /// In uz, this message translates to:
+  /// **'Dorilarni faqat shifokor ko\'rsatmasiga ko\'ra qabul qiling. Ahvolingiz yomonlashsa — 103.'**
+  String get conclusionDisclaimer;
+
+  /// No description provided for @scheduleAndPrices.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jadval va narxlar'**
+  String get scheduleAndPrices;
+
+  /// No description provided for @scheduleAndPricesSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ish kunlari, soatlar, onlayn qabul'**
+  String get scheduleAndPricesSubtitle;
+
+  /// No description provided for @workDays.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ish kunlari'**
+  String get workDays;
+
+  /// No description provided for @workHours.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ish vaqti (Toshkent vaqti)'**
+  String get workHours;
+
+  /// No description provided for @from.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshlanishi'**
+  String get from;
+
+  /// No description provided for @to.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tugashi'**
+  String get to;
+
+  /// No description provided for @slotsPerDay.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kuniga {count} ta 30 daqiqalik qabul'**
+  String slotsPerDay(int count);
+
+  /// No description provided for @clinicPrice.
+  ///
+  /// In uz, this message translates to:
+  /// **'Klinikadagi qabul narxi'**
+  String get clinicPrice;
+
+  /// No description provided for @onlinePrice.
+  ///
+  /// In uz, this message translates to:
+  /// **'Onlayn qabul narxi'**
+  String get onlinePrice;
+
+  /// No description provided for @onlineSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video qo\'ng\'iroq va chat orqali'**
+  String get onlineSubtitle;
+
+  /// No description provided for @scheduleNote.
+  ///
+  /// In uz, this message translates to:
+  /// **'O\'zgarishlar faqat yangi bronlarga ta\'sir qiladi. Mavjud qabullar saqlanadi.'**
+  String get scheduleNote;
+
+  /// No description provided for @chooseConsultationType.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kamida bitta qabul turini yoqing'**
+  String get chooseConsultationType;
+
+  /// No description provided for @onlinePriceRequired.
+  ///
+  /// In uz, this message translates to:
+  /// **'Onlayn qabul narxini kiriting'**
+  String get onlinePriceRequired;
+
+  /// No description provided for @errorChatClosed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Chat yopilgan'**
+  String get errorChatClosed;
+
+  /// No description provided for @errorTooEarly.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video hali ochilmagan — qabuldan 10 daqiqa oldin ochiladi'**
+  String get errorTooEarly;
+
+  /// No description provided for @errorTooLate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video qabul vaqti tugagan'**
+  String get errorTooLate;
+
+  /// No description provided for @errorVideoUnavailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video xizmati vaqtincha ishlamayapti'**
+  String get errorVideoUnavailable;
+
+  /// No description provided for @errorTypeUnavailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shifokor bu turdagi qabulni o\'tkazmaydi'**
+  String get errorTypeUnavailable;
+
+  /// No description provided for @errorInvalidSchedule.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jadval noto\'g\'ri: ish vaqti va kunlarini tekshiring'**
+  String get errorInvalidSchedule;
 }
 
 class _AppLocalizationsDelegate

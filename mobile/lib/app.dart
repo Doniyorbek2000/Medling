@@ -285,16 +285,14 @@ class _NotificationRouterState extends State<NotificationRouter> {
     final id = t.appointmentId;
     if (id == null) return;
     try {
-      final list = await context.read<MedLinkRepository>().appointments();
-      final a = list.where((x) => x.id == id).firstOrNull;
-      if (a == null) {
-        // Shifokor uchun: bemorlar ro'yxati.
-        HomeTabs.request.value = 'patients';
-        return;
-      }
+      // Bemor ham, shifokor ham ochishi mumkin (myRole bilan).
+      final a = await context.read<MedLinkRepository>().appointment(id);
       await appNavigatorKey.currentState?.push(
         MaterialPageRoute(
-          builder: (_) => AppointmentDetailScreen(appointment: a),
+          builder: (_) => AppointmentDetailScreen(
+            appointment: a,
+            openChat: t.type == 'chat',
+          ),
         ),
       );
     } catch (_) {}

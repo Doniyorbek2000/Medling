@@ -924,4 +924,306 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get remindersEnabled => 'Напоминания включены';
+
+  @override
+  String get online => 'Онлайн';
+
+  @override
+  String get inClinic => 'В клинике';
+
+  @override
+  String get onlineAvailable => 'Есть онлайн-приём';
+
+  @override
+  String get onlineOnly => 'Только онлайн-приём';
+
+  @override
+  String get consultationType => 'Тип приёма';
+
+  @override
+  String get consultationTypes => 'Типы приёма';
+
+  @override
+  String get onlineHowItWorks =>
+      'Во время приёма в приложении откроется видеозвонок. Подготовьте стабильный интернет и тихое место.';
+
+  @override
+  String onlinePriceLabel(String price) {
+    return 'Онлайн-приём: $price';
+  }
+
+  @override
+  String get onlineConsultation => 'Онлайн-консультация';
+
+  @override
+  String get joinVideo => 'Войти в видеозвонок';
+
+  @override
+  String get videoReady =>
+      'Комната открыта. Войдите, чтобы связаться с врачом.';
+
+  @override
+  String get videoReadyShort => 'Видео доступно';
+
+  @override
+  String videoOpensAt(String time) {
+    return 'Видео откроется в $time (за 10 минут до приёма).';
+  }
+
+  @override
+  String get videoClosed =>
+      'Время видеоприёма истекло. Задайте вопросы в чате.';
+
+  @override
+  String get videoNotConfigured =>
+      'Видеосвязь пока не подключена. Свяжитесь с врачом в чате.';
+
+  @override
+  String get videoTips =>
+      'Совет: используйте наушники и сядьте в светлом месте.';
+
+  @override
+  String get callConnecting => 'Подключение...';
+
+  @override
+  String get callWaiting => 'Собеседник ещё не подключился. Подождите...';
+
+  @override
+  String get callReconnecting => 'Связь прервалась, переподключаемся...';
+
+  @override
+  String get callEnded => 'Звонок завершён';
+
+  @override
+  String get callFailed =>
+      'Не удалось подключиться. Проверьте интернет и повторите.';
+
+  @override
+  String get callPermissionDenied =>
+      'Нет доступа к камере или микрофону. Разрешите доступ для MedLink в настройках.';
+
+  @override
+  String get callEncrypted => 'Зашифрованная связь · без записи';
+
+  @override
+  String get mute => 'Выкл. микрофон';
+
+  @override
+  String get unmute => 'Вкл. микрофон';
+
+  @override
+  String get cameraOff => 'Выкл. камеру';
+
+  @override
+  String get cameraOn => 'Вкл. камеру';
+
+  @override
+  String get switchCamera => 'Сменить';
+
+  @override
+  String get endCall => 'Завершить';
+
+  @override
+  String get endCallConfirm => 'Завершить звонок?';
+
+  @override
+  String get close => 'Закрыть';
+
+  @override
+  String get chat => 'Чат';
+
+  @override
+  String get chatSubtitle => 'Задайте вопрос врачу';
+
+  @override
+  String get chatSubtitleDoctor => 'Переписка с пациентом';
+
+  @override
+  String get chatHint => 'Напишите сообщение...';
+
+  @override
+  String get send => 'Отправить';
+
+  @override
+  String get sending => 'Отправка';
+
+  @override
+  String get chatEmptyTitle => 'Сообщений пока нет';
+
+  @override
+  String get chatEmptyBody =>
+      'Задайте вопрос по приёму. Врач ответит в рабочее время.';
+
+  @override
+  String get chatClosed => 'Чат закрыт: прошло 7 дней после приёма.';
+
+  @override
+  String get chatEmergencyNote =>
+      'Чат не для экстренной помощи — при угрозе жизни звоните 103';
+
+  @override
+  String get patientInfo => 'Данные пациента';
+
+  @override
+  String get patientInfoSubtitle => 'Медицинский профиль и анализ ИИ';
+
+  @override
+  String get aiPreTriage => 'Анализ ИИ перед приёмом';
+
+  @override
+  String get viewDetails => 'Подробнее';
+
+  @override
+  String get sex => 'Пол';
+
+  @override
+  String get heightWeight => 'Рост / вес';
+
+  @override
+  String get patientReview => 'Оценка пациента';
+
+  @override
+  String get conclusion => 'Заключение врача';
+
+  @override
+  String get writeConclusion => 'Написать заключение';
+
+  @override
+  String get editConclusion => 'Изменить заключение';
+
+  @override
+  String get saveConclusion => 'Сохранить заключение';
+
+  @override
+  String get saveConclusionConfirm =>
+      'Заключение будет отправлено пациенту, приём завершится. Продолжить?';
+
+  @override
+  String get conclusionSaved => 'Заключение сохранено и отправлено пациенту';
+
+  @override
+  String get diagnosis => 'Диагноз';
+
+  @override
+  String get diagnosisHint => 'Например: ОРВИ (J06.9)';
+
+  @override
+  String get recommendations => 'Рекомендации';
+
+  @override
+  String get prescription => 'Рецепт';
+
+  @override
+  String get addMedication => 'Добавить препарат';
+
+  @override
+  String get noPrescription => 'Препараты не назначены';
+
+  @override
+  String get medication => 'Препарат';
+
+  @override
+  String get drugName => 'Название препарата';
+
+  @override
+  String get dose => 'Доза';
+
+  @override
+  String get frequency => 'Схема приёма';
+
+  @override
+  String get frequencyHint => 'Например: 2 раза в день после еды';
+
+  @override
+  String get notes => 'Примечание';
+
+  @override
+  String get followUp => 'Повторный приём';
+
+  @override
+  String get followUpNone => 'Не требуется';
+
+  @override
+  String inDays(int days) {
+    return 'через $days дн.';
+  }
+
+  @override
+  String forDays(int days) {
+    return '$days дн.';
+  }
+
+  @override
+  String followUpIn(int days) {
+    return 'Повторный приём: через $days дн.';
+  }
+
+  @override
+  String get conclusionPrivacy =>
+      'Заключение хранится в зашифрованном виде и доступно только пациенту.';
+
+  @override
+  String get conclusionDisclaimer =>
+      'Принимайте препараты только по назначению врача. При ухудшении — 103.';
+
+  @override
+  String get scheduleAndPrices => 'График и цены';
+
+  @override
+  String get scheduleAndPricesSubtitle => 'Рабочие дни, часы, онлайн-приём';
+
+  @override
+  String get workDays => 'Рабочие дни';
+
+  @override
+  String get workHours => 'Рабочее время (Ташкент)';
+
+  @override
+  String get from => 'С';
+
+  @override
+  String get to => 'До';
+
+  @override
+  String slotsPerDay(int count) {
+    return '$count приёмов по 30 минут в день';
+  }
+
+  @override
+  String get clinicPrice => 'Цена приёма в клинике';
+
+  @override
+  String get onlinePrice => 'Цена онлайн-приёма';
+
+  @override
+  String get onlineSubtitle => 'По видеосвязи и в чате';
+
+  @override
+  String get scheduleNote =>
+      'Изменения влияют только на новые записи. Существующие приёмы сохраняются.';
+
+  @override
+  String get chooseConsultationType => 'Включите хотя бы один тип приёма';
+
+  @override
+  String get onlinePriceRequired => 'Укажите цену онлайн-приёма';
+
+  @override
+  String get errorChatClosed => 'Чат закрыт';
+
+  @override
+  String get errorTooEarly =>
+      'Видео ещё не доступно — откроется за 10 минут до приёма';
+
+  @override
+  String get errorTooLate => 'Время видеоприёма истекло';
+
+  @override
+  String get errorVideoUnavailable => 'Видеосвязь временно недоступна';
+
+  @override
+  String get errorTypeUnavailable => 'Врач не проводит такой тип приёма';
+
+  @override
+  String get errorInvalidSchedule => 'Неверный график: проверьте дни и часы';
 }
