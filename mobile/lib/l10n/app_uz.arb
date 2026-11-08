@@ -596,5 +596,40 @@
   "attachmentHint": "Tahlil natijasi, retsept yoki teri o'zgarishi rasmini yuborishingiz mumkin. Rasm shifrlanadi, joylashuv ma'lumoti olib tashlanadi.",
   "uploadingPhoto": "Rasm yuborilmoqda...",
   "errorFileTooLarge": "Fayl juda katta (5 MB gacha)",
-  "errorUnsupportedFile": "Faqat JPEG yoki PNG rasm yuborish mumkin"
+  "errorUnsupportedFile": "Faqat JPEG yoki PNG rasm yuborish mumkin",
+  "aboutApp": "Ilova haqida",
+  "privacyPolicy": "Maxfiylik siyosati",
+  "termsOfUse": "Foydalanish shartlari",
+  "deleteAccount": "Hisobni o'chirish",
+  "deleteAccountSubtitle": "Hisob va tibbiy ma'lumotlar butunlay o'chiriladi",
+  "deleteAccountConfirm": "Hisobingiz butunlay o'chiriladi:\n• tibbiy profil, AI tahlillari va telefon raqamingiz o'chiriladi;\n• kelgusi qabullar bekor qilinadi, to'lov qaytarish qoidalari bo'yicha qaytariladi;\n• to'lovlar, shifokor xulosalari va xavfsizlik jurnali qonun talabiga ko'ra telefon raqamingizsiz saqlanadi.\n\nBu amalni ortga qaytarib bo'lmaydi.",
+  "deleteAccountFinal": "Haqiqatan ham hisobingizni o'chirmoqchimisiz?",
+  "accountDeleted": "Hisobingiz o'chirildi",
+  "continueAction": "Davom etish",
+  "reschedule": "Vaqtini o'zgartirish",
+  "rescheduleTitle": "Yangi vaqtni tanlang",
+  "rescheduleHint": "To'lov saqlanadi. Yana {count} marta ko'chirish mumkin.",
+  "@rescheduleHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rescheduleConfirm": "Qabulni {time} ga ko'chirasizmi?",
+  "@rescheduleConfirm": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rescheduled": "Qabul vaqti o'zgartirildi",
+  "currentTime": "Hozirgi vaqt",
+  "errorTooLateToReschedule": "Qabulgacha 24 soatdan kam qolgani uchun vaqtni o'zgartirib bo'lmaydi",
+  "errorRescheduleLimit": "Qabulni ko'pi bilan 2 marta ko'chirish mumkin",
+  "errorDoctorUnavailable": "Shifokor hozir bu turdagi qabulni olib bormayapti",
+  "errorRefundFailed": "To'lov tizimi pulni qaytarmadi. Keyinroq qayta urinib ko'ring",
+  "refundCompletedNow": "Qabul bekor qilindi. Pul kartangizga qaytarildi — bank odatda 5–10 kunda o'tkazadi.",
+  "liveConnected": "Jonli aloqa"
 }

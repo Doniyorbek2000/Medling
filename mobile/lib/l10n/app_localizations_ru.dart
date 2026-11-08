@@ -1341,4 +1341,76 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get errorUnsupportedFile =>
       'Можно отправлять только фото JPEG или PNG';
+
+  @override
+  String get aboutApp => 'О приложении';
+
+  @override
+  String get privacyPolicy => 'Политика конфиденциальности';
+
+  @override
+  String get termsOfUse => 'Условия использования';
+
+  @override
+  String get deleteAccount => 'Удалить аккаунт';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Аккаунт и медицинские данные удаляются навсегда';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Ваш аккаунт будет удалён навсегда:\n• медицинский профиль, AI-анализы и номер телефона удаляются;\n• будущие приёмы отменяются, оплата возвращается по правилам возврата;\n• платежи, заключения врачей и журнал безопасности хранятся по закону без вашего номера телефона.\n\nЭто действие нельзя отменить.';
+
+  @override
+  String get deleteAccountFinal => 'Вы действительно хотите удалить аккаунт?';
+
+  @override
+  String get accountDeleted => 'Аккаунт удалён';
+
+  @override
+  String get continueAction => 'Продолжить';
+
+  @override
+  String get reschedule => 'Перенести приём';
+
+  @override
+  String get rescheduleTitle => 'Выберите новое время';
+
+  @override
+  String rescheduleHint(int count) {
+    return 'Оплата сохранится. Перенести можно ещё $count раз(а).';
+  }
+
+  @override
+  String rescheduleConfirm(String time) {
+    return 'Перенести приём на $time?';
+  }
+
+  @override
+  String get rescheduled => 'Время приёма изменено';
+
+  @override
+  String get currentTime => 'Текущее время';
+
+  @override
+  String get errorTooLateToReschedule =>
+      'До приёма меньше 24 часов — перенести нельзя';
+
+  @override
+  String get errorRescheduleLimit => 'Приём можно перенести не более двух раз';
+
+  @override
+  String get errorDoctorUnavailable => 'Врач сейчас не ведёт такой приём';
+
+  @override
+  String get errorRefundFailed =>
+      'Платёжная система не выполнила возврат. Попробуйте позже';
+
+  @override
+  String get refundCompletedNow =>
+      'Приём отменён. Деньги возвращены на карту — банк обычно зачисляет их за 5–10 дней.';
+
+  @override
+  String get liveConnected => 'На связи';
 }

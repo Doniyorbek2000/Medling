@@ -1338,4 +1338,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorUnsupportedFile => 'Only JPEG or PNG images are supported';
+
+  @override
+  String get aboutApp => 'About the app';
+
+  @override
+  String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get termsOfUse => 'Terms of use';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Permanently delete your account and health data';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Your account will be permanently deleted:\n• your medical profile, AI analyses and phone number are deleted;\n• upcoming visits are cancelled and refunded under the refund rules;\n• payments, doctors\' conclusions and the security log are kept as required by law, without your phone number.\n\nThis cannot be undone.';
+
+  @override
+  String get deleteAccountFinal =>
+      'Are you sure you want to delete your account?';
+
+  @override
+  String get accountDeleted => 'Your account has been deleted';
+
+  @override
+  String get continueAction => 'Continue';
+
+  @override
+  String get reschedule => 'Reschedule';
+
+  @override
+  String get rescheduleTitle => 'Choose a new time';
+
+  @override
+  String rescheduleHint(int count) {
+    return 'Your payment is kept. You can reschedule $count more time(s).';
+  }
+
+  @override
+  String rescheduleConfirm(String time) {
+    return 'Move the visit to $time?';
+  }
+
+  @override
+  String get rescheduled => 'Visit rescheduled';
+
+  @override
+  String get currentTime => 'Current time';
+
+  @override
+  String get errorTooLateToReschedule =>
+      'Less than 24 hours before the visit — it can no longer be rescheduled';
+
+  @override
+  String get errorRescheduleLimit => 'A visit can be rescheduled at most twice';
+
+  @override
+  String get errorDoctorUnavailable =>
+      'The doctor is not taking this type of visit right now';
+
+  @override
+  String get errorRefundFailed =>
+      'The payment provider did not complete the refund. Try again later';
+
+  @override
+  String get refundCompletedNow =>
+      'Visit cancelled. The money was refunded to your card — banks usually take 5–10 days.';
+
+  @override
+  String get liveConnected => 'Live';
 }

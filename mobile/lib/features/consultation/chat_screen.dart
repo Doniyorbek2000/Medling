@@ -13,8 +13,10 @@ import '../../models/models.dart';
 import '../../widgets/brand.dart';
 import '../../widgets/states.dart';
 
-/// Qabul chati (bemor ↔ shifokor). Xabarlar serverda shifrlangan; ekran
-/// ochiq paytda har 4 soniyada yangilanadi, fonda — to'xtaydi.
+/// Qabul chati (bemor ↔ shifokor). Xabarlar serverda shifrlangan.
+/// Yangi xabarlar WebSocket orqali darhol keladi; ulanish bo'lmasa yoki
+/// uzilsa — har 4 soniyada so'rov va orqaga chekinish bilan qayta ulanish.
+/// Fonda hammasi to'xtaydi.
 class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key,
@@ -28,6 +30,9 @@ class ChatScreen extends StatefulWidget {
   final String? subtitle;
 
   static const pollEvery = Duration(seconds: 4);
+
+  /// Real vaqt ulanishi ishlayotganda — faqat ehtiyot uchun so'rov.
+  static const livePollEvery = Duration(seconds: 30);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -44,6 +49,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _uploading = false;
   Object? _error;
   Timer? _poll;
+  LiveChat? _liveChat;
+  StreamSubscription<ChatMessage?>? _liveSub;
+  Timer? _reconnect;
+  bool _live = false;
+  bool _paused = false;
+  int _retry = 0;
 
   MedLinkRepository get _repo => context.read<MedLinkRepository>();
   int get _lastSeq => _messages.isEmpty ? 0 : _messages.last.seq;
@@ -54,12 +65,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _refresh(initial: true);
     _startPolling();
+    _connectLive();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
+    _disconnectLive();
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -68,31 +81,95 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _paused = false;
       _refresh();
       _startPolling();
+      _connectLive();
     } else if (state == AppLifecycleState.paused) {
+      _paused = true;
       _poll?.cancel();
+      _disconnectLive();
     }
   }
 
   void _startPolling() {
     _poll?.cancel();
-    _poll = Timer.periodic(ChatScreen.pollEvery, (_) => _refresh());
+    _poll = Timer.periodic(
+      _live ? ChatScreen.livePollEvery : ChatScreen.pollEvery,
+      (_) => _refresh(),
+    );
+  }
+
+  void _connectLive() {
+    _disconnectLive();
+    final live = _repo.liveChat(widget.appointmentId);
+    if (live == null) return;
+    _liveChat = live;
+    _liveSub = live.events.listen(
+      (m) {
+        if (!mounted) return;
+        if (m == null) {
+          // Ulandi: so'rovlar siyraklashadi, uzilish paytidagilar olinadi.
+          _retry = 0;
+          setState(() => _live = true);
+          _startPolling();
+          _refresh();
+        } else {
+          _addMessages([m]);
+        }
+      },
+      onError: (Object _) => _onLiveLost(),
+      onDone: _onLiveLost,
+      cancelOnError: true,
+    );
+  }
+
+  void _disconnectLive() {
+    _reconnect?.cancel();
+    _liveSub?.cancel();
+    _liveSub = null;
+    _liveChat?.close();
+    _liveChat = null;
+    _live = false;
+  }
+
+  /// Ulanish uzildi (tarmoq, token yangilanishi): so'rovlarga qaytamiz va
+  /// 2, 4, 8, 16, 30 soniyadan keyin qayta ulanamiz.
+  void _onLiveLost() {
+    _liveSub = null;
+    _liveChat = null;
+    if (!mounted || _paused) return;
+    if (_live) setState(() => _live = false);
+    _startPolling();
+    final delay = Duration(seconds: (2 << _retry).clamp(2, 30));
+    if (_retry < 4) _retry++;
+    _reconnect?.cancel();
+    _reconnect = Timer(delay, _connectLive);
+  }
+
+  void _addMessages(List<ChatMessage> items) {
+    final known = _messages.map((m) => m.id).toSet();
+    final fresh = items.where((m) => !known.contains(m.id)).toList();
+    if (fresh.isEmpty) return;
+    setState(() {
+      _messages
+        ..addAll(fresh)
+        ..sort((a, b) => a.seq.compareTo(b.seq));
+    });
+    _scrollToEnd();
   }
 
   Future<void> _refresh({bool initial = false}) async {
     try {
       final res = await _repo.messages(widget.appointmentId, after: _lastSeq);
       if (!mounted) return;
-      final known = _messages.map((m) => m.id).toSet();
-      final fresh = res.items.where((m) => !known.contains(m.id)).toList();
       setState(() {
-        _messages.addAll(fresh);
         _canWrite = res.canWrite;
         _loading = false;
         _error = null;
       });
-      if (fresh.isNotEmpty || initial) _scrollToEnd();
+      _addMessages(res.items);
+      if (initial) _scrollToEnd();
     } catch (e) {
       if (mounted && initial) {
         setState(() {
@@ -227,6 +304,27 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 style: context.text.bodySmall?.copyWith(
                   color: context.colors.onSurfaceVariant,
                 ),
+              ),
+            if (_live)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Brand.success,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    context.l10n.liveConnected,
+                    style: context.text.labelSmall?.copyWith(
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
           ],
         ),

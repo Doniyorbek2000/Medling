@@ -89,6 +89,55 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
+  testWidgets('chat: yangi xabar WebSocket orqali darhol keladi', (t) async {
+    final sockets = <FakeSocket>[];
+    var polls = 0;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await pumpScreen(
+      t,
+      {
+        'GET /v1/appointments/a1/messages': (_) {
+          polls++;
+          return {'canWrite': true, 'items': <Object>[]};
+        },
+      },
+      const ChatScreen(appointmentId: 'a1', title: 'Karimova D.'),
+      sockets: sockets,
+    );
+    final socket = sockets.single;
+    expect(socket.uri.toString(), 'ws://10.0.2.2:8080/v1/appointments/a1/live');
+    expect(socket.token, 'test');
+    socket.push({'type': 'ready'});
+    await t.pump();
+    final before = polls;
+    socket.push({
+      'type': 'message',
+      'message': {
+        'id': 'm9',
+        'seq': 1,
+        'senderRole': 'doctor',
+        'mine': false,
+        'text': 'Tahlil natijasini yuboring',
+        'at': now,
+      },
+    });
+    await t.pump();
+    await t.pump(const Duration(milliseconds: 300));
+    expect(find.text('Tahlil natijasini yuboring'), findsOneWidget);
+    // Ulanish bor paytda 4 soniyalik so'rovlar to'xtaydi.
+    await t.pump(const Duration(seconds: 10));
+    expect(polls, before);
+    // Ulanish uzilsa — so'rovlarga qaytadi.
+    await socket.incoming.close();
+    await t.pump();
+    await t.pump(const Duration(seconds: 5));
+    expect(polls, greaterThan(before));
+    // ...va orqaga chekinish bilan qayta ulanadi.
+    expect(sockets, hasLength(2));
+    await t.pumpWidget(const SizedBox());
+    expect(sockets.last.closed, isTrue);
+  });
+
   testWidgets('chat yopilgan bo\'lsa yozib bo\'lmaydi', (t) async {
     await pumpScreen(t, {
       'GET /v1/appointments/a1/messages': (_) => {

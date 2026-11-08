@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/l10n.dart';
+import '../../core/legal_links.dart';
 import '../../core/session.dart';
 import '../../core/theme.dart';
 import '../../data/repository.dart';
@@ -173,6 +174,19 @@ class _ConsentScreenState extends State<ConsentScreen> {
                           color: context.colors.onSurfaceVariant,
                         ),
                         textAlign: TextAlign.center,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: () => openLegal(context, 'privacy'),
+                            child: Text(l.privacyPolicy),
+                          ),
+                          TextButton(
+                            onPressed: () => openLegal(context, 'terms'),
+                            child: Text(l.termsOfUse),
+                          ),
+                        ],
                       ),
                     ],
                   ),

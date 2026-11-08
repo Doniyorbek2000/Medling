@@ -121,6 +121,7 @@ class Appointment {
       myRole = j['myRole'] as String?,
       patientName = j['patientName'] as String?,
       refundStatus = j['refundStatus'] as String? ?? 'none',
+      reschedulesLeft = j['reschedulesLeft'] as int? ?? 0,
       videoAvailable = j['videoAvailable'] as bool? ?? false;
 
   final String id;
@@ -147,6 +148,16 @@ class Appointment {
   /// Bemor bekor qilsa pul qaytariladimi (qabulgacha kamida 24 soat).
   bool refundableByPatientAt(DateTime now) =>
       startsAt.difference(now) >= const Duration(hours: 24);
+
+  /// Bemor yana necha marta vaqtni ko'chira oladi (server qoidasi: 2).
+  final int reschedulesLeft;
+
+  /// Ko'chirish qoidasi serverdagi bilan bir xil: faol qabul, 24 soat oldin,
+  /// limit tugamagan.
+  bool canRescheduleAt(DateTime now) =>
+      (status == 'confirmed' || status == 'awaitingPayment') &&
+      reschedulesLeft > 0 &&
+      refundableByPatientAt(now);
   final bool videoAvailable;
 
   bool get isOnline => type == 'online';

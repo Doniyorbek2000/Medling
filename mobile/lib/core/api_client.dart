@@ -3,7 +3,10 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
+import 'package:web_socket_channel/web_socket_channel.dart';
+
 import 'config.dart';
+import 'live_socket.dart';
 
 class ApiError implements Exception {
   ApiError(this.status, this.code, [this.message]);
@@ -38,6 +41,27 @@ class ApiClient {
   final Uri _base;
   String? token;
   void Function()? onUnauthorized;
+
+  /// WebSocket ochuvchi (testlarda almashtiriladi; null — real vaqt o'chiq).
+  WebSocketChannel? Function(Uri uri, String token)? socketFactory =
+      openLiveSocket;
+
+  /// Real vaqt ulanishi. Mavjud bo'lmasa null (chaqiruvchi so'rovlarga
+  /// o'tadi).
+  WebSocketChannel? openSocket(String path) {
+    final t = token;
+    final f = socketFactory;
+    if (t == null || f == null) return null;
+    final uri = _base.replace(
+      scheme: _base.scheme == 'https' ? 'wss' : 'ws',
+      path: path,
+    );
+    try {
+      return f(uri, t);
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<Map<String, dynamic>> get(String path, [Map<String, String>? query]) =>
       _send('GET', path, query: query);

@@ -29,6 +29,10 @@ String errorText(BuildContext context, Object e) {
     'video_unavailable' => l.errorVideoUnavailable,
     'consultation_type_unavailable' => l.errorTypeUnavailable,
     'invalid_schedule' || 'invalid_price' => l.errorInvalidSchedule,
+    'too_late_to_reschedule' => l.errorTooLateToReschedule,
+    'reschedule_limit' => l.errorRescheduleLimit,
+    'doctor_unavailable' => l.errorDoctorUnavailable,
+    'refund_failed' => l.errorRefundFailed,
     _ => l.errorGeneric,
   };
 }

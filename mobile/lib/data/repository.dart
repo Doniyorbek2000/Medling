@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../core/api_client.dart';
 import '../models/models.dart';
@@ -163,6 +166,14 @@ class MedLinkRepository {
     );
   }
 
+  /// Chatning real vaqt oqimi: `ready` (ulandi) va yangi xabarlar.
+  /// null — ulanish imkoni yo'q (brauzer/test), so'rovlar ishlatiladi.
+  LiveChat? liveChat(String appointmentId) {
+    final ch = api.openSocket('/v1/appointments/$appointmentId/live');
+    if (ch == null) return null;
+    return LiveChat._(ch);
+  }
+
   Future<ChatMessage> sendMessage(String appointmentId, String text) async =>
       ChatMessage.fromJson(
         await api.post('/v1/appointments/$appointmentId/messages', {
@@ -225,6 +236,21 @@ class MedLinkRepository {
       DoctorSettings.fromJson(await api.put('/v1/doctor/settings', s.toJson()));
 
   /// Qaytaradi: `requested` (pul qaytariladi) yoki `none`.
+  /// Qabulni shu shifokorning boshqa bo'sh vaqtiga ko'chirish.
+  Future<Appointment> reschedule(String id, DateTime startsAt) async =>
+      Appointment.fromJson(
+        await api.post('/v1/appointments/$id/reschedule', {
+          'startsAt': startsAt.toUtc().toIso8601String(),
+        }),
+      );
+
+  /// Hisobni butunlay o'chirish. Qaytariladigan to'lovlar soni qaytadi.
+  Future<int> deleteAccount() async {
+    final res = await api.delete('/v1/me');
+    clearCache();
+    return res['refunds'] as int? ?? 0;
+  }
+
   Future<String> cancelAppointment(String id) async =>
       (await api.post('/v1/appointments/$id/cancel'))['refund'] as String? ??
       'none';
@@ -314,4 +340,24 @@ class MedLinkRepository {
         'decision': decision,
         'note': ?note,
       });
+}
+
+/// Chat WebSocket ulanishi.
+class LiveChat {
+  LiveChat._(this._channel);
+  final WebSocketChannel _channel;
+
+  /// `null` — ulanish tayyor (server `ready` yubordi); aks holda yangi xabar.
+  Stream<ChatMessage?> get events => _channel.stream.map((raw) {
+    final e = jsonDecode(raw as String) as Map<String, dynamic>;
+    return e['type'] == 'message'
+        ? ChatMessage.fromJson(e['message'] as Map<String, dynamic>)
+        : null;
+  });
+
+  Future<void> close() async {
+    try {
+      await _channel.sink.close();
+    } catch (_) {}
+  }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ import 'package:medlink/core/session.dart';
 import 'package:medlink/core/settings.dart';
 import 'package:medlink/data/repository.dart';
 import 'package:medlink/main.dart';
+import 'package:stream_channel/stream_channel.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 /// Soxta backend: yo'l -> javob.
 typedef Routes = Map<String, Object? Function(http.Request req)>;
@@ -39,7 +42,49 @@ ApiClient fakeApi(Routes routes) => ApiClient(
       headers: {'content-type': 'application/json; charset=utf-8'},
     );
   }),
-);
+)..socketFactory = null; // testlarda haqiqiy tarmoq ulanishi yo'q
+
+/// Soxta WebSocket: test serverdan keladigan hodisalarni [incoming] ga
+/// yozadi.
+class FakeSocket extends StreamChannelMixin<dynamic>
+    implements WebSocketChannel {
+  final incoming = StreamController<dynamic>();
+  final _sink = _FakeSink();
+  Uri? uri;
+  String? token;
+
+  bool get closed => _sink.closed;
+
+  void push(Map<String, dynamic> event) => incoming.add(jsonEncode(event));
+
+  @override
+  Stream<dynamic> get stream => incoming.stream;
+  @override
+  WebSocketSink get sink => _sink;
+  @override
+  String? get protocol => null;
+  @override
+  int? get closeCode => null;
+  @override
+  String? get closeReason => null;
+  @override
+  Future<void> get ready async {}
+}
+
+class _FakeSink implements WebSocketSink {
+  bool closed = false;
+  @override
+  void add(dynamic data) {}
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) {}
+  @override
+  Future<void> addStream(Stream<dynamic> stream) async {}
+  @override
+  Future<void> close([int? closeCode, String? closeReason]) async =>
+      closed = true;
+  @override
+  Future<void> get done async {}
+}
 
 class FakeLock extends AppLock {
   @override
@@ -109,11 +154,22 @@ Future<MedLinkRepository> pumpScreen(
   Routes routes,
   Widget screen, {
   double height = 2532,
+  List<FakeSocket>? sockets,
 }) async {
   t.view.physicalSize = Size(1170, height);
   t.view.devicePixelRatio = 3;
   addTearDown(t.view.reset);
   final api = fakeApi(routes)..token = 'test';
+  if (sockets != null) {
+    // Har bir ulanish (shu jumladan qayta ulanish) — yangi soxta socket.
+    api.socketFactory = (uri, token) {
+      final s = FakeSocket()
+        ..uri = uri
+        ..token = token;
+      sockets.add(s);
+      return s;
+    };
+  }
   final repo = MedLinkRepository(api);
   final settings = AppSettings()..locale = const Locale('uz');
   await t.pumpWidget(

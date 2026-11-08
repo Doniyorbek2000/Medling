@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/app_lock.dart';
 import '../../core/config.dart';
 import '../../core/l10n.dart';
+import '../../core/legal_links.dart';
 import '../../core/notifications_controller.dart';
 import '../../core/session.dart';
 import '../../core/settings.dart';
@@ -90,6 +91,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _repo.deleteHealthData();
       if (mounted) showMessage(context, l.deleted);
       _load();
+    } catch (e) {
+      if (mounted) showError(context, e);
+    }
+  }
+
+  /// Hisobni o'chirish: avval nima o'chishi va nima qonun bo'yicha
+  /// saqlanishi tushuntiriladi, keyin yana bir bor tasdiq so'raladi.
+  Future<void> _deleteAccount() async {
+    final l = context.l10n;
+    final first = await confirmDialog(
+      context,
+      title: l.deleteAccount,
+      message: l.deleteAccountConfirm,
+      confirm: l.continueAction,
+      destructive: true,
+    );
+    if (!first || !mounted) return;
+    final sure = await confirmDialog(
+      context,
+      title: l.deleteAccount,
+      message: l.deleteAccountFinal,
+      confirm: l.delete,
+      destructive: true,
+    );
+    if (!sure || !mounted) return;
+    final session = context.read<Session>();
+    try {
+      await _repo.deleteAccount();
+      if (!mounted) return;
+      showMessage(context, l.accountDeleted);
+      await session.logout();
     } catch (e) {
       if (mounted) showError(context, e);
     }
@@ -282,8 +314,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Brand.danger,
                 onTap: _deleteHealth,
               ),
+              _tile(
+                Icons.person_remove_outlined,
+                l.deleteAccount,
+                subtitle: l.deleteAccountSubtitle,
+                color: Brand.danger,
+                onTap: _deleteAccount,
+              ),
             ]),
-            _group(l.about, [
+            _group(l.aboutApp, [
+              _tile(
+                Icons.policy_outlined,
+                l.privacyPolicy,
+                onTap: () => openLegal(context, 'privacy'),
+              ),
+              _tile(
+                Icons.description_outlined,
+                l.termsOfUse,
+                onTap: () => openLegal(context, 'terms'),
+              ),
               _tile(
                 Icons.emergency_outlined,
                 l.emergencyNumber,

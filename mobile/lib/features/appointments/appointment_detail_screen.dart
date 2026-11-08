@@ -18,6 +18,7 @@ import '../consultation/video_call_screen.dart';
 import '../doctors/specialty.dart';
 import '../payments/payment_screen.dart';
 import 'appointment_status.dart';
+import 'reschedule_screen.dart';
 
 /// Qabul tafsilotlari — bemor va shifokor uchun (rol serverdan `myRole`).
 class AppointmentDetailScreen extends StatefulWidget {
@@ -128,6 +129,8 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
       final refund = await _repo.cancelAppointment(_a.id);
       if (mounted && refund == 'requested') {
         showMessage(context, l.refundRequested);
+      } else if (mounted && refund == 'refunded') {
+        showMessage(context, l.refundCompletedNow);
       }
       await _refresh();
     } catch (e) {
@@ -135,6 +138,13 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _reschedule() async {
+    final updated = await Navigator.of(context).push<Appointment>(
+      MaterialPageRoute(builder: (_) => RescheduleScreen(appointment: _a)),
+    );
+    if (updated != null) await _refresh();
   }
 
   Future<void> _review() async {
@@ -328,6 +338,16 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                 onPressed: _review,
                 icon: const Icon(Icons.star_rounded),
                 label: Text(l.rateDoctor),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (!_isDoctor &&
+                _a.doctor != null &&
+                _a.canRescheduleAt(DateTime.now())) ...[
+              OutlinedButton.icon(
+                onPressed: _busy ? null : _reschedule,
+                icon: const Icon(Icons.edit_calendar_rounded),
+                label: Text(l.reschedule),
               ),
               const SizedBox(height: 8),
             ],

@@ -2529,6 +2529,132 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Faqat JPEG yoki PNG rasm yuborish mumkin'**
   String get errorUnsupportedFile;
+
+  /// No description provided for @aboutApp.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ilova haqida'**
+  String get aboutApp;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In uz, this message translates to:
+  /// **'Maxfiylik siyosati'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanish shartlari'**
+  String get termsOfUse;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobni o\'chirish'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisob va tibbiy ma\'lumotlar butunlay o\'chiriladi'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobingiz butunlay o\'chiriladi:\n• tibbiy profil, AI tahlillari va telefon raqamingiz o\'chiriladi;\n• kelgusi qabullar bekor qilinadi, to\'lov qaytarish qoidalari bo\'yicha qaytariladi;\n• to\'lovlar, shifokor xulosalari va xavfsizlik jurnali qonun talabiga ko\'ra telefon raqamingizsiz saqlanadi.\n\nBu amalni ortga qaytarib bo\'lmaydi.'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccountFinal.
+  ///
+  /// In uz, this message translates to:
+  /// **'Haqiqatan ham hisobingizni o\'chirmoqchimisiz?'**
+  String get deleteAccountFinal;
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobingiz o\'chirildi'**
+  String get accountDeleted;
+
+  /// No description provided for @continueAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Davom etish'**
+  String get continueAction;
+
+  /// No description provided for @reschedule.
+  ///
+  /// In uz, this message translates to:
+  /// **'Vaqtini o\'zgartirish'**
+  String get reschedule;
+
+  /// No description provided for @rescheduleTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yangi vaqtni tanlang'**
+  String get rescheduleTitle;
+
+  /// No description provided for @rescheduleHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov saqlanadi. Yana {count} marta ko\'chirish mumkin.'**
+  String rescheduleHint(int count);
+
+  /// No description provided for @rescheduleConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabulni {time} ga ko\'chirasizmi?'**
+  String rescheduleConfirm(String time);
+
+  /// No description provided for @rescheduled.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul vaqti o\'zgartirildi'**
+  String get rescheduled;
+
+  /// No description provided for @currentTime.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hozirgi vaqt'**
+  String get currentTime;
+
+  /// No description provided for @errorTooLateToReschedule.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabulgacha 24 soatdan kam qolgani uchun vaqtni o\'zgartirib bo\'lmaydi'**
+  String get errorTooLateToReschedule;
+
+  /// No description provided for @errorRescheduleLimit.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabulni ko\'pi bilan 2 marta ko\'chirish mumkin'**
+  String get errorRescheduleLimit;
+
+  /// No description provided for @errorDoctorUnavailable.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shifokor hozir bu turdagi qabulni olib bormayapti'**
+  String get errorDoctorUnavailable;
+
+  /// No description provided for @errorRefundFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov tizimi pulni qaytarmadi. Keyinroq qayta urinib ko\'ring'**
+  String get errorRefundFailed;
+
+  /// No description provided for @refundCompletedNow.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul bekor qilindi. Pul kartangizga qaytarildi — bank odatda 5–10 kunda o\'tkazadi.'**
+  String get refundCompletedNow;
+
+  /// No description provided for @liveConnected.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jonli aloqa'**
+  String get liveConnected;
 }
 
 class _AppLocalizationsDelegate

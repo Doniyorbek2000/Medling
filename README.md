@@ -40,7 +40,11 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
   (Android) va Apple Pay (iOS).
 - Pul qaytarish siyosati bekor qilishdan oldin ko'rsatiladi: qabulgacha 24
   soatdan ko'p bo'lsa, to'liq qaytariladi; shifokor bekor qilsa, har doim
-  qaytariladi.
+  qaytariladi. Google Pay va Apple Pay to'lovlari Stripe orqali darhol
+  avtomatik qaytariladi; Click va Payme — admin navbati orqali.
+- Qabul vaqtini ko'chirish: shu shifokorning boshqa bo'sh vaqtiga, qabulgacha
+  kamida 24 soat qolganda va ko'pi bilan 2 marta. To'lov saqlanadi,
+  shifokorga push boradi.
 - Qabullar: kelgusi va o'tgan qabullar, tafsilotlar, bekor qilish, yakunlangan
   qabuldan keyin shifokorni baholash.
 - Bildirishnomalar: to'lov tasdiqlandi, qabul bekor qilindi, qabuldan 24 soat
@@ -50,7 +54,10 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 - Sozlamalar: til (o'zbek, rus, ingliz), mavzu (yorug', qorong'i, tizim
   bo'yicha), Face ID / barmoq izi bilan qulflash.
 - Maxfiylik: rozilikni qaytarib olish, ma'lumotlar nusxasini olish, tibbiy
-  ma'lumotlarni o'chirish.
+  ma'lumotlarni o'chirish, hisobni butunlay o'chirish (App Store va Google
+  Play talabi). Maxfiylik siyosati va foydalanish shartlari ilovada va
+  serverda (`/legal/privacy`, `/legal/terms`, 3 tilda) — shu havolani do'kon
+  sahifasiga qo'ying.
 
 **Shifokor uchun**
 - Ariza: F.I.Sh., mutaxassislik, litsenziya, hujjatlar.
@@ -97,6 +104,7 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 | Kirish | Token faqat shu qabulning bemori va shifokoriga beriladi. Qabul onlayn va to'langan bo'lishi kerak, vaqt oralig'i qabuldan 10 daqiqa oldindan 60 daqiqa keyingacha. Xona nomi va ko'rinadigan ismda shaxsiy ma'lumot yo'q |
 | Rasmlar | Chatda tahlil natijasi yoki retsept rasmi (JPEG/PNG, 5 MB gacha). Turi fayl imzosi bo'yicha tekshiriladi. Rasm shifrlanib, PostgreSQL'da alohida jadvalda saqlanadi va xotiraga yuklanmaydi. Telefonda qayta kodlanadi, bu joylashuv (EXIF) ma'lumotini olib tashlaydi. Har bir ko'rish audit jurnaliga yoziladi |
 | Chat | Xabarlar AES-256-GCM bilan shifrlanadi. Faqat ishtirokchilar ko'radi. Push'da matn ko'rsatilmaydi ("Yangi xabar"). Xabar yuborish daqiqasiga 30 ta bilan cheklangan |
+| Real vaqt | Yangi xabarlar WebSocket (`/v1/appointments/{id}/live`) orqali darhol keladi. Token sarlavhada, ulanish 15 daqiqada yopiladi va yangi token bilan qayta ochiladi. Uzilsa, ilova 4 soniyalik so'rovga o'tadi va 2–30 soniyada qayta ulanadi |
 | Xulosa | Tashxis, tavsiyalar, retsept (dori, doza, tartib, muddat), qayta ko'rik. Shifrlangan holda saqlanadi, bemorga push yuboriladi, qabul yakunlanadi |
 | Shifokor uchun | Qabul oldidan bemorning tibbiy profili (allergiyalar alohida ajratilgan) va AI tahlili. Har bir ko'rish audit jurnaliga yoziladi |
 
@@ -162,7 +170,8 @@ mobile/lib/
 | AI'ga minimal ma'lumot | Faqat alomatlar matni, yosh, jins va surunkali kasalliklar yuboriladi. Telefon, e-mail, pasport va JShShIR avtomatik yashiriladi |
 | Xavfli belgilar | AI'dan mustaqil lokal qoidalar. Apostrofning barcha variantlari, apostrofsiz va kirill yozuvdagi matn ham tekshiriladi |
 | Rozilik | 6 ta alohida, versiyalangan band. Tarix o'chirilmaydi. Rozilik bo'lmasa server `451` qaytaradi |
-| Sub'ekt huquqlari | `GET /v1/me/export`, `DELETE /v1/me/health-data` |
+| Sub'ekt huquqlari | `GET /v1/me/export`, `DELETE /v1/me/health-data`, `DELETE /v1/me` (hisobni o'chirish: telefon raqami, tibbiy profil, AI tahlillari va qurilmalar o'chadi, kelgusi qabullar bekor qilinib pul qaytariladi; to'lovlar, xulosalar va audit qonun bo'yicha raqamsiz saqlanadi) |
+| App Store | `ios/Runner/PrivacyInfo.xcprivacy`: kuzatuv yo'q, yig'iladigan ma'lumotlar ro'yxati. App Store Connect'dagi "App Privacy" anketasini shu bilan bir xil to'ldiring |
 | OTP | Xeshlangan, 5 daqiqa amal qiladi, 5 ta urinish, IP bo'yicha cheklov |
 | To'lov xavfsizligi | Click imzosi (MD5) va Payme Basic auth konstant vaqtda tekshiriladi. Summa serverda olinadi. Karta ma'lumotlari serverga tushmaydi |
 
@@ -249,17 +258,26 @@ chiqarishdan oldin hal qilinishi shart:
    ko'p yurisdiksiyalarda tibbiy dasturiy ta'minot (SaMD) hisoblanishi mumkin.
    Ilova natijani "tashxis emas" deb aniq ko'rsatadi, lekin regulyator bilan
    maslahatlashing.
-6. **Bitta server nusxasi.** PostgreSQL ulangan, lekin hozirgi arxitektura
+6. **Operator rekvizitlari.** Maxfiylik siyosatida operator nomi va aloqa
+   ma'lumotlari `MEDLINK_OPERATOR_NAME`, `MEDLINK_OPERATOR_ADDRESS`,
+   `MEDLINK_CONTACT_EMAIL`, `MEDLINK_CONTACT_PHONE` orqali beriladi. Siyosat va
+   shartlar matni (`backend/lib/src/legal/legal.dart`) tizim qanday ishlashiga
+   mos yozilgan, lekin yurist tekshirishi kerak: saqlash muddatlari,
+   vakolatli organ nomi.
+7. **Click qaytarishlari.** Click Merchant API'da qaytarish (reversal)
+   alohida shartnoma va kalitlar bilan ochiladi; hozir Click va Payme
+   qaytarishlari kabinet orqali bajarilib, ilovada belgilanadi.
+8. **Bitta server nusxasi.** PostgreSQL ulangan, lekin hozirgi arxitektura
    bitta yozuvchi nusxani talab qiladi (ikkinchisi ishga tushmaydi).
    Gorizontal masshtablash uchun servislarni "har so'rovda bazadan o'qish"
    rejimiga o'tkazish kerak (pastdagi "PostgreSQL" bo'limiga qarang).
    Shifrlash kalitlarini KMS / Secret Manager'da saqlang.
-7. **Rozilik matnlari** (`mobile/lib/l10n/app_*.arb`, `consent*` kalitlari)
+9. **Rozilik matnlari** (`mobile/lib/l10n/app_*.arb`, `consent*` kalitlari)
    namunaviy, uchala tilda ham. Ularni yurist tekshirishi kerak.
-8. **Firebase loyihasi.** Push kodi tayyor, lekin Firebase loyihasi, APNs
+10. **Firebase loyihasi.** Push kodi tayyor, lekin Firebase loyihasi, APNs
    kaliti va yuqoridagi parametrlar berilmaguncha faqat mahalliy eslatmalar
    ishlaydi.
-9. **Qurilmada sinash.** APK, AAB va iOS build CI'da muvaffaqiyatli yig'iladi,
+11. **Qurilmada sinash.** APK, AAB va iOS build CI'da muvaffaqiyatli yig'iladi,
    lekin ilova haqiqiy telefonda ishga tushirib ko'rilmagan. Google Pay, Apple
    Pay, Face ID, push-bildirishnomalar, video qo'ng'iroq va deep link'larni
    haqiqiy qurilmada sinab ko'ring.

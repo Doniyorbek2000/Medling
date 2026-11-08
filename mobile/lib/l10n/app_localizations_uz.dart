@@ -1348,4 +1348,79 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get errorUnsupportedFile => 'Faqat JPEG yoki PNG rasm yuborish mumkin';
+
+  @override
+  String get aboutApp => 'Ilova haqida';
+
+  @override
+  String get privacyPolicy => 'Maxfiylik siyosati';
+
+  @override
+  String get termsOfUse => 'Foydalanish shartlari';
+
+  @override
+  String get deleteAccount => 'Hisobni o\'chirish';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Hisob va tibbiy ma\'lumotlar butunlay o\'chiriladi';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Hisobingiz butunlay o\'chiriladi:\n• tibbiy profil, AI tahlillari va telefon raqamingiz o\'chiriladi;\n• kelgusi qabullar bekor qilinadi, to\'lov qaytarish qoidalari bo\'yicha qaytariladi;\n• to\'lovlar, shifokor xulosalari va xavfsizlik jurnali qonun talabiga ko\'ra telefon raqamingizsiz saqlanadi.\n\nBu amalni ortga qaytarib bo\'lmaydi.';
+
+  @override
+  String get deleteAccountFinal =>
+      'Haqiqatan ham hisobingizni o\'chirmoqchimisiz?';
+
+  @override
+  String get accountDeleted => 'Hisobingiz o\'chirildi';
+
+  @override
+  String get continueAction => 'Davom etish';
+
+  @override
+  String get reschedule => 'Vaqtini o\'zgartirish';
+
+  @override
+  String get rescheduleTitle => 'Yangi vaqtni tanlang';
+
+  @override
+  String rescheduleHint(int count) {
+    return 'To\'lov saqlanadi. Yana $count marta ko\'chirish mumkin.';
+  }
+
+  @override
+  String rescheduleConfirm(String time) {
+    return 'Qabulni $time ga ko\'chirasizmi?';
+  }
+
+  @override
+  String get rescheduled => 'Qabul vaqti o\'zgartirildi';
+
+  @override
+  String get currentTime => 'Hozirgi vaqt';
+
+  @override
+  String get errorTooLateToReschedule =>
+      'Qabulgacha 24 soatdan kam qolgani uchun vaqtni o\'zgartirib bo\'lmaydi';
+
+  @override
+  String get errorRescheduleLimit =>
+      'Qabulni ko\'pi bilan 2 marta ko\'chirish mumkin';
+
+  @override
+  String get errorDoctorUnavailable =>
+      'Shifokor hozir bu turdagi qabulni olib bormayapti';
+
+  @override
+  String get errorRefundFailed =>
+      'To\'lov tizimi pulni qaytarmadi. Keyinroq qayta urinib ko\'ring';
+
+  @override
+  String get refundCompletedNow =>
+      'Qabul bekor qilindi. Pul kartangizga qaytarildi — bank odatda 5–10 kunda o\'tkazadi.';
+
+  @override
+  String get liveConnected => 'Jonli aloqa';
 }
