@@ -125,6 +125,20 @@ CREATE TABLE audit_log (
 );
 CREATE INDEX audit_actor ON audit_log(actor_id, at);
 ''',
+  // 2 — chat fayllari (shifrlangan, xotiraga yuklanmaydi)
+  '''
+CREATE TABLE attachments (
+  id              TEXT PRIMARY KEY,
+  appointment_id  TEXT NOT NULL REFERENCES appointments(id),
+  uploader_id     TEXT NOT NULL REFERENCES users(id),
+  name            TEXT NOT NULL,
+  mime            TEXT NOT NULL,
+  size            INTEGER NOT NULL,
+  content         TEXT NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX attachments_appointment ON attachments(appointment_id);
+''',
 ];
 
 /// Ishga tushirish tartibi (foreign key'lar uchun): ota jadvallar oldin.

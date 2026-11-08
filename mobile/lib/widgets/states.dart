@@ -22,6 +22,8 @@ String errorText(BuildContext context, Object e) {
     'not_started' => l.errorNotStarted,
     'already_reviewed' => l.errorAlreadyReviewed,
     'chat_closed' => l.errorChatClosed,
+    'file_too_large' => l.errorFileTooLarge,
+    'unsupported_file_type' => l.errorUnsupportedFile,
     'too_early' => l.errorTooEarly,
     'too_late' => l.errorTooLate,
     'video_unavailable' => l.errorVideoUnavailable,

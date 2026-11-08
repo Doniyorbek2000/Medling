@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -15,6 +16,7 @@ import 'payments/click.dart';
 import 'payments/orders.dart';
 import 'payments/payme.dart';
 import 'payments/wallet.dart';
+import 'consultations/attachments.dart';
 import 'consultations/chat.dart';
 import 'consultations/video.dart';
 import 'notifications/notifications.dart';
@@ -37,9 +39,17 @@ class MedLinkApi {
     required this.notifications,
     required this.chat,
     required this.video,
+    AttachmentService? attachments,
     required this.publicBaseUrl,
     this.trustProxy = false,
-  });
+  }) : attachments =
+           attachments ??
+           AttachmentService(
+             appointments: appointments,
+             chat: chat,
+             encryption: chat.encryption,
+             store: MemoryAttachmentStore(),
+           );
 
   final AuthService auth;
   final ConsentService consents;
@@ -56,6 +66,7 @@ class MedLinkApi {
   final NotificationService notifications;
   final ChatService chat;
   final VideoTokenIssuer video;
+  final AttachmentService attachments;
   final String publicBaseUrl;
   final bool trustProxy;
 
@@ -542,6 +553,51 @@ class MedLinkApi {
         );
         await _audit(u, 'chat.send', 'appointment', id);
         return jsonOk(await chat.toJson(m, u.id), status: 201);
+      })
+      ..post('/v1/appointments/<id>/attachments', (
+        Request req,
+        String id,
+      ) async {
+        final u = requireUser(req);
+        _limit(req, 'upload:${u.id}', 20, const Duration(minutes: 10));
+        // Hajm chegarasi: butun faylni o'qishdan oldin to'xtatamiz.
+        final declared = int.tryParse(req.headers['content-length'] ?? '');
+        if (declared != null && declared > AttachmentService.maxBytes) {
+          throw ApiException(413, 'file_too_large');
+        }
+        final builder = BytesBuilder(copy: false);
+        await for (final chunk in req.read()) {
+          builder.add(chunk);
+          if (builder.length > AttachmentService.maxBytes) {
+            throw ApiException(413, 'file_too_large');
+          }
+        }
+        final name = req.headers['x-file-name'];
+        final m = await attachments.upload(
+          id,
+          u.id,
+          builder.takeBytes(),
+          fileName: name == null ? null : Uri.decodeComponent(name),
+        );
+        await _audit(u, 'attachment.upload', 'appointment', id);
+        return jsonOk(await chat.toJson(m, u.id), status: 201);
+      })
+      ..get('/v1/appointments/<id>/attachments/<att>', (
+        Request req,
+        String id,
+        String att,
+      ) async {
+        final u = requireUser(req);
+        final (meta, bytes) = await attachments.download(id, att, u.id);
+        await _audit(u, 'attachment.read', 'attachment', att);
+        return Response.ok(
+          bytes,
+          headers: {
+            'content-type': meta.mime,
+            'content-length': '${bytes.length}',
+            'content-disposition': 'inline',
+          },
+        );
       })
       ..post('/v1/appointments/<id>/video', (Request req, String id) async {
         final u = requireUser(req);

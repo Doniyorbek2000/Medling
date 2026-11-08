@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:medlink/features/appointments/appointment_detail_screen.dart';
 import 'package:medlink/features/consultation/chat_screen.dart';
 import 'package:medlink/features/consultation/conclusion_screen.dart';
@@ -232,5 +233,52 @@ void main() {
     await t.pumpAndSettle();
     expect(saved?['diagnosis'], 'Migren');
     expect((saved?['prescriptions'] as List).single['drug'], 'Sumatriptan');
+  });
+
+  testWidgets('chat: rasm ilovasi ko\'rinadi va to\'liq ekranda ochiladi', (
+    t,
+  ) async {
+    final png = base64.decode(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+    );
+    var downloads = 0;
+    await pumpScreen(t, {
+      'GET /v1/appointments/a1/messages': (_) => {
+        'canWrite': true,
+        'items': [
+          {
+            'id': 'm1',
+            'seq': 1,
+            'senderRole': 'patient',
+            'mine': true,
+            'text': 'tahlil.jpg',
+            'at': DateTime.now().toUtc().toIso8601String(),
+            'attachment': {
+              'id': 'f1',
+              'name': 'tahlil.png',
+              'mime': 'image/png',
+              'size': png.length,
+            },
+          },
+        ],
+      },
+      'GET /v1/appointments/a1/attachments/f1': (_) {
+        downloads++;
+        return http.Response.bytes(
+          png,
+          200,
+          headers: {'content-type': 'image/png'},
+        );
+      },
+    }, const ChatScreen(appointmentId: 'a1', title: 'X'));
+    await t.pumpAndSettle();
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.text('tahlil.jpg'), findsNothing); // fayl nomi emas, rasm
+    expect(find.byTooltip("Rasm qo'shish"), findsOneWidget);
+    await t.tap(find.byType(Image));
+    await t.pumpAndSettle();
+    expect(find.byType(InteractiveViewer), findsOneWidget);
+    expect(downloads, 1); // qayta ochilganda keshdan
+    await t.pumpWidget(const SizedBox());
   });
 }

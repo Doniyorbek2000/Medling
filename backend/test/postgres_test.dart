@@ -81,6 +81,12 @@ class _World {
         sender: LogPushSender(),
       ),
       chat: chat,
+      attachments: AttachmentService(
+        appointments: appointments,
+        chat: chat,
+        encryption: enc,
+        store: PostgresAttachmentStore(store.pool),
+      ),
       video: VideoTokenIssuer(url: '', apiKey: '', apiSecret: ''),
       publicBaseUrl: 'http://localhost',
     );
@@ -412,6 +418,19 @@ void main() {
       token: docT,
       body: {'text': 'Salom! Qachondan beri?'},
     );
+    final png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3];
+    final upRes = await w.handler(
+      Request(
+        'POST',
+        Uri.parse('http://localhost/v1/appointments/${a1['id']}/attachments'),
+        body: png,
+        headers: {'authorization': 'Bearer $patient', 'x-file-name': 'eko.png'},
+      ),
+    );
+    expect(upRes.statusCode, 201);
+    final attId =
+        ((jsonDecode(await upRes.readAsString()) as Map)['attachment']
+            as Map)['id'];
     final docUser = w.doctors.byId(app['id'] as String)!.userId;
     final appt1 = w.appointments.byId(a1['id'] as String)!;
     await w.appointments.setConclusion(appt1.id, docUser, {
@@ -440,7 +459,7 @@ void main() {
     final counts = await w.restore();
     expect(counts['users'], 3);
     expect(counts['appointments'], 2);
-    expect(counts['chat_messages'], 2);
+    expect(counts['chat_messages'], 3);
 
     // Foydalanuvchi o'sha ID bilan qaytadi.
     final again = await w.login('+998901234567', consent: false);
@@ -501,7 +520,25 @@ void main() {
     expect((msgs['items'] as List).map((m) => m['text']), [
       'Salom, doktor!',
       'Salom! Qachondan beri?',
+      'eko.png',
     ]);
+
+    // Fayl bazadan o'qiladi (shifrlangan holda saqlangan).
+    final dl = await w.handler(
+      Request(
+        'GET',
+        Uri.parse(
+          'http://localhost/v1/appointments/${a1['id']}/attachments/$attId',
+        ),
+        headers: {'authorization': 'Bearer $again'},
+      ),
+    );
+    expect(dl.statusCode, 200);
+    expect(await dl.read().expand((c) => c).toList(), png);
+    expect(
+      ((msgs['items'] as List).last as Map)['attachment']['name'],
+      'eko.png',
+    );
 
     // Audit jurnali bazada.
     expect(await PostgresAuditLog(store.pool).forActor(patientId), isNotEmpty);

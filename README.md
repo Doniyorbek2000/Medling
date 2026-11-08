@@ -38,6 +38,9 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
   (har doim Toshkent vaqtida), 15 daqiqalik to'lov broni taymer bilan.
 - To'lov: Click, Payme (ilovaga deep link orqali qaytadi), Google Pay
   (Android) va Apple Pay (iOS).
+- Pul qaytarish siyosati bekor qilishdan oldin ko'rsatiladi: qabulgacha 24
+  soatdan ko'p bo'lsa, to'liq qaytariladi; shifokor bekor qilsa, har doim
+  qaytariladi.
 - Qabullar: kelgusi va o'tgan qabullar, tafsilotlar, bekor qilish, yakunlangan
   qabuldan keyin shifokorni baholash.
 - Bildirishnomalar: to'lov tasdiqlandi, qabul bekor qilindi, qabuldan 24 soat
@@ -62,6 +65,11 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
   ochilganda avtomatik yangilanadi). Qabulni yakunlash.
 
 **Admin uchun**
+- Statistika: foydalanuvchilar, faol shifokorlar, kutilayotgan arizalar,
+  bugungi qabullar, 30 kunlik tushum, onlayn ulushi, qabullar holati.
+- Pul qaytarish navbati. Admin pulni Click yoki Payme kabinetida qaytaradi va
+  ilovada "qaytarildi" deb belgilaydi, bemorga push yuboriladi. Payme
+  `CancelTransaction` kelsa, qaytarish avtomatik belgilanadi.
 - Moderatsiya navbati: litsenziya va hujjatlarni ko'rish, tasdiqlash yoki
   sababini yozib rad etish. Har bir qaror audit jurnaliga yoziladi.
 
@@ -87,6 +95,7 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 |---|---|
 | Video | LiveKit (open-source WebRTC SFU). Serverni O'zbekistondagi data-markazga o'rnatish mumkin, bu ma'lumotlarni lokalizatsiya qilish talabiga mos keladi. Media DTLS-SRTP bilan shifrlanadi, yozib olish o'chirilgan |
 | Kirish | Token faqat shu qabulning bemori va shifokoriga beriladi. Qabul onlayn va to'langan bo'lishi kerak, vaqt oralig'i qabuldan 10 daqiqa oldindan 60 daqiqa keyingacha. Xona nomi va ko'rinadigan ismda shaxsiy ma'lumot yo'q |
+| Rasmlar | Chatda tahlil natijasi yoki retsept rasmi (JPEG/PNG, 5 MB gacha). Turi fayl imzosi bo'yicha tekshiriladi. Rasm shifrlanib, PostgreSQL'da alohida jadvalda saqlanadi va xotiraga yuklanmaydi. Telefonda qayta kodlanadi, bu joylashuv (EXIF) ma'lumotini olib tashlaydi. Har bir ko'rish audit jurnaliga yoziladi |
 | Chat | Xabarlar AES-256-GCM bilan shifrlanadi. Faqat ishtirokchilar ko'radi. Push'da matn ko'rsatilmaydi ("Yangi xabar"). Xabar yuborish daqiqasiga 30 ta bilan cheklangan |
 | Xulosa | Tashxis, tavsiyalar, retsept (dori, doza, tartib, muddat), qayta ko'rik. Shifrlangan holda saqlanadi, bemorga push yuboriladi, qabul yakunlanadi |
 | Shifokor uchun | Qabul oldidan bemorning tibbiy profili (allergiyalar alohida ajratilgan) va AI tahlili. Har bir ko'rish audit jurnaliga yoziladi |

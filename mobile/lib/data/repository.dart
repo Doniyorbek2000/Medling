@@ -170,6 +170,34 @@ class MedLinkRepository {
         }),
       );
 
+  Future<ChatMessage> uploadAttachment(
+    String appointmentId,
+    List<int> bytes,
+    String fileName,
+  ) async => ChatMessage.fromJson(
+    await api.postBytes(
+      '/v1/appointments/$appointmentId/attachments',
+      bytes,
+      headers: {'x-file-name': Uri.encodeComponent(fileName)},
+    ),
+  );
+
+  /// Ekranda qayta-qayta yuklanmasligi uchun xotirada (faqat sessiya
+  /// davomida; diskka yozilmaydi).
+  final _attachmentCache = <String, Uint8List>{};
+
+  Future<Uint8List> attachmentBytes(String appointmentId, String id) async {
+    final cached = _attachmentCache[id];
+    if (cached != null) return cached;
+    final bytes = await api.getBytes(
+      '/v1/appointments/$appointmentId/attachments/$id',
+    );
+    if (_attachmentCache.length > 30) _attachmentCache.clear();
+    return _attachmentCache[id] = bytes;
+  }
+
+  void clearCache() => _attachmentCache.clear();
+
   Future<({String url, String token})> videoToken(String appointmentId) async {
     final res = await api.post('/v1/appointments/$appointmentId/video');
     return (url: res['url'] as String, token: res['token'] as String);

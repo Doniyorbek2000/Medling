@@ -589,5 +589,12 @@
   "cancelPolicyDoctor": "Bemorga to'lov to'liq qaytariladi va xabar yuboriladi. Bekor qilasizmi?",
   "refundRequested": "Qabul bekor qilindi. To'lov 3–5 ish kuni ichida qaytariladi.",
   "refundRequestedShort": "To'lov qaytarilmoqda",
-  "refundDone": "To'lov qaytarildi"
+  "refundDone": "To'lov qaytarildi",
+  "attachPhoto": "Rasm qo'shish",
+  "takePhoto": "Suratga olish",
+  "chooseFromGallery": "Galereyadan tanlash",
+  "attachmentHint": "Tahlil natijasi, retsept yoki teri o'zgarishi rasmini yuborishingiz mumkin. Rasm shifrlanadi, joylashuv ma'lumoti olib tashlanadi.",
+  "uploadingPhoto": "Rasm yuborilmoqda...",
+  "errorFileTooLarge": "Fayl juda katta (5 MB gacha)",
+  "errorUnsupportedFile": "Faqat JPEG yoki PNG rasm yuborish mumkin"
 }

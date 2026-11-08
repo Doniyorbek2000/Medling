@@ -1318,4 +1318,27 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get refundDone => 'Оплата возвращена';
+
+  @override
+  String get attachPhoto => 'Прикрепить фото';
+
+  @override
+  String get takePhoto => 'Сделать фото';
+
+  @override
+  String get chooseFromGallery => 'Выбрать из галереи';
+
+  @override
+  String get attachmentHint =>
+      'Можно отправить фото анализов, рецепта или изменений кожи. Фото шифруется, данные о местоположении удаляются.';
+
+  @override
+  String get uploadingPhoto => 'Отправка фото...';
+
+  @override
+  String get errorFileTooLarge => 'Файл слишком большой (до 5 МБ)';
+
+  @override
+  String get errorUnsupportedFile =>
+      'Можно отправлять только фото JPEG или PNG';
 }

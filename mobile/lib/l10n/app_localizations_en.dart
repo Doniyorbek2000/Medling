@@ -1316,4 +1316,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get refundDone => 'Refunded';
+
+  @override
+  String get attachPhoto => 'Attach photo';
+
+  @override
+  String get takePhoto => 'Take a photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from gallery';
+
+  @override
+  String get attachmentHint =>
+      'You can send a photo of test results, a prescription or a skin change. Photos are encrypted and location data is removed.';
+
+  @override
+  String get uploadingPhoto => 'Sending photo...';
+
+  @override
+  String get errorFileTooLarge => 'File is too large (max 5 MB)';
+
+  @override
+  String get errorUnsupportedFile => 'Only JPEG or PNG images are supported';
 }

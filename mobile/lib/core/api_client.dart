@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -48,6 +49,57 @@ class ApiClient {
       _send('PUT', path, body: body);
 
   Future<Map<String, dynamic>> delete(String path) => _send('DELETE', path);
+
+  /// Fayl yuklash (xom baytlar).
+  Future<Map<String, dynamic>> postBytes(
+    String path,
+    List<int> bytes, {
+    Map<String, String> headers = const {},
+  }) async {
+    final req = http.Request('POST', _base.replace(path: path))
+      ..headers.addAll({
+        'accept': 'application/json',
+        'content-type': 'application/octet-stream',
+        if (token != null) 'authorization': 'Bearer $token',
+        ...headers,
+      })
+      ..bodyBytes = bytes;
+    return _decode(await _execute(req));
+  }
+
+  /// Fayl yuklab olish (xom baytlar).
+  Future<Uint8List> getBytes(String path) async {
+    final req = http.Request('GET', _base.replace(path: path))
+      ..headers.addAll({if (token != null) 'authorization': 'Bearer $token'});
+    final res = await _execute(req);
+    if (res.statusCode == 200) return res.bodyBytes;
+    _decode(res); // xatoni ApiError sifatida otadi
+    throw ApiError(res.statusCode, 'http_${res.statusCode}');
+  }
+
+  Future<http.Response> _execute(http.Request req) async {
+    try {
+      return await http.Response.fromStream(
+        await _http.send(req).timeout(const Duration(seconds: 60)),
+      );
+    } catch (_) {
+      throw ApiError(0, 'network');
+    }
+  }
+
+  Map<String, dynamic> _decode(http.Response res) {
+    final decoded = res.body.isEmpty
+        ? <String, dynamic>{}
+        : jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+    if (res.statusCode >= 200 && res.statusCode < 300) return decoded;
+    if (res.statusCode == 401 && token != null) onUnauthorized?.call();
+    final err = decoded['error'] as Map<String, dynamic>?;
+    throw ApiError(
+      res.statusCode,
+      err?['code'] as String? ?? 'http_${res.statusCode}',
+      err?['message'] as String?,
+    );
+  }
 
   Future<Map<String, dynamic>> _send(
     String method,

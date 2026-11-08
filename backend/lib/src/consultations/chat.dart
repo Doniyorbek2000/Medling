@@ -4,6 +4,7 @@ import '../appointments/appointments.dart';
 import '../core/http_utils.dart';
 import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
+import 'attachments.dart';
 
 class ChatMessage {
   ChatMessage({
@@ -14,7 +15,11 @@ class ChatMessage {
     required this.textEnc,
     required this.seq,
     DateTime? at,
+    this.attachment,
   }) : at = at ?? DateTime.now().toUtc();
+
+  /// Biriktirilgan fayl (bo'lsa). Fayl mazmuni alohida omborda.
+  final AttachmentMeta? attachment;
 
   final String id;
   final String appointmentId;
@@ -67,6 +72,17 @@ class ChatService {
           textEnc: (r['data'] as Map)['textEnc'] as String,
           seq: r['seq'] as int,
           at: DateTime.parse((r['data'] as Map)['at'] as String),
+          attachment: switch ((r['data'] as Map)['attachment']) {
+            final Map<String, dynamic> j => AttachmentMeta(
+              id: j['id'] as String,
+              appointmentId: r['appointment_id'] as String,
+              uploaderId: j['uploaderId'] as String,
+              name: j['name'] as String,
+              mime: j['mime'] as String,
+              size: j['size'] as int,
+            ),
+            _ => null,
+          },
         ),
     ]..sort((a, b) => a.seq.compareTo(b.seq));
     for (final m in list) {
@@ -77,8 +93,9 @@ class ChatService {
   Future<ChatMessage> send(
     String appointmentId,
     String userId,
-    String text,
-  ) async {
+    String text, {
+    AttachmentMeta? attachment,
+  }) async {
     final a = appointments.requireParticipant(appointmentId, userId);
     final trimmed = text.trim();
     if (trimmed.isEmpty || trimmed.length > maxLength) {
@@ -99,6 +116,7 @@ class ChatService {
         aad: 'chat:$appointmentId:$id',
       ),
       seq: list.length + 1,
+      attachment: attachment,
     );
     list.add(m);
     changes.save(
@@ -111,6 +129,11 @@ class ChatService {
           'senderRole': m.senderRole,
           'textEnc': m.textEnc,
           'at': m.at.toIso8601String(),
+          if (m.attachment != null)
+            'attachment': {
+              ...m.attachment!.toJson(),
+              'uploaderId': m.attachment!.uploaderId,
+            },
         },
       ),
     );
@@ -144,6 +167,7 @@ class ChatService {
       aad: 'chat:${m.appointmentId}:${m.id}',
     ),
     'at': m.at.toIso8601String(),
+    'attachment': m.attachment?.toJson(),
   };
 
   /// Eksport uchun: foydalanuvchi ishtirok etgan barcha xabarlar.

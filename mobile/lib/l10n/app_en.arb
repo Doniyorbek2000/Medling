@@ -397,5 +397,12 @@
   "cancelPolicyDoctor": "The patient will get a full refund and a notification. Cancel?",
   "refundRequested": "Visit cancelled. Your payment will be refunded within 3–5 business days.",
   "refundRequestedShort": "Refund in progress",
-  "refundDone": "Refunded"
+  "refundDone": "Refunded",
+  "attachPhoto": "Attach photo",
+  "takePhoto": "Take a photo",
+  "chooseFromGallery": "Choose from gallery",
+  "attachmentHint": "You can send a photo of test results, a prescription or a skin change. Photos are encrypted and location data is removed.",
+  "uploadingPhoto": "Sending photo...",
+  "errorFileTooLarge": "File is too large (max 5 MB)",
+  "errorUnsupportedFile": "Only JPEG or PNG images are supported"
 }

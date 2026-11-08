@@ -186,6 +186,14 @@ Future<void> main() async {
     devices: devices,
     notifications: notifications,
     chat: chat,
+    attachments: AttachmentService(
+      appointments: appointments,
+      chat: chat,
+      encryption: enc,
+      store: store == null
+          ? MemoryAttachmentStore()
+          : PostgresAttachmentStore(store.pool),
+    ),
     video: VideoTokenIssuer(
       url: env['LIVEKIT_URL'] ?? '',
       apiKey: env['LIVEKIT_API_KEY'] ?? '',

@@ -2487,6 +2487,48 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'To\'lov qaytarildi'**
   String get refundDone;
+
+  /// No description provided for @attachPhoto.
+  ///
+  /// In uz, this message translates to:
+  /// **'Rasm qo\'shish'**
+  String get attachPhoto;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In uz, this message translates to:
+  /// **'Suratga olish'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In uz, this message translates to:
+  /// **'Galereyadan tanlash'**
+  String get chooseFromGallery;
+
+  /// No description provided for @attachmentHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tahlil natijasi, retsept yoki teri o\'zgarishi rasmini yuborishingiz mumkin. Rasm shifrlanadi, joylashuv ma\'lumoti olib tashlanadi.'**
+  String get attachmentHint;
+
+  /// No description provided for @uploadingPhoto.
+  ///
+  /// In uz, this message translates to:
+  /// **'Rasm yuborilmoqda...'**
+  String get uploadingPhoto;
+
+  /// No description provided for @errorFileTooLarge.
+  ///
+  /// In uz, this message translates to:
+  /// **'Fayl juda katta (5 MB gacha)'**
+  String get errorFileTooLarge;
+
+  /// No description provided for @errorUnsupportedFile.
+  ///
+  /// In uz, this message translates to:
+  /// **'Faqat JPEG yoki PNG rasm yuborish mumkin'**
+  String get errorUnsupportedFile;
 }
 
 class _AppLocalizationsDelegate

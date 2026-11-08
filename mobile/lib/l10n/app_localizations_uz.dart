@@ -1326,4 +1326,26 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get refundDone => 'To\'lov qaytarildi';
+
+  @override
+  String get attachPhoto => 'Rasm qo\'shish';
+
+  @override
+  String get takePhoto => 'Suratga olish';
+
+  @override
+  String get chooseFromGallery => 'Galereyadan tanlash';
+
+  @override
+  String get attachmentHint =>
+      'Tahlil natijasi, retsept yoki teri o\'zgarishi rasmini yuborishingiz mumkin. Rasm shifrlanadi, joylashuv ma\'lumoti olib tashlanadi.';
+
+  @override
+  String get uploadingPhoto => 'Rasm yuborilmoqda...';
+
+  @override
+  String get errorFileTooLarge => 'Fayl juda katta (5 MB gacha)';
+
+  @override
+  String get errorUnsupportedFile => 'Faqat JPEG yoki PNG rasm yuborish mumkin';
 }

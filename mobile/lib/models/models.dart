@@ -347,7 +347,10 @@ class ChatMessage {
       senderRole = j['senderRole'] as String,
       mine = j['mine'] as bool,
       text = j['text'] as String,
-      at = DateTime.parse(j['at'] as String).toLocal();
+      at = DateTime.parse(j['at'] as String).toLocal(),
+      attachment = j['attachment'] == null
+          ? null
+          : ChatAttachment.fromJson(j['attachment'] as Map<String, dynamic>);
 
   final String id;
   final int seq;
@@ -355,6 +358,22 @@ class ChatMessage {
   final bool mine;
   final String text;
   final DateTime at;
+  final ChatAttachment? attachment;
+}
+
+class ChatAttachment {
+  ChatAttachment.fromJson(Map<String, dynamic> j)
+    : id = j['id'] as String,
+      name = j['name'] as String,
+      mime = j['mime'] as String,
+      size = j['size'] as int;
+
+  final String id;
+  final String name;
+  final String mime;
+  final int size;
+
+  bool get isImage => mime.startsWith('image/');
 }
 
 /// Shifokor ish jadvali va konsultatsiya turlari.

@@ -62,6 +62,7 @@ class NotificationsController {
   }
 
   Future<void> onLogout() async {
+    repo.clearCache(); // tibbiy rasmlar xotirada qolmasin
     await service.unregisterDevice(repo);
     await service.cancelReminders();
   }

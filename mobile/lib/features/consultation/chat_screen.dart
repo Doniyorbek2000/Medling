@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/format.dart';
@@ -40,6 +41,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   bool _loading = true;
   bool _canWrite = true;
   bool _sending = false;
+  bool _uploading = false;
   Object? _error;
   Timer? _poll;
 
@@ -141,6 +143,75 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _attach() async {
+    final l = context.l10n;
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (c) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(l.takePhoto),
+              onTap: () => Navigator.pop(c, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l.chooseFromGallery),
+              onTap: () => Navigator.pop(c, ImageSource.gallery),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Text(
+                l.attachmentHint,
+                style: Theme.of(c).textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+    XFile? file;
+    try {
+      // Qayta kodlash (maxWidth/imageQuality) joylashuv kabi EXIF
+      // metama'lumotlarini olib tashlaydi; to'liq metadata so'ralmaydi.
+      file = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 85,
+        requestFullMetadata: false,
+      );
+    } catch (_) {
+      if (mounted) showMessage(context, l.callPermissionDenied);
+      return;
+    }
+    if (file == null || !mounted) return;
+    setState(() => _uploading = true);
+    _scrollToEnd();
+    try {
+      final bytes = await file.readAsBytes();
+      final m = await _repo.uploadAttachment(
+        widget.appointmentId,
+        bytes,
+        file.name,
+      );
+      HapticFeedback.lightImpact();
+      if (!mounted) return;
+      setState(() {
+        if (!_messages.any((x) => x.id == m.id)) _messages.add(m);
+        _messages.sort((a, b) => a.seq.compareTo(b.seq));
+      });
+      _scrollToEnd();
+    } catch (e) {
+      if (mounted) showError(context, e);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -209,11 +280,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         );
         lastDay = day;
       }
-      items.add(_Bubble(message: m));
+      items.add(_Bubble(message: m, appointmentId: widget.appointmentId));
     }
     for (final p in _pending) {
       items.add(_Bubble.pending(text: p));
     }
+    if (_uploading) items.add(_Bubble.pending(text: l.uploadingPhoto));
     return ListView(
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
@@ -249,6 +321,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            IconButton(
+              tooltip: l.attachPhoto,
+              onPressed: _uploading ? null : _attach,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+            ),
             Expanded(
               child: TextField(
                 controller: _input,
@@ -298,13 +375,16 @@ class _DayChip extends StatelessWidget {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required ChatMessage this.message}) : pendingText = null;
+  const _Bubble({required ChatMessage this.message, this.appointmentId})
+    : pendingText = null;
   const _Bubble.pending({required String text})
     : message = null,
+      appointmentId = null,
       pendingText = text;
 
   final ChatMessage? message;
   final String? pendingText;
+  final String? appointmentId;
 
   @override
   Widget build(BuildContext context) {
@@ -348,10 +428,13 @@ class _Bubble extends StatelessWidget {
                     ),
                   ),
                 ),
-              SelectableText(
-                m?.text ?? pendingText!,
-                style: TextStyle(color: fg, height: 1.35),
-              ),
+              if (m?.attachment case final att? when att.isImage)
+                _ImageAttachment(appointmentId: appointmentId!, attachment: att)
+              else
+                SelectableText(
+                  m?.text ?? pendingText!,
+                  style: TextStyle(color: fg, height: 1.35),
+                ),
               const SizedBox(height: 2),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -379,4 +462,85 @@ class _Bubble extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Chatdagi rasm: avtorizatsiya bilan yuklanadi, bosilsa to'liq ekranda.
+class _ImageAttachment extends StatelessWidget {
+  const _ImageAttachment({
+    required this.appointmentId,
+    required this.attachment,
+  });
+
+  final String appointmentId;
+  final ChatAttachment attachment;
+
+  @override
+  Widget build(BuildContext context) {
+    final future = context.read<MedLinkRepository>().attachmentBytes(
+      appointmentId,
+      attachment.id,
+    );
+    return FutureBuilder<Uint8List>(
+      future: future,
+      builder: (context, snap) {
+        final bytes = snap.data;
+        return Semantics(
+          image: true,
+          label: attachment.name,
+          button: bytes != null,
+          child: GestureDetector(
+            onTap: bytes == null
+                ? null
+                : () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      fullscreenDialog: true,
+                      builder: (_) =>
+                          _ImageViewer(bytes: bytes, title: attachment.name),
+                    ),
+                  ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 220,
+                height: 220,
+                child: bytes != null
+                    ? Image.memory(
+                        bytes,
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                      )
+                    : ColoredBox(
+                        color: Colors.black12,
+                        child: Center(
+                          child: snap.hasError
+                              ? const Icon(Icons.broken_image_outlined)
+                              : const CircularProgressIndicator.adaptive(),
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ImageViewer extends StatelessWidget {
+  const _ImageViewer({required this.bytes, required this.title});
+  final Uint8List bytes;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.black,
+    appBar: AppBar(
+      backgroundColor: Colors.black,
+      foregroundColor: Colors.white,
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+    ),
+    body: Center(
+      child: InteractiveViewer(maxScale: 5, child: Image.memory(bytes)),
+    ),
+  );
 }

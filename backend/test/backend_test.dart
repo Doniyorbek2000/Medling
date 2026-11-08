@@ -942,6 +942,72 @@ void main() {
         expect(txt, isNot(contains('psix')));
       }
 
+      // Chatga rasm (JPEG imzosi bilan), begona va noto'g'ri fayllar.
+      final jpeg = [0xFF, 0xD8, 0xFF, 0xE0, ...List.filled(100, 7)];
+      Future<Response> upload(List<int> bytes, String token, {String? name}) =>
+          Future.value(
+            h(
+              Request(
+                'POST',
+                Uri.parse(
+                  'http://localhost/v1/appointments/${appt['id']}/attachments',
+                ),
+                body: bytes,
+                headers: {
+                  'authorization': 'Bearer $token',
+                  'x-file-name': ?name,
+                },
+              ),
+            ),
+          );
+      final up = await upload(
+        jpeg,
+        patient,
+        name: Uri.encodeComponent('qon tahlili.jpg'),
+      );
+      expect(up.statusCode, 201);
+      final upJson =
+          jsonDecode(await up.readAsString()) as Map<String, dynamic>;
+      final att = upJson['attachment'] as Map;
+      expect(att['mime'], 'image/jpeg');
+      expect(att['name'], 'qon tahlili.jpg');
+      expect(att['size'], jpeg.length);
+      final dl = await h(
+        Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/v1/appointments/${appt['id']}/attachments/${att['id']}',
+          ),
+          headers: {'authorization': 'Bearer $docT'},
+        ),
+      );
+      expect(dl.statusCode, 200);
+      expect(dl.headers['content-type'], 'image/jpeg');
+      expect(await dl.read().expand((c) => c).toList(), jpeg);
+      final denied = await h(
+        Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/v1/appointments/${appt['id']}/attachments/${att['id']}',
+          ),
+          headers: {'authorization': 'Bearer $stranger'},
+        ),
+      );
+      expect(denied.statusCode, 403);
+      expect(
+        (await upload(utf8.encode('salom'), patient, name: 'x.jpg')).statusCode,
+        415,
+      );
+      expect(
+        (await upload([
+          0xFF,
+          0xD8,
+          0xFF,
+          ...List.filled(AttachmentService.maxBytes, 0),
+        ], patient)).statusCode,
+        413,
+      );
+
       // Shifokor bemor profilini ko'radi; bemor esa bu endpointni ishlata olmaydi.
       expect(
         (await send(
