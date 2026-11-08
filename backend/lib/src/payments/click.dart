@@ -2,6 +2,7 @@ import 'package:crypto/crypto.dart';
 
 import 'dart:convert';
 
+import '../persistence/changes.dart';
 import 'orders.dart';
 
 /// CLICK Shop API (merchant tomoni): Prepare (action=0) va Complete (action=1).
@@ -24,6 +25,15 @@ class ClickMerchant {
   /// click_trans_id -> merchant_prepare_id
   final _prepared = <String, int>{};
   int _seq = 1000;
+
+  /// Ishga tushganda bazadan tiklash.
+  void restore(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      final id = (r['data'] as Map)['prepareId'] as int;
+      _prepared[r['id'] as String] = id;
+      if (id > _seq) _seq = id;
+    }
+  }
 
   Uri checkoutUrl(PaymentOrder o, String returnUrl) =>
       Uri.https('my.click.uz', '/services/pay', {
@@ -93,13 +103,17 @@ class ClickMerchant {
       return _resp(p, -9, 'Transaction cancelled');
     }
     if (!_amountOk(o, p['amount'])) return _resp(p, -2, 'Incorrect amount');
-    final prepId = _prepared.putIfAbsent(
-      p['click_trans_id'] ?? '',
-      () => ++_seq,
+    final clickId = p['click_trans_id'] ?? '';
+    final prepId = _prepared.putIfAbsent(clickId, () => ++_seq);
+    changes.save(
+      'click_prepared',
+      clickId,
+      () => (columns: const <String, Object?>{}, data: {'prepareId': prepId}),
     );
     o
       ..status = OrderStatus.processing
       ..providerTxnId = p['click_trans_id'];
+    orders.persist(o);
     return _resp(p, 0, 'Success', prepareId: prepId);
   }
 
@@ -122,11 +136,13 @@ class ClickMerchant {
     // CLICK tomonida xato bo'lsa (error < 0) — buyurtma bekor qilinadi.
     if ((int.tryParse(p['error'] ?? '0') ?? 0) < 0) {
       o.status = OrderStatus.cancelled;
+      orders.persist(o);
       return _resp(p, -9, 'Transaction cancelled');
     }
     o
       ..status = OrderStatus.paid
       ..paidAt = DateTime.now().toUtc();
+    orders.persist(o);
     onPaid(o);
     return _resp(p, 0, 'Success', confirmId: prepId);
   }

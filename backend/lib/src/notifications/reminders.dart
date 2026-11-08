@@ -1,0 +1,145 @@
+import 'dart:async';
+
+import '../appointments/appointments.dart';
+import '../doctors/doctors.dart';
+import '../consultations/chat.dart';
+import 'notifications.dart';
+
+/// Har daqiqada qabul boshlanishiga 1 soat qolganlarni topib, bemor va
+/// shifokorga eslatma yuboradi. (Prod'da: Cloud Scheduler / navbat orqali.)
+class ReminderScheduler {
+  ReminderScheduler({
+    required this.appointments,
+    required this.doctors,
+    required this.notifications,
+    this.lead = const Duration(hours: 1),
+  });
+
+  final AppointmentService appointments;
+  final DoctorService doctors;
+  final NotificationService notifications;
+  final Duration lead;
+  Timer? _timer;
+
+  /// Bron muddati o'tib bekor qilingan qabul (to'lovni bekor qilish uchun).
+  void Function(Appointment a)? onExpired;
+
+  void start({Duration every = const Duration(minutes: 1)}) {
+    _timer?.cancel();
+    _timer = Timer.periodic(every, (_) => tick(DateTime.now().toUtc()));
+  }
+
+  void stop() => _timer?.cancel();
+
+  /// Bitta tekshiruv (testlarda to'g'ridan-to'g'ri chaqiriladi).
+  Future<int> tick(DateTime now) async {
+    // Bron muddati o'tgan to'lanmagan qabullar va ularning to'lovlari.
+    for (final a in appointments.expireUnpaid(now)) {
+      onExpired?.call(a);
+    }
+    final due = appointments.dueForReminder(now, lead);
+    for (final a in due) {
+      a.reminderSent = true;
+      appointments.persist(a);
+      final data = {'type': 'appointment', 'appointmentId': a.id};
+      await notifications.notify(
+        a.patientId,
+        PushKind.appointmentReminder,
+        at: a.startsAt,
+        data: data,
+      );
+      final doctorUser = doctors.byId(a.doctorId)?.userId;
+      if (doctorUser != null) {
+        await notifications.notify(
+          doctorUser,
+          PushKind.appointmentReminder,
+          at: a.startsAt,
+          data: data,
+        );
+      }
+    }
+    return due.length;
+  }
+}
+
+/// Qabul hodisalarini bildirishnomalarga ulaydi.
+void wireAppointmentNotifications({
+  required AppointmentService appointments,
+  required DoctorService doctors,
+  required NotificationService notifications,
+}) {
+  appointments.onConfirmed = (a) {
+    final data = {'type': 'appointment', 'appointmentId': a.id};
+    notifications.notify(
+      a.patientId,
+      PushKind.paymentConfirmed,
+      at: a.startsAt,
+      data: data,
+    );
+    final doctorUser = doctors.byId(a.doctorId)?.userId;
+    if (doctorUser != null) {
+      notifications.notify(
+        doctorUser,
+        PushKind.newPatient,
+        at: a.startsAt,
+        data: data,
+      );
+    }
+  };
+  appointments.onRescheduled = (a, previous) {
+    final doctorUser = doctors.byId(a.doctorId)?.userId;
+    if (doctorUser != null) {
+      notifications.notify(
+        doctorUser,
+        PushKind.appointmentRescheduled,
+        at: a.startsAt,
+        data: {'type': 'appointment', 'appointmentId': a.id},
+      );
+    }
+  };
+  appointments.onCancelled = (a, actor) {
+    final doctorUser = doctors.byId(a.doctorId)?.userId;
+    // Bekor qilgan tomonga emas, ikkinchi tomonga xabar beramiz; admin
+    // bekor qilsa — ikkalasiga.
+    final to = <String?>{
+      if (actor != a.patientId) a.patientId,
+      if (actor != doctorUser) doctorUser,
+    }.whereType<String>();
+    for (final u in to) {
+      notifications.notify(
+        u,
+        PushKind.appointmentCancelled,
+        at: a.startsAt,
+        data: {'type': 'appointment', 'appointmentId': a.id},
+      );
+    }
+  };
+}
+
+/// Chat, video va xulosa hodisalarini bildirishnomalarga ulaydi.
+void wireConsultationNotifications({
+  required AppointmentService appointments,
+  required DoctorService doctors,
+  required ChatService chat,
+  required NotificationService notifications,
+}) {
+  chat.onMessage = (a, m) {
+    final doctorUser = doctors.byId(a.doctorId)?.userId;
+    final to = m.senderRole == 'patient' ? doctorUser : a.patientId;
+    if (to != null) {
+      // Matn emas — faqat "yangi xabar" (xabar mazmuni qulf ekranida yo'q).
+      notifications.notify(
+        to,
+        PushKind.newMessage,
+        data: {'type': 'chat', 'appointmentId': a.id},
+      );
+    }
+  };
+  appointments.onConclusion = (a) {
+    notifications.notify(
+      a.patientId,
+      PushKind.conclusionReady,
+      data: {'type': 'appointment', 'appointmentId': a.id},
+    );
+  };
+}

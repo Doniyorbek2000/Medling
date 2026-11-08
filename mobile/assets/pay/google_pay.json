@@ -1,0 +1,32 @@
+{
+  "provider": "google_pay",
+  "data": {
+    "environment": "TEST",
+    "apiVersion": 2,
+    "apiVersionMinor": 0,
+    "allowedPaymentMethods": [
+      {
+        "type": "CARD",
+        "tokenizationSpecification": {
+          "type": "PAYMENT_GATEWAY",
+          "parameters": {
+            "gateway": "stripe",
+            "stripe:version": "2020-08-27",
+            "stripe:publishableKey": "pk_test_REPLACE_ME"
+          }
+        },
+        "parameters": {
+          "allowedCardNetworks": ["VISA", "MASTERCARD"],
+          "allowedAuthMethods": ["PAN_ONLY", "CRYPTOGRAM_3DS"]
+        }
+      }
+    ],
+    "merchantInfo": {
+      "merchantName": "MedLink"
+    },
+    "transactionInfo": {
+      "countryCode": "UZ",
+      "currencyCode": "UZS"
+    }
+  }
+}

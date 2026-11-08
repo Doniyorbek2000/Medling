@@ -31,6 +31,13 @@ class AuditEvent {
 abstract class AuditLog {
   Future<void> record(AuditEvent event);
   Future<List<AuditEvent>> forActor(String actorId);
+
+  /// Admin ko'rinishi: eng yangilari birinchi.
+  Future<List<AuditEvent>> recent({
+    String? actorId,
+    String? actionPrefix,
+    int limit = 100,
+  });
 }
 
 /// Ishlab chiqish uchun. Prod'da faqat qo'shish mumkin bo'lgan (append-only,
@@ -46,4 +53,15 @@ class InMemoryAuditLog implements AuditLog {
   @override
   Future<List<AuditEvent>> forActor(String actorId) async =>
       _events.where((e) => e.actorId == actorId).toList();
+
+  @override
+  Future<List<AuditEvent>> recent({
+    String? actorId,
+    String? actionPrefix,
+    int limit = 100,
+  }) async => _events.reversed
+      .where((e) => actorId == null || e.actorId == actorId)
+      .where((e) => actionPrefix == null || e.action.startsWith(actionPrefix))
+      .take(limit)
+      .toList();
 }

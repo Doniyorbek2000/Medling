@@ -1,0 +1,158 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+  # Firebase (push) — repozitoriy o'zgaruvchilari (Settings → Variables).
+  # Bo'sh bo'lsa ilova push'siz yig'iladi, mahalliy eslatmalar ishlaydi.
+  FIREBASE_DEFINES: >-
+    --dart-define=FIREBASE_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID }}
+    --dart-define=FIREBASE_SENDER_ID=${{ vars.FIREBASE_SENDER_ID }}
+    --dart-define=FIREBASE_ANDROID_API_KEY=${{ vars.FIREBASE_ANDROID_API_KEY }}
+    --dart-define=FIREBASE_ANDROID_APP_ID=${{ vars.FIREBASE_ANDROID_APP_ID }}
+    --dart-define=FIREBASE_IOS_API_KEY=${{ vars.FIREBASE_IOS_API_KEY }}
+    --dart-define=FIREBASE_IOS_APP_ID=${{ vars.FIREBASE_IOS_APP_ID }}
+
+jobs:
+  backend:
+    name: Backend (Dart + PostgreSQL)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: medlink_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      # Integratsion testlar (test/postgres_test.dart) shu bazada ishlaydi.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medlink_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - run: dart test
+
+  docker:
+    name: Backend Docker image
+    needs: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t medlink-backend backend
+
+  mobile:
+    name: Mobil — analyze va testlar
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Lokalizatsiya fayllari yangilanganmi
+        run: git diff --exit-code -- lib/l10n
+      - run: flutter analyze --fatal-infos
+      - run: flutter test
+
+  android:
+    name: Android (APK + AAB)
+    needs: mobile
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      # Gradle tarqatmasi va kutubxonalari keshlanadi: tashqi serverlar
+      # (github.com releases) vaqtincha 5xx qaytarsa ham build buzilmaydi.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper/dists
+            ~/.gradle/caches
+          key: gradle-${{ runner.os }}-${{ hashFiles('mobile/android/gradle/wrapper/gradle-wrapper.properties', 'mobile/android/**/*.gradle.kts') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - name: Gradle'ni yuklab olish (qayta urinish bilan)
+        run: |
+          # gradlew Flutter tomonidan yaratiladi (repozitoriyda saqlanmaydi).
+          flutter build apk --config-only
+          cd android
+          for i in 1 2 3 4 5; do
+            ./gradlew --version && exit 0
+            echo "Gradle yuklab olinmadi (urinish $i), $((i * 20)) s kutamiz..."
+            sleep $((i * 20))
+          done
+          exit 1
+      # Release kaliti repozitoriy secret'larida bo'lsa — u bilan imzolanadi,
+      # aks holda debug kalit bilan (faqat sinov uchun).
+      - name: Release kalitini tiklash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/medlink.jks"
+          echo "MEDLINK_KEYSTORE_PATH=$RUNNER_TEMP/medlink.jks" >> "$GITHUB_ENV"
+      - name: Build
+        env:
+          MEDLINK_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MEDLINK_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MEDLINK_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          flutter build apk --release --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }} $FIREBASE_DEFINES
+          flutter build appbundle --release --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }} $FIREBASE_DEFINES
+      - uses: actions/upload-artifact@v4
+        with:
+          name: medlink-android
+          path: |
+            mobile/build/app/outputs/flutter-apk/app-release.apk
+            mobile/build/app/outputs/bundle/release/app-release.aab
+
+  ios:
+    name: iOS (imzosiz build)
+    needs: mobile
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign --dart-define=MEDLINK_API=${{ vars.MEDLINK_API || 'https://api.medlink.uz' }} $FIREBASE_DEFINES

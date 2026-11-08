@@ -38,6 +38,9 @@ Middleware errorMiddleware(void Function(Object, StackTrace) log) =>
     (inner) => (req) async {
       try {
         return await inner(req);
+      } on HijackException {
+        // WebSocket ulanishi — shelf_io o'zi boshqaradi.
+        rethrow;
       } on ApiException catch (e) {
         return jsonError(e.status, e.code, e.message);
       } on FormatException {

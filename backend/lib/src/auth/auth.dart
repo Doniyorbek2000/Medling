@@ -8,6 +8,7 @@ import 'package:shelf/shelf.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/http_utils.dart';
+import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
 
 enum Role { patient, doctor, admin }
@@ -18,8 +19,14 @@ class User {
     required this.phoneHash,
     required this.phoneEnc,
     required this.role,
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now().toUtc();
   final String id;
+  final DateTime createdAt;
+
+  /// Admin tomonidan bloklangan (kira olmaydi, tokenlari ishlamaydi).
+  bool blocked = false;
+  String? blockReason;
 
   /// Qidiruv uchun HMAC-SHA256 (telefon raqami ochiq saqlanmaydi).
   final String phoneHash;
@@ -74,6 +81,93 @@ class AuthService {
 
   User? userById(String id) => _users[id];
 
+  int get userCount => _users.length;
+
+  /// Foydalanuvchini bazaga yozish uchun belgilaydi (yangi yoki rol o'zgardi).
+  void saveUser(User u) => changes.save(
+    'users',
+    u.id,
+    () => (
+      columns: {'phone_hash': u.phoneHash, 'role': u.role.name},
+      data: {
+        'phoneEnc': u.phoneEnc,
+        'createdAt': u.createdAt.toIso8601String(),
+        'blocked': u.blocked,
+        'blockReason': u.blockReason,
+      },
+    ),
+  );
+
+  Iterable<User> get users => _users.values;
+
+  /// Admin qidiruvi: to'liq raqam bo'yicha (raqam ochiq saqlanmaydi, shuning
+  /// uchun faqat xesh orqali aniq moslik).
+  User? byPhone(String phone) {
+    if (!_phoneRe.hasMatch(phone)) return null;
+    final h = _hash(phone);
+    return _users.values.where((u) => u.phoneHash == h).firstOrNull;
+  }
+
+  /// Admin uchun yashirilgan raqam: +99890***4567.
+  Future<String> maskedPhone(User u) async {
+    try {
+      final p = await encryption.decrypt(u.phoneEnc, aad: 'user:${u.id}:phone');
+      return p.length < 8
+          ? '***'
+          : '${p.substring(0, 6)}***${p.substring(p.length - 4)}';
+    } catch (_) {
+      return '***';
+    }
+  }
+
+  void setBlocked(User u, {required bool blocked, String? reason}) {
+    u
+      ..blocked = blocked
+      ..blockReason = blocked ? reason : null;
+    saveUser(u);
+  }
+
+  /// Hisobni o'chirish: foydalanuvchi tizimdan o'chiriladi (barcha tokenlar
+  /// darhol yaroqsiz), telefon raqami (shifrlangan va xeshi) yo'q qilinadi.
+  /// Qator bazada qoladi — qonun bo'yicha saqlanadigan yozuvlar (to'lovlar,
+  /// tibbiy xulosalar, audit) unga bog'langan, lekin endi shaxsni aniqlamaydi.
+  /// Shu raqam bilan qayta kirilsa — yangi, bo'sh hisob ochiladi.
+  void deleteUser(User u) {
+    _users.remove(u.id);
+    changes.save(
+      'users',
+      u.id,
+      () => (
+        columns: {'phone_hash': 'deleted:${u.id}', 'role': u.role.name},
+        data: {
+          'phoneEnc': '',
+          'deletedAt': DateTime.now().toUtc().toIso8601String(),
+        },
+      ),
+    );
+  }
+
+  /// Ishga tushganda bazadan tiklash (o'chirilgan hisoblar tiklanmaydi).
+  void restoreUsers(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      if ((r['phone_hash'] as String).startsWith('deleted:')) continue;
+      final j = r['data'] as Map;
+      final u =
+          User(
+              id: r['id'] as String,
+              phoneHash: r['phone_hash'] as String,
+              phoneEnc: j['phoneEnc'] as String,
+              role: Role.values.byName(r['role'] as String),
+              createdAt: j['createdAt'] == null
+                  ? null
+                  : DateTime.parse(j['createdAt'] as String),
+            )
+            ..blocked = j['blocked'] as bool? ?? false
+            ..blockReason = j['blockReason'] as String?;
+      _users[u.id] = u;
+    }
+  }
+
   Future<void> requestOtp(String phone) async {
     if (!_phoneRe.hasMatch(phone)) {
       throw ApiException(400, 'invalid_phone', 'Format: +998XXXXXXXXX');
@@ -106,6 +200,13 @@ class AuthService {
     _otps.remove(key);
 
     var user = _users.values.where((u) => u.phoneHash == key).firstOrNull;
+    if (user != null && user.blocked) {
+      throw ApiException(
+        403,
+        'account_blocked',
+        'Hisob bloklangan. Qo\'llab-quvvatlash xizmatiga murojaat qiling',
+      );
+    }
     if (user == null) {
       final id = const Uuid().v4();
       user = User(
@@ -115,6 +216,7 @@ class AuthService {
         role: _adminPhones.contains(phone) ? Role.admin : Role.patient,
       );
       _users[id] = user;
+      saveUser(user);
     }
     return (token: issueToken(user), user: user);
   }
@@ -134,6 +236,8 @@ class AuthService {
           try {
             final jwt = JWT.verify(h.substring(7), _jwtKey, issuer: 'medlink');
             user = _users[jwt.subject];
+            // Bloklangan hisob tokenlari darhol ishlamay qoladi.
+            if (user != null && user.blocked) user = null;
           } on JWTException {
             // Noto'g'ri token — anonim sifatida davom etadi.
           }

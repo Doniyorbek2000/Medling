@@ -1,0 +1,749 @@
+{
+  "@@locale": "uz",
+  "appName": "MedLink",
+  "tagline": "Sun'iy intellekt yordamidagi tibbiy platforma",
+  "onb1Title": "Alomatlaringizni AI tahlil qiladi",
+  "onb1Body": "Nima bezovta qilayotganini yozing — Google Med-PaLM 2 qanchalik shoshilinchligini va qaysi shifokorga borishni aytadi.",
+  "onb2Title": "Faqat tekshirilgan shifokorlar",
+  "onb2Body": "Har bir shifokorning diplomi va litsenziyasi moderatorlar tomonidan tekshiriladi. Qabulga bir necha bosishda yoziling.",
+  "onb3Title": "Ma'lumotlaringiz himoyalangan",
+  "onb3Body": "Tibbiy ma'lumotlar shifrlanadi, faqat sizning roziligingiz bilan ishlatiladi va istalgan vaqtda o'chiriladi.",
+  "skip": "O'tkazish",
+  "next": "Keyingi",
+  "getStarted": "Boshlash",
+  "phoneTitle": "Telefon raqamingiz",
+  "phoneSubtitle": "Kirish uchun SMS orqali kod yuboramiz",
+  "getCode": "Kod olish",
+  "loginLegal": "Davom etish orqali siz foydalanish shartlari va maxfiylik siyosati bilan tanishishga rozilik bildirasiz.",
+  "otpTitle": "Kodni kiriting",
+  "otpSubtitle": "{phone} raqamiga 6 xonali kod yuborildi",
+  "@otpSubtitle": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "login": "Kirish",
+  "resendCode": "Kodni qayta yuborish",
+  "resendIn": "Qayta yuborish: {seconds} s",
+  "@resendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "cancel": "Bekor qilish",
+  "save": "Saqlash",
+  "saved": "Saqlandi",
+  "delete": "O'chirish",
+  "deleted": "O'chirildi",
+  "retry": "Qayta urinish",
+  "loading": "Yuklanmoqda",
+  "submit": "Yuborish",
+  "add": "Qo'shish",
+  "clear": "Tozalash",
+  "all": "Barchasi",
+  "seeAll": "Barchasi",
+  "required": "majburiy",
+  "requiredField": "Majburiy maydon",
+  "logout": "Chiqish",
+  "logoutConfirm": "Hisobingizdan chiqmoqchimisiz?",
+  "systemDefault": "Tizim bo'yicha",
+  "today": "Bugun",
+  "errorGeneric": "Xatolik yuz berdi. Qayta urinib ko'ring",
+  "errorNetwork": "Internet aloqasi yo'q",
+  "errorOtpInvalid": "Kod noto'g'ri",
+  "errorOtpExpired": "Kod muddati o'tgan. Qayta so'rang",
+  "errorOtpAttempts": "Urinishlar soni tugadi. Yangi kod so'rang",
+  "errorRateLimited": "Juda ko'p so'rov. Birozdan so'ng urinib ko'ring",
+  "errorConsentRequired": "Buning uchun rozilik kerak",
+  "errorSlotUnavailable": "Bu vaqt band. Boshqa vaqtni tanlang",
+  "errorAlreadyApplied": "Siz allaqachon ariza topshirgansiz",
+  "errorNotPayable": "Bu qabulni to'lab bo'lmaydi",
+  "errorNotStarted": "Qabul hali boshlanmagan",
+  "errorAlreadyReviewed": "Siz allaqachon baho qoldirgansiz",
+  "consentScreenTitle": "Rozilik va maxfiylik",
+  "consentIntro": "Ma'lumotlaringiz qanday ishlatilishini o'qib chiqing va har bir band bo'yicha alohida qaror qabul qiling. Majburiy bandlarsiz xizmat ishlamaydi.",
+  "consentFooter": "Versiya: {version}. Qaroringiz vaqti va qurilma ma'lumoti dalil sifatida saqlanadi.",
+  "@consentFooter": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "agreeContinue": "Roziman, davom etish",
+  "consentSettings": "Rozilik sozlamalari",
+  "withdrawTitle": "Rozilikni qaytarib olish",
+  "withdrawMessage": "Majburiy rozilikni qaytarib olsangiz, xizmatdan foydalana olmaysiz. Davom etasizmi?",
+  "withdrawConfirm": "Ha, qaytarib olaman",
+  "consentTermsTitle": "Foydalanish shartlari",
+  "consentTermsSummary": "MedLink xizmatidan foydalanish qoidalari.",
+  "consentTermsBody": "MedLink — bemorlarni litsenziyaga ega shifokorlar bilan bog'lovchi axborot platformasi. Platforma tibbiy yordam ko'rsatmaydi va shoshilinch tibbiy yordam o'rnini bosmaydi. Hayot uchun xavfli holatlarda 103 raqamiga qo'ng'iroq qiling. Shifokorlarning diplomi va litsenziyasi moderatorlar tomonidan tekshiriladi.",
+  "consentPersonalTitle": "Shaxsga doir ma'lumotlar",
+  "consentPersonalSummary": "Telefon raqamingiz va profil ma'lumotlaringizni saqlash.",
+  "consentPersonalBody": "\"Shaxsga doir ma'lumotlar to'g'risida\"gi Qonunga muvofiq telefon raqamingiz, ism-familiyangiz va qabullar tarixi xizmat ko'rsatish maqsadida qayta ishlanadi va shifrlangan holda saqlanadi. Siz istalgan vaqtda ma'lumotlaringiz nusxasini olishingiz, ularni o'zgartirish yoki o'chirishni talab qilishingiz mumkin.",
+  "consentHealthTitle": "Sog'liq haqidagi ma'lumotlar",
+  "consentHealthSummary": "Alomatlar, qabul sababi va tibbiy profilni saqlash.",
+  "consentHealthBody": "Sog'lig'ingiz haqidagi ma'lumotlar alohida toifadagi ma'lumot hisoblanadi. Ular AES-256 bilan shifrlanadi, faqat siz va siz tanlagan shifokor ko'ra oladi. Har bir murojaat audit jurnalida qayd etiladi. Ma'lumotlar reklama maqsadida uchinchi shaxslarga berilmaydi.",
+  "consentAiTitle": "Sun'iy intellekt tahlili",
+  "consentAiSummary": "Alomatlaringizni Google Med-PaLM 2 orqali tahlil qilish.",
+  "consentAiBody": "AI tahlilidan foydalansangiz, kiritgan matningiz, yoshingiz va jinsingiz modelga yuboriladi. Ism, telefon va boshqa identifikatorlar yuborilmaydi. Natija tashxis emas. Rozilikni qaytarib olsangiz, AI tahlillari tarixi o'chiriladi. Bu rozilik ixtiyoriy.",
+  "consentTransferTitle": "Ma'lumotni xorijga uzatish",
+  "consentTransferSummary": "AI tahlili uchun shaxssizlashtirilgan matn Google Cloud'ga uzatiladi.",
+  "consentTransferBody": "AI modeli O'zbekistondan tashqaridagi Google Cloud serverlarida ishlaydi. Tahlil uchun shaxssizlashtirilgan alomatlar matni shifrlangan kanal (TLS) orqali uzatiladi. AI tahlilidan foydalanish uchun bu rozilik zarur.",
+  "consentMarketingTitle": "Xabarnomalar va aksiyalar",
+  "consentMarketingSummary": "Yangiliklar va maxsus takliflar haqida xabarlar.",
+  "consentMarketingBody": "Ixtiyoriy. Istalgan vaqtda sozlamalarda o'chirishingiz mumkin.",
+  "tabHome": "Asosiy",
+  "tabDoctors": "Shifokorlar",
+  "tabAppointments": "Qabullarim",
+  "tabPatients": "Bemorlarim",
+  "tabModeration": "Moderatsiya",
+  "tabProfile": "Profil",
+  "goodMorning": "Xayrli tong!",
+  "goodAfternoon": "Xayrli kun!",
+  "goodEvening": "Xayrli kech!",
+  "homeSubtitle": "Bugun sog'lig'ingiz uchun nima qila olamiz?",
+  "aiCardTitle": "Alomatlarni tahlil qilish",
+  "aiCardBody": "Nima bezovta qilayotganini yozing — AI qaysi shifokorga borishni aytadi.",
+  "nextAppointment": "Navbatdagi qabul",
+  "specialists": "Mutaxassislar",
+  "emergencyBanner": "Hayot uchun xavfli holatda darhol {phone} ga qo'ng'iroq qiling",
+  "@emergencyBanner": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "callEmergency": "{phone} ga qo'ng'iroq qilish",
+  "@callEmergency": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "triageTitle": "AI alomatlar tahlili",
+  "triageHistory": "Tahlillar tarixi",
+  "triageHistoryEmpty": "Hali tahlil o'tkazilmagan",
+  "aiConsentNeededTitle": "AI tahlili uchun rozilik kerak",
+  "aiConsentNeededBody": "\"Sun'iy intellekt tahlili\" va \"Ma'lumotni xorijga uzatish\" bandlariga rozilik bering. Bu ixtiyoriy — usiz ham shifokorga yozilishingiz mumkin.",
+  "symptomsQuestion": "Nima bezovta qilyapti?",
+  "symptomsHint": "Masalan: 3 kundan beri harorat 38.5, tomoq og'riyapti, yutishda og'riq bor...",
+  "noPiiHint": "Ism, telefon yoki pasport ma'lumotlarini yozmang.",
+  "age": "Yosh",
+  "durationDays": "Davomiyligi (kun)",
+  "female": "Ayol",
+  "male": "Erkak",
+  "prefilledFromProfile": "Ma'lumotlar tibbiy profilingizdan olindi",
+  "chronicIncluded": "Hisobga olinadi: {list}",
+  "@chronicIncluded": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "analyze": "Tahlil qilish",
+  "analyzing": "Tahlil qilinmoqda...",
+  "triagePoweredBy": "Tahlil Google Med-PaLM 2 yordamida bajariladi va tashxis hisoblanmaydi.",
+  "resultTitle": "Tahlil natijasi",
+  "urgencyEmergency": "Shoshilinch yordam kerak",
+  "urgencyEmergencyBody": "Darhol {phone} ga qo'ng'iroq qiling yoki eng yaqin shifoxonaga boring.",
+  "@urgencyEmergencyBody": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "urgencyUrgent": "Tez orada shifokorga ko'rining",
+  "urgencyUrgentBody": "Bugun yoki ertaga shifokor qabuliga yoziling.",
+  "urgencyRoutine": "Rejali qabul",
+  "urgencyRoutineBody": "Yaqin kunlarda shifokor ko'rigidan o'ting.",
+  "urgencySelfCare": "Uyda kuzatish",
+  "urgencySelfCareBody": "Holat yomonlashsa, shifokorga murojaat qiling.",
+  "redFlags": "Xavfli belgilar",
+  "possibleCauses": "Ehtimoliy sabablar",
+  "likelihoodHigh": "Yuqori",
+  "likelihoodMedium": "O'rtacha",
+  "likelihoodLow": "Past",
+  "advice": "Tavsiya",
+  "whichDoctor": "Qaysi shifokorga borish kerak",
+  "findSpecialist": "{specialty} topish",
+  "@findSpecialist": {
+    "placeholders": {
+      "specialty": {
+        "type": "String"
+      }
+    }
+  },
+  "disclaimer": "Bu tahlil tashxis emas va shifokor ko'rigining o'rnini bosmaydi.",
+  "searchDoctors": "Shifokor yoki klinika",
+  "noDoctorsFound": "Shifokorlar topilmadi",
+  "noDoctorsFoundHint": "Boshqa mutaxassislik yoki so'rovni sinab ko'ring",
+  "verifiedLicense": "Litsenziya tekshirilgan",
+  "yearsExperience": "{count, plural, other{{count} yil tajriba}}",
+  "@yearsExperience": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "experienceLabel": "Yil tajriba",
+  "rating": "Reyting",
+  "reviews": "Sharhlar",
+  "about": "Haqida",
+  "consultationPrice": "Qabul narxi: {price}",
+  "@consultationPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "patientReviews": "Bemorlar sharhlari",
+  "chooseDay": "Kunni tanlang",
+  "chooseTime": "Vaqtni tanlang",
+  "morning": "Ertalab",
+  "afternoon": "Tushdan keyin",
+  "noSlots": "Bu kunda bo'sh vaqt yo'q",
+  "visitReason": "Murojaat sababi",
+  "visitReasonHint": "Faqat shifokor ko'radi",
+  "bookFor": "Yozilish · {when} · {price}",
+  "@bookFor": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "holdNotice": "Vaqt 15 daqiqa band qilinadi — shu muddatda to'lang.",
+  "priceUzs": "{amount} so'm",
+  "@priceUzs": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "payment": "To'lov",
+  "paymentMethod": "To'lov usuli",
+  "localCards": "Uzcard, Humo",
+  "intlCards": "Visa, Mastercard",
+  "payAmount": "To'lash · {price}",
+  "@payAmount": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "pay": "To'lash",
+  "checkPayment": "To'lovni tekshirish",
+  "paymentNotYet": "To'lov hali tasdiqlanmadi. Birozdan so'ng tekshiring.",
+  "paymentFailed": "To'lov amalga oshmadi",
+  "cardSafety": "Karta ma'lumotlari MedLink serverlarida saqlanmaydi.",
+  "holdLeft": "Bron muddati: {time}",
+  "@holdLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "holdExpired": "Bron muddati tugadi. Vaqtni qayta tanlang.",
+  "appointmentConfirmed": "Qabul tasdiqlandi!",
+  "backToHome": "Bosh sahifaga",
+  "upcoming": "Kelgusi",
+  "past": "O'tgan",
+  "noUpcoming": "Kelgusi qabullar yo'q",
+  "noPast": "O'tgan qabullar yo'q",
+  "findDoctor": "Shifokor topish",
+  "statusAwaitingPayment": "To'lov kutilmoqda",
+  "statusConfirmed": "Tasdiqlangan",
+  "statusCompleted": "Yakunlangan",
+  "statusCancelled": "Bekor qilingan",
+  "appointmentDetails": "Qabul tafsilotlari",
+  "dateLabel": "Sana",
+  "timeLabel": "Vaqt",
+  "clinicLabel": "Klinika",
+  "priceLabel": "Narx",
+  "cancelAppointment": "Qabulni bekor qilish",
+  "cancelAppointmentConfirm": "Haqiqatan ham qabulni bekor qilmoqchimisiz?",
+  "rateDoctor": "Shifokorni baholash",
+  "reviewHint": "Tajribangiz haqida yozing (ixtiyoriy)",
+  "yourReview": "Sizning bahoyingiz",
+  "doctorApplication": "Shifokor arizasi",
+  "moderationHowTitle": "Moderatsiya qanday o'tadi",
+  "moderationHowBody": "Diplom, litsenziya (Sog'liqni saqlash vazirligi reyestri) va shaxsni tasdiqlovchi hujjat tekshiriladi. Tasdiqlangandan so'ng profilingiz \"tekshirilgan\" belgisi bilan bemorlarga ko'rinadi. Odatda 1–3 ish kuni.",
+  "fullName": "F.I.Sh.",
+  "fullNameInvalid": "To'liq F.I.Sh. kiriting",
+  "specialty": "Mutaxassislik",
+  "licenseNumber": "Litsenziya raqami",
+  "city": "Shahar",
+  "experienceYearsLabel": "Tajriba (yil)",
+  "priceUzsLabel": "Narx (so'm)",
+  "aboutYou": "O'zingiz haqingizda",
+  "documents": "Hujjatlar",
+  "documentsHint": "Diplom, litsenziya, pasport nusxalariga havolalar (har qatorda bittadan)",
+  "applicationConfirm": "Ma'lumotlar to'g'riligini tasdiqlayman va ular tekshirilishiga roziman",
+  "sendApplication": "Arizani yuborish",
+  "applicationSent": "Ariza yuborildi. Moderatsiya 1–3 ish kuni davom etadi.",
+  "noPatients": "Hozircha yozilgan bemorlar yo'q",
+  "noReason": "Sabab ko'rsatilmagan",
+  "completeVisit": "Qabulni yakunlash",
+  "completeVisitConfirm": "Qabul o'tkazilganini tasdiqlaysizmi? Shundan so'ng bemor baho qoldira oladi.",
+  "noPending": "Tekshirilishi kerak bo'lgan arizalar yo'q",
+  "approve": "Tasdiqlash",
+  "approveConfirm": "{name} arizasini tasdiqlaysizmi? Profil bemorlarga ko'rinadi.",
+  "@approveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reject": "Rad etish",
+  "rejectReason": "Rad etish sababi",
+  "rejectReasonHint": "Masalan: litsenziya reyestrda topilmadi",
+  "patient": "Bemor",
+  "rolePatient": "Bemor",
+  "roleDoctor": "Shifokor",
+  "roleAdmin": "Administrator",
+  "health": "Sog'liq",
+  "medicalProfile": "Tibbiy profil",
+  "medicalProfileSubtitle": "Allergiyalar, surunkali kasalliklar, dorilar",
+  "medicalProfileNote": "Ma'lumotlar shifrlangan holda saqlanadi va AI tahliliga avtomatik qo'shiladi.",
+  "birthDate": "Tug'ilgan sana",
+  "bloodType": "Qon guruhi",
+  "heightCm": "Bo'y (sm)",
+  "weightKg": "Vazn (kg)",
+  "allergies": "Allergiyalar",
+  "allergiesHint": "Masalan: penitsillin",
+  "chronicConditions": "Surunkali kasalliklar",
+  "chronicHint": "Masalan: qandli diabet 2-tur",
+  "medications": "Doimiy dorilar",
+  "medicationsHint": "Masalan: metformin 500 mg",
+  "forDoctors": "Shifokorlar uchun",
+  "becomeDoctor": "Shifokor sifatida qo'shilish",
+  "becomeDoctorSubtitle": "Ariza topshiring va moderatsiyadan o'ting",
+  "applicationPending": "Ariza ko'rib chiqilmoqda",
+  "applicationApproved": "Tasdiqlangan shifokor",
+  "applicationRejected": "Ariza rad etilgan",
+  "applicationSuspended": "Profil to'xtatilgan",
+  "moderatorNote": "Moderator izohi: {note}",
+  "@moderatorNote": {
+    "placeholders": {
+      "note": {
+        "type": "String"
+      }
+    }
+  },
+  "reapply": "Qayta ariza topshirish",
+  "settings": "Sozlamalar",
+  "language": "Til",
+  "theme": "Mavzu",
+  "themeLight": "Yorug'",
+  "themeDark": "Qorong'i",
+  "biometricLock": "Biometrik qulf",
+  "biometricLockSubtitle": "Face ID / barmoq izi bilan ochish",
+  "biometricReason": "MedLink'ni ochish uchun shaxsingizni tasdiqlang",
+  "lockedTitle": "MedLink qulflangan",
+  "unlock": "Ochish",
+  "privacy": "Maxfiylik",
+  "exportData": "Ma'lumotlarim nusxasi",
+  "exportDataSubtitle": "Saqlangan barcha ma'lumotlarni olish",
+  "exportCopied": "Ma'lumotlaringiz nusxasi buferga ko'chirildi",
+  "deleteHealthData": "Tibbiy ma'lumotlarni o'chirish",
+  "deleteHealthDataConfirm": "AI tahlillari va tibbiy profil qaytarib bo'lmaydigan tarzda o'chiriladi. Qabullar tarixi qonunda belgilangan muddat saqlanadi.",
+  "emergencyNumber": "Tez yordam",
+  "version": "Versiya",
+  "specTherapist": "Terapevt",
+  "specPediatrician": "Pediatr",
+  "specCardiologist": "Kardiolog",
+  "specNeurologist": "Nevrolog",
+  "specGastroenterologist": "Gastroenterolog",
+  "specPulmonologist": "Pulmonolog",
+  "specEndocrinologist": "Endokrinolog",
+  "specDermatologist": "Dermatolog",
+  "specEnt": "LOR",
+  "specOphthalmologist": "Oftalmolog",
+  "specGynecologist": "Ginekolog",
+  "specUrologist": "Urolog",
+  "specTraumatologist": "Travmatolog",
+  "specPsychiatrist": "Psixiatr",
+  "tashkentTime": "Toshkent vaqti bilan (UTC+5)",
+  "completeProfile": "Profilni to'ldiring",
+  "licenses": "Litsenziyalar",
+  "reminderTitle": "MedLink: qabul eslatmasi",
+  "reminderDayBefore": "Ertaga soat {time} da qabulingiz bor.",
+  "@reminderDayBefore": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderHourBefore": "Qabulingiz 1 soatdan keyin, soat {time} da.",
+  "@reminderHourBefore": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notifications": "Bildirishnomalar",
+  "notificationsSubtitle": "Qabul eslatmalari va holat o'zgarishlari",
+  "notificationsDenied": "Ruxsat berilmadi. Telefon sozlamalaridan MedLink uchun bildirishnomalarni yoqing.",
+  "enableRemindersTitle": "Qabulni unutmang",
+  "enableRemindersBody": "Qabuldan 1 kun va 1 soat oldin eslatma yuboramiz. Matnda tibbiy ma'lumot ko'rsatilmaydi.",
+  "enableReminders": "Eslatmalarni yoqish",
+  "remindersEnabled": "Eslatmalar yoqildi",
+  "online": "Onlayn",
+  "inClinic": "Klinikada",
+  "onlineAvailable": "Onlayn qabul bor",
+  "onlineOnly": "Faqat onlayn qabul",
+  "consultationType": "Qabul turi",
+  "consultationTypes": "Qabul turlari",
+  "onlineHowItWorks": "Qabul vaqtida ilovada video qo'ng'iroq ochiladi. Barqaror internet va tinch joy tayyorlang.",
+  "onlinePriceLabel": "Onlayn qabul: {price}",
+  "@onlinePriceLabel": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineConsultation": "Onlayn konsultatsiya",
+  "joinVideo": "Video qo'ng'iroqqa kirish",
+  "videoReady": "Xona ochiq. Shifokor bilan bog'lanish uchun kiring.",
+  "videoReadyShort": "Video tayyor",
+  "videoOpensAt": "Video soat {time} da ochiladi (qabuldan 10 daqiqa oldin).",
+  "@videoOpensAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "videoClosed": "Video qabul vaqti tugadi. Savollarni chatda yozing.",
+  "videoNotConfigured": "Video xizmati hozircha ulanmagan. Shifokor bilan chat orqali bog'laning.",
+  "videoTips": "Maslahat: quloqchin ishlating, yorug' joyda o'tiring.",
+  "callConnecting": "Ulanmoqda...",
+  "callWaiting": "Suhbatdosh hali kirmadi. Kuting...",
+  "callReconnecting": "Aloqa uzildi, qayta ulanmoqda...",
+  "callEnded": "Qo'ng'iroq tugadi",
+  "callFailed": "Ulanib bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
+  "callPermissionDenied": "Kamera yoki mikrofonga ruxsat berilmagan. Telefon sozlamalaridan MedLink uchun ruxsat bering.",
+  "callEncrypted": "Shifrlangan aloqa · yozib olinmaydi",
+  "mute": "Ovozni o'chirish",
+  "unmute": "Ovozni yoqish",
+  "cameraOff": "Kamerani o'chirish",
+  "cameraOn": "Kamerani yoqish",
+  "switchCamera": "Almashtirish",
+  "endCall": "Tugatish",
+  "endCallConfirm": "Qo'ng'iroqni tugatmoqchimisiz?",
+  "close": "Yopish",
+  "chat": "Chat",
+  "chatSubtitle": "Shifokorga savol bering",
+  "chatSubtitleDoctor": "Bemor bilan yozishma",
+  "chatHint": "Xabar yozing...",
+  "send": "Yuborish",
+  "sending": "Yuborilmoqda",
+  "chatEmptyTitle": "Hali xabarlar yo'q",
+  "chatEmptyBody": "Qabul bo'yicha savolingizni yozing. Shifokor ish vaqtida javob beradi.",
+  "chatClosed": "Chat yopilgan: qabuldan keyin 7 kun o'tdi.",
+  "chatEmergencyNote": "Chat shoshilinch yordam uchun emas — xavfli holatda 103 ga qo'ng'iroq qiling",
+  "patientInfo": "Bemor ma'lumotlari",
+  "patientInfoSubtitle": "Tibbiy profil va AI tahlili",
+  "aiPreTriage": "Qabul oldidan AI tahlili",
+  "viewDetails": "Batafsil ko'rish",
+  "sex": "Jins",
+  "heightWeight": "Bo'y / vazn",
+  "patientReview": "Bemor bahosi",
+  "conclusion": "Shifokor xulosasi",
+  "writeConclusion": "Xulosa yozish",
+  "editConclusion": "Xulosani tahrirlash",
+  "saveConclusion": "Xulosani saqlash",
+  "saveConclusionConfirm": "Xulosa bemorga yuboriladi va qabul yakunlanadi. Davom etasizmi?",
+  "conclusionSaved": "Xulosa saqlandi va bemorga yuborildi",
+  "diagnosis": "Tashxis",
+  "diagnosisHint": "Masalan: O'tkir respirator infeksiya (J06.9)",
+  "recommendations": "Tavsiyalar",
+  "prescription": "Retsept",
+  "addMedication": "Dori qo'shish",
+  "noPrescription": "Dori tayinlanmagan",
+  "medication": "Dori",
+  "drugName": "Dori nomi",
+  "dose": "Doza",
+  "frequency": "Qabul qilish tartibi",
+  "frequencyHint": "Masalan: kuniga 2 marta, ovqatdan keyin",
+  "notes": "Izoh",
+  "followUp": "Qayta ko'rik",
+  "followUpNone": "Shart emas",
+  "inDays": "{days} kundan keyin",
+  "@inDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "forDays": "{days} kun",
+  "@forDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "followUpIn": "Qayta ko'rik: {days} kundan keyin",
+  "@followUpIn": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "conclusionPrivacy": "Xulosa shifrlangan holda saqlanadi va faqat bemorga ko'rinadi.",
+  "conclusionDisclaimer": "Dorilarni faqat shifokor ko'rsatmasiga ko'ra qabul qiling. Ahvolingiz yomonlashsa — 103.",
+  "scheduleAndPrices": "Jadval va narxlar",
+  "scheduleAndPricesSubtitle": "Ish kunlari, soatlar, onlayn qabul",
+  "workDays": "Ish kunlari",
+  "workHours": "Ish vaqti (Toshkent vaqti)",
+  "from": "Boshlanishi",
+  "to": "Tugashi",
+  "slotsPerDay": "Kuniga {count} ta 30 daqiqalik qabul",
+  "@slotsPerDay": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clinicPrice": "Klinikadagi qabul narxi",
+  "onlinePrice": "Onlayn qabul narxi",
+  "onlineSubtitle": "Video qo'ng'iroq va chat orqali",
+  "scheduleNote": "O'zgarishlar faqat yangi bronlarga ta'sir qiladi. Mavjud qabullar saqlanadi.",
+  "chooseConsultationType": "Kamida bitta qabul turini yoqing",
+  "onlinePriceRequired": "Onlayn qabul narxini kiriting",
+  "errorChatClosed": "Chat yopilgan",
+  "errorTooEarly": "Video hali ochilmagan — qabuldan 10 daqiqa oldin ochiladi",
+  "errorTooLate": "Video qabul vaqti tugagan",
+  "errorVideoUnavailable": "Video xizmati vaqtincha ishlamayapti",
+  "errorTypeUnavailable": "Shifokor bu turdagi qabulni o'tkazmaydi",
+  "errorInvalidSchedule": "Jadval noto'g'ri: ish vaqti va kunlarini tekshiring",
+  "videoNotConfiguredDoctor": "Video xizmati hozircha ulanmagan. Bemor bilan chat orqali bog'laning.",
+  "tabAdmin": "Boshqaruv",
+  "statistics": "Statistika",
+  "applications": "Arizalar",
+  "refunds": "Qaytarishlar",
+  "statUsers": "Foydalanuvchilar",
+  "statDoctors": "Faol shifokorlar",
+  "statPendingApplications": "Kutilayotgan arizalar",
+  "statToday": "Bugungi qabullar",
+  "statRevenue30d": "30 kunlik tushum",
+  "statOnlineShare": "Onlayn ulushi",
+  "statRefundsPending": "Qaytarilishi kerak",
+  "statAppointments": "Qabullar holati",
+  "noRefunds": "Qaytariladigan to'lovlar yo'q",
+  "refundReasonDoctor": "Shifokor bekor qildi",
+  "refundReasonPatient": "Bemor 24 soatdan oldin bekor qildi",
+  "markRefunded": "Qaytarildi deb belgilash",
+  "markRefundedConfirm": "Avval {provider} kabinetida to'lovni qaytaring. Bemorga xabar yuboriladi. Davom etasizmi?",
+  "@markRefundedConfirm": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "requestedAt": "So'ralgan: {time}",
+  "@requestedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "transactionId": "Tranzaksiya: {id}",
+  "@transactionId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "copied": "Nusxa olindi",
+  "cancelPolicyRefund": "Qabulgacha 24 soatdan ko'proq vaqt bor — to'lov to'liq qaytariladi. Bekor qilasizmi?",
+  "cancelPolicyNoRefund": "Qabulgacha 24 soatdan kam qoldi — to'lov qaytarilmaydi. Baribir bekor qilasizmi?",
+  "cancelPolicyDoctor": "Bemorga to'lov to'liq qaytariladi va xabar yuboriladi. Bekor qilasizmi?",
+  "refundRequested": "Qabul bekor qilindi. To'lov 3–5 ish kuni ichida qaytariladi.",
+  "refundRequestedShort": "To'lov qaytarilmoqda",
+  "refundDone": "To'lov qaytarildi",
+  "attachPhoto": "Rasm qo'shish",
+  "takePhoto": "Suratga olish",
+  "chooseFromGallery": "Galereyadan tanlash",
+  "attachmentHint": "Tahlil natijasi, retsept yoki teri o'zgarishi rasmini yuborishingiz mumkin. Rasm shifrlanadi, joylashuv ma'lumoti olib tashlanadi.",
+  "uploadingPhoto": "Rasm yuborilmoqda...",
+  "errorFileTooLarge": "Fayl juda katta (5 MB gacha)",
+  "errorUnsupportedFile": "Faqat JPEG yoki PNG rasm yuborish mumkin",
+  "aboutApp": "Ilova haqida",
+  "privacyPolicy": "Maxfiylik siyosati",
+  "termsOfUse": "Foydalanish shartlari",
+  "deleteAccount": "Hisobni o'chirish",
+  "deleteAccountSubtitle": "Hisob va tibbiy ma'lumotlar butunlay o'chiriladi",
+  "deleteAccountConfirm": "Hisobingiz butunlay o'chiriladi:\n• tibbiy profil, AI tahlillari va telefon raqamingiz o'chiriladi;\n• kelgusi qabullar bekor qilinadi, to'lov qaytarish qoidalari bo'yicha qaytariladi;\n• to'lovlar, shifokor xulosalari va xavfsizlik jurnali qonun talabiga ko'ra telefon raqamingizsiz saqlanadi.\n\nBu amalni ortga qaytarib bo'lmaydi.",
+  "deleteAccountFinal": "Haqiqatan ham hisobingizni o'chirmoqchimisiz?",
+  "accountDeleted": "Hisobingiz o'chirildi",
+  "continueAction": "Davom etish",
+  "reschedule": "Vaqtini o'zgartirish",
+  "rescheduleTitle": "Yangi vaqtni tanlang",
+  "rescheduleHint": "To'lov saqlanadi. Yana {count} marta ko'chirish mumkin.",
+  "@rescheduleHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rescheduleConfirm": "Qabulni {time} ga ko'chirasizmi?",
+  "@rescheduleConfirm": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rescheduled": "Qabul vaqti o'zgartirildi",
+  "currentTime": "Hozirgi vaqt",
+  "errorTooLateToReschedule": "Qabulgacha 24 soatdan kam qolgani uchun vaqtni o'zgartirib bo'lmaydi",
+  "errorRescheduleLimit": "Qabulni ko'pi bilan 2 marta ko'chirish mumkin",
+  "errorDoctorUnavailable": "Shifokor hozir bu turdagi qabulni olib bormayapti",
+  "errorRefundFailed": "To'lov tizimi pulni qaytarmadi. Keyinroq qayta urinib ko'ring",
+  "refundCompletedNow": "Qabul bekor qilindi. Pul kartangizga qaytarildi — bank odatda 5–10 kunda o'tkazadi.",
+  "liveConnected": "Jonli aloqa",
+  "users": "Foydalanuvchilar",
+  "appointmentsAll": "Qabullar",
+  "payments": "To'lovlar",
+  "auditLog": "Audit jurnali",
+  "statusApproved": "Tasdiqlangan",
+  "statusSuspended": "To'xtatilgan",
+  "statusRejected": "Rad etilgan",
+  "statusPending": "Ko'rib chiqilmoqda",
+  "blocked": "Bloklangan",
+  "searchByPhone": "Telefon raqami: +998901234567",
+  "noResults": "Hech narsa topilmadi",
+  "suspendDoctor": "Profilni to'xtatish",
+  "suspendReasonHint": "Masalan: litsenziya muddati tugagan",
+  "suspendWarning": "Kelgusi qabullar ({count} ta) bekor qilinadi va bemorlarga pul to'liq qaytariladi.",
+  "@suspendWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reinstateDoctor": "Profilni tiklash",
+  "reinstateConfirm": "{name} profili yana bemorlarga ko'rinadi.",
+  "@reinstateConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reason": "Sabab",
+  "hideReview": "Yashirish",
+  "showReview": "Qaytarish",
+  "hideReviewTitle": "Sharhni yashirish",
+  "hideReviewHint": "Masalan: haqorat yoki shaxsiy ma'lumot",
+  "hiddenReview": "Yashirilgan: {reason}",
+  "@hiddenReview": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "noReviewsYet": "Sharhlar yo'q",
+  "blockUser": "Bloklash",
+  "unblockUser": "Blokdan chiqarish",
+  "blockReasonHint": "Masalan: soxta bronlar",
+  "blockWarning": "Foydalanuvchi tizimdan chiqariladi va kira olmaydi. Kelgusi qabullari bekor qilinib, pul qaytariladi.",
+  "unblockConfirm": "Foydalanuvchi yana tizimga kira oladi.",
+  "registeredAt": "Ro'yxatdan o'tgan: {date}",
+  "@registeredAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "appointmentsCount": "Qabullar: {count}",
+  "@appointmentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paidLabel": "To'langan",
+  "unpaidLabel": "To'lanmagan",
+  "totalPaid": "Jami to'langan: {amount}",
+  "@totalPaid": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderPending": "Kutilmoqda",
+  "orderProcessing": "Jarayonda",
+  "orderCancelled": "Bekor qilingan",
+  "orderRefunded": "Qaytarilgan",
+  "refundReasonAdmin": "Administrator bekor qildi",
+  "refundReasonLate": "Bron muddati o'tgach to'langan",
+  "medicalData": "Tibbiy ma'lumot",
+  "actorLabel": "Kim: {id}",
+  "@actorLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "noNotifications": "Hozircha bildirishnomalar yo'q",
+  "markAllRead": "Hammasini o'qilgan deb belgilash",
+  "statCompleted30d": "30 kunda yakunlangan",
+  "statEarnings30d": "30 kunlik daromad",
+  "statAwaitingConclusion": "Xulosa kutmoqda",
+  "daysOff": "Dam olish kunlari",
+  "daysOffHint": "Bu kunlarda bemorlar yozila olmaydi. Oldin yozilganlar o'zgarmaydi.",
+  "addDayOff": "Kun qo'shish",
+  "noDaysOff": "Dam olish kunlari belgilanmagan",
+  "errorAccountBlocked": "Hisobingiz bloklangan. Qo'llab-quvvatlash xizmatiga murojaat qiling.",
+  "errorNoteRequired": "Sababni yozing",
+  "errorCannotBlockAdmin": "Administratorni bloklab bo'lmaydi",
+  "doctorWorkspace": "Ish stoli",
+  "myPayments": "To'lovlarim",
+  "myPaymentsSubtitle": "Kvitansiyalar va qaytarishlar",
+  "noPayments": "Hozircha to'lovlar yo'q",
+  "visitOn": "Qabul: {date}",
+  "@visitOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
+}

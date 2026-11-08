@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adaptiv launcher ikonkasi foni (flutter_launcher_icons). -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- FCM bildirishnoma ikonkasi rangi. -->
+    <color name="medlink_blue">#055DBE</color>
+</resources>
