@@ -1228,4 +1228,92 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get videoNotConfiguredDoctor =>
       'Video is not set up yet. Please use the chat with the patient.';
+
+  @override
+  String get tabAdmin => 'Admin';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get applications => 'Applications';
+
+  @override
+  String get refunds => 'Refunds';
+
+  @override
+  String get statUsers => 'Users';
+
+  @override
+  String get statDoctors => 'Active doctors';
+
+  @override
+  String get statPendingApplications => 'Pending applications';
+
+  @override
+  String get statToday => 'Visits today';
+
+  @override
+  String get statRevenue30d => '30-day revenue';
+
+  @override
+  String get statOnlineShare => 'Online share';
+
+  @override
+  String get statRefundsPending => 'Refunds pending';
+
+  @override
+  String get statAppointments => 'Visits by status';
+
+  @override
+  String get noRefunds => 'No pending refunds';
+
+  @override
+  String get refundReasonDoctor => 'Cancelled by the doctor';
+
+  @override
+  String get refundReasonPatient => 'Cancelled by the patient over 24h ahead';
+
+  @override
+  String get markRefunded => 'Mark as refunded';
+
+  @override
+  String markRefundedConfirm(String provider) {
+    return 'First issue the refund in the $provider merchant dashboard. The patient will be notified. Continue?';
+  }
+
+  @override
+  String requestedAt(String time) {
+    return 'Requested: $time';
+  }
+
+  @override
+  String transactionId(String id) {
+    return 'Transaction: $id';
+  }
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get cancelPolicyRefund =>
+      'More than 24 hours before the visit — you will get a full refund. Cancel?';
+
+  @override
+  String get cancelPolicyNoRefund =>
+      'Less than 24 hours before the visit — the payment is not refunded. Cancel anyway?';
+
+  @override
+  String get cancelPolicyDoctor =>
+      'The patient will get a full refund and a notification. Cancel?';
+
+  @override
+  String get refundRequested =>
+      'Visit cancelled. Your payment will be refunded within 3–5 business days.';
+
+  @override
+  String get refundRequestedShort => 'Refund in progress';
+
+  @override
+  String get refundDone => 'Refunded';
 }

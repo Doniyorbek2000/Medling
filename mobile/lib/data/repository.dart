@@ -196,8 +196,10 @@ class MedLinkRepository {
   Future<DoctorSettings> saveDoctorSettings(DoctorSettings s) async =>
       DoctorSettings.fromJson(await api.put('/v1/doctor/settings', s.toJson()));
 
-  Future<void> cancelAppointment(String id) =>
-      api.post('/v1/appointments/$id/cancel');
+  /// Qaytaradi: `requested` (pul qaytariladi) yoki `none`.
+  Future<String> cancelAppointment(String id) async =>
+      (await api.post('/v1/appointments/$id/cancel'))['refund'] as String? ??
+      'none';
 
   Future<void> review(String appointmentId, int rating, String comment) =>
       api.post('/v1/appointments/$appointmentId/review', {
@@ -261,6 +263,20 @@ class MedLinkRepository {
       api.post('/v1/doctor/appointments/$id/complete');
 
   // ---- Admin ----
+  Future<AdminStats> adminStats() async =>
+      AdminStats.fromJson(await api.get('/v1/admin/stats'));
+
+  Future<List<RefundRequest>> refunds() async {
+    final res = await api.get('/v1/admin/refunds');
+    return [
+      for (final r in res['items'] as List)
+        RefundRequest.fromJson(r as Map<String, dynamic>),
+    ];
+  }
+
+  Future<void> completeRefund(String orderId) =>
+      api.post('/v1/admin/refunds/$orderId/complete');
+
   Future<List<Map<String, dynamic>>> pendingDoctors() async =>
       ((await api.get('/v1/admin/doctors/pending'))['items'] as List)
           .cast<Map<String, dynamic>>();

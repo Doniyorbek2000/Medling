@@ -1230,4 +1230,92 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get videoNotConfiguredDoctor =>
       'Видеосвязь пока не подключена. Свяжитесь с пациентом в чате.';
+
+  @override
+  String get tabAdmin => 'Управление';
+
+  @override
+  String get statistics => 'Статистика';
+
+  @override
+  String get applications => 'Заявки';
+
+  @override
+  String get refunds => 'Возвраты';
+
+  @override
+  String get statUsers => 'Пользователи';
+
+  @override
+  String get statDoctors => 'Активные врачи';
+
+  @override
+  String get statPendingApplications => 'Заявки на проверке';
+
+  @override
+  String get statToday => 'Приёмы сегодня';
+
+  @override
+  String get statRevenue30d => 'Выручка за 30 дней';
+
+  @override
+  String get statOnlineShare => 'Доля онлайн';
+
+  @override
+  String get statRefundsPending => 'Ожидают возврата';
+
+  @override
+  String get statAppointments => 'Статусы приёмов';
+
+  @override
+  String get noRefunds => 'Нет ожидающих возвратов';
+
+  @override
+  String get refundReasonDoctor => 'Отменено врачом';
+
+  @override
+  String get refundReasonPatient => 'Пациент отменил более чем за 24 часа';
+
+  @override
+  String get markRefunded => 'Отметить возврат';
+
+  @override
+  String markRefundedConfirm(String provider) {
+    return 'Сначала выполните возврат в кабинете $provider. Пациент получит уведомление. Продолжить?';
+  }
+
+  @override
+  String requestedAt(String time) {
+    return 'Запрошен: $time';
+  }
+
+  @override
+  String transactionId(String id) {
+    return 'Транзакция: $id';
+  }
+
+  @override
+  String get copied => 'Скопировано';
+
+  @override
+  String get cancelPolicyRefund =>
+      'До приёма более 24 часов — оплата будет возвращена полностью. Отменить?';
+
+  @override
+  String get cancelPolicyNoRefund =>
+      'До приёма меньше 24 часов — оплата не возвращается. Всё равно отменить?';
+
+  @override
+  String get cancelPolicyDoctor =>
+      'Пациенту будет возвращена вся сумма и отправлено уведомление. Отменить?';
+
+  @override
+  String get refundRequested =>
+      'Приём отменён. Оплата вернётся в течение 3–5 рабочих дней.';
+
+  @override
+  String get refundRequestedShort => 'Возврат в обработке';
+
+  @override
+  String get refundDone => 'Оплата возвращена';
 }

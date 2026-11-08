@@ -104,17 +104,31 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
   Future<void> _cancel() async {
     final l = context.l10n;
+    // Pul qaytarish siyosati oldindan aniq ko'rsatiladi.
+    final String policy;
+    if (_a.status != 'confirmed') {
+      policy = l.cancelAppointmentConfirm;
+    } else if (_isDoctor) {
+      policy = l.cancelPolicyDoctor;
+    } else if (_a.refundableByPatientAt(DateTime.now())) {
+      policy = l.cancelPolicyRefund;
+    } else {
+      policy = l.cancelPolicyNoRefund;
+    }
     final ok = await confirmDialog(
       context,
       title: l.cancelAppointment,
-      message: l.cancelAppointmentConfirm,
+      message: policy,
       confirm: l.cancelAppointment,
       destructive: true,
     );
     if (!ok || !mounted) return;
     setState(() => _busy = true);
     try {
-      await _repo.cancelAppointment(_a.id);
+      final refund = await _repo.cancelAppointment(_a.id);
+      if (mounted && refund == 'requested') {
+        showMessage(context, l.refundRequested);
+      }
       await _refresh();
     } catch (e) {
       if (mounted) showError(context, e);
@@ -183,6 +197,13 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                           label: _a.isOnline ? l.online : l.inClinic,
                           color: _a.isOnline ? Brand.teal : Brand.blue,
                         ),
+                        if (_a.refundStatus == 'requested')
+                          StatusChip(
+                            label: l.refundRequestedShort,
+                            color: Brand.warning,
+                          ),
+                        if (_a.refundStatus == 'refunded')
+                          StatusChip(label: l.refundDone, color: Brand.success),
                       ],
                     ),
                   ],

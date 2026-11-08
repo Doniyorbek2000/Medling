@@ -2331,6 +2331,162 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Video xizmati hozircha ulanmagan. Bemor bilan chat orqali bog\'laning.'**
   String get videoNotConfiguredDoctor;
+
+  /// No description provided for @tabAdmin.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshqaruv'**
+  String get tabAdmin;
+
+  /// No description provided for @statistics.
+  ///
+  /// In uz, this message translates to:
+  /// **'Statistika'**
+  String get statistics;
+
+  /// No description provided for @applications.
+  ///
+  /// In uz, this message translates to:
+  /// **'Arizalar'**
+  String get applications;
+
+  /// No description provided for @refunds.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaytarishlar'**
+  String get refunds;
+
+  /// No description provided for @statUsers.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchilar'**
+  String get statUsers;
+
+  /// No description provided for @statDoctors.
+  ///
+  /// In uz, this message translates to:
+  /// **'Faol shifokorlar'**
+  String get statDoctors;
+
+  /// No description provided for @statPendingApplications.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kutilayotgan arizalar'**
+  String get statPendingApplications;
+
+  /// No description provided for @statToday.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bugungi qabullar'**
+  String get statToday;
+
+  /// No description provided for @statRevenue30d.
+  ///
+  /// In uz, this message translates to:
+  /// **'30 kunlik tushum'**
+  String get statRevenue30d;
+
+  /// No description provided for @statOnlineShare.
+  ///
+  /// In uz, this message translates to:
+  /// **'Onlayn ulushi'**
+  String get statOnlineShare;
+
+  /// No description provided for @statRefundsPending.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaytarilishi kerak'**
+  String get statRefundsPending;
+
+  /// No description provided for @statAppointments.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabullar holati'**
+  String get statAppointments;
+
+  /// No description provided for @noRefunds.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaytariladigan to\'lovlar yo\'q'**
+  String get noRefunds;
+
+  /// No description provided for @refundReasonDoctor.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shifokor bekor qildi'**
+  String get refundReasonDoctor;
+
+  /// No description provided for @refundReasonPatient.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bemor 24 soatdan oldin bekor qildi'**
+  String get refundReasonPatient;
+
+  /// No description provided for @markRefunded.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaytarildi deb belgilash'**
+  String get markRefunded;
+
+  /// No description provided for @markRefundedConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Avval {provider} kabinetida to\'lovni qaytaring. Bemorga xabar yuboriladi. Davom etasizmi?'**
+  String markRefundedConfirm(String provider);
+
+  /// No description provided for @requestedAt.
+  ///
+  /// In uz, this message translates to:
+  /// **'So\'ralgan: {time}'**
+  String requestedAt(String time);
+
+  /// No description provided for @transactionId.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tranzaksiya: {id}'**
+  String transactionId(String id);
+
+  /// No description provided for @copied.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nusxa olindi'**
+  String get copied;
+
+  /// No description provided for @cancelPolicyRefund.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabulgacha 24 soatdan ko\'proq vaqt bor — to\'lov to\'liq qaytariladi. Bekor qilasizmi?'**
+  String get cancelPolicyRefund;
+
+  /// No description provided for @cancelPolicyNoRefund.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabulgacha 24 soatdan kam qoldi — to\'lov qaytarilmaydi. Baribir bekor qilasizmi?'**
+  String get cancelPolicyNoRefund;
+
+  /// No description provided for @cancelPolicyDoctor.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bemorga to\'lov to\'liq qaytariladi va xabar yuboriladi. Bekor qilasizmi?'**
+  String get cancelPolicyDoctor;
+
+  /// No description provided for @refundRequested.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul bekor qilindi. To\'lov 3–5 ish kuni ichida qaytariladi.'**
+  String get refundRequested;
+
+  /// No description provided for @refundRequestedShort.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov qaytarilmoqda'**
+  String get refundRequestedShort;
+
+  /// No description provided for @refundDone.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov qaytarildi'**
+  String get refundDone;
 }
 
 class _AppLocalizationsDelegate

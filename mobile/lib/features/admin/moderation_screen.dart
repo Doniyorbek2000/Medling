@@ -13,7 +13,10 @@ import '../doctors/specialty.dart';
 /// Admin: shifokor arizalarini tekshirish (tasdiqlash / rad etish).
 /// Har bir qaror serverda moderator ID'si va vaqti bilan audit jurnaliga yoziladi.
 class ModerationScreen extends StatefulWidget {
-  const ModerationScreen({super.key});
+  const ModerationScreen({super.key, this.embedded = false});
+
+  /// Admin panelining ichki bo'limi sifatida (o'z AppBar'isiz).
+  final bool embedded;
 
   @override
   State<ModerationScreen> createState() => _ModerationScreenState();
@@ -54,17 +57,19 @@ class _ModerationScreenState extends State<ModerationScreen> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final repo = context.read<MedLinkRepository>();
+    final list = AsyncList<Map<String, dynamic>>(
+      key: ValueKey(_version),
+      load: repo.pendingDoctors,
+      empty: EmptyView(icon: Icons.task_alt_rounded, title: l.noPending),
+      itemBuilder: (context, d, _) => _card(context, d),
+    );
+    if (widget.embedded) return list;
     return Scaffold(
       appBar: AppBar(
         title: Text(l.tabModeration),
         automaticallyImplyLeading: false,
       ),
-      body: AsyncList<Map<String, dynamic>>(
-        key: ValueKey(_version),
-        load: repo.pendingDoctors,
-        empty: EmptyView(icon: Icons.task_alt_rounded, title: l.noPending),
-        itemBuilder: (context, d, _) => _card(context, d),
-      ),
+      body: list,
     );
   }
 

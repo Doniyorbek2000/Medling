@@ -1238,4 +1238,92 @@ class AppLocalizationsUz extends AppLocalizations {
   @override
   String get videoNotConfiguredDoctor =>
       'Video xizmati hozircha ulanmagan. Bemor bilan chat orqali bog\'laning.';
+
+  @override
+  String get tabAdmin => 'Boshqaruv';
+
+  @override
+  String get statistics => 'Statistika';
+
+  @override
+  String get applications => 'Arizalar';
+
+  @override
+  String get refunds => 'Qaytarishlar';
+
+  @override
+  String get statUsers => 'Foydalanuvchilar';
+
+  @override
+  String get statDoctors => 'Faol shifokorlar';
+
+  @override
+  String get statPendingApplications => 'Kutilayotgan arizalar';
+
+  @override
+  String get statToday => 'Bugungi qabullar';
+
+  @override
+  String get statRevenue30d => '30 kunlik tushum';
+
+  @override
+  String get statOnlineShare => 'Onlayn ulushi';
+
+  @override
+  String get statRefundsPending => 'Qaytarilishi kerak';
+
+  @override
+  String get statAppointments => 'Qabullar holati';
+
+  @override
+  String get noRefunds => 'Qaytariladigan to\'lovlar yo\'q';
+
+  @override
+  String get refundReasonDoctor => 'Shifokor bekor qildi';
+
+  @override
+  String get refundReasonPatient => 'Bemor 24 soatdan oldin bekor qildi';
+
+  @override
+  String get markRefunded => 'Qaytarildi deb belgilash';
+
+  @override
+  String markRefundedConfirm(String provider) {
+    return 'Avval $provider kabinetida to\'lovni qaytaring. Bemorga xabar yuboriladi. Davom etasizmi?';
+  }
+
+  @override
+  String requestedAt(String time) {
+    return 'So\'ralgan: $time';
+  }
+
+  @override
+  String transactionId(String id) {
+    return 'Tranzaksiya: $id';
+  }
+
+  @override
+  String get copied => 'Nusxa olindi';
+
+  @override
+  String get cancelPolicyRefund =>
+      'Qabulgacha 24 soatdan ko\'proq vaqt bor — to\'lov to\'liq qaytariladi. Bekor qilasizmi?';
+
+  @override
+  String get cancelPolicyNoRefund =>
+      'Qabulgacha 24 soatdan kam qoldi — to\'lov qaytarilmaydi. Baribir bekor qilasizmi?';
+
+  @override
+  String get cancelPolicyDoctor =>
+      'Bemorga to\'lov to\'liq qaytariladi va xabar yuboriladi. Bekor qilasizmi?';
+
+  @override
+  String get refundRequested =>
+      'Qabul bekor qilindi. To\'lov 3–5 ish kuni ichida qaytariladi.';
+
+  @override
+  String get refundRequestedShort => 'To\'lov qaytarilmoqda';
+
+  @override
+  String get refundDone => 'To\'lov qaytarildi';
 }

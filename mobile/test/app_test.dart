@@ -146,7 +146,7 @@ void main() {
       'GET /v1/admin/doctors/pending': (_) => {'items': <Object>[]},
     };
     await pumpApp(t, routes, loggedIn: true, role: UserRole.admin);
-    expect(find.text('Moderatsiya'), findsOneWidget);
+    expect(find.text('Boshqaruv'), findsWidgets);
   });
 
   testWidgets('tarmoq xatosida qayta urinish tugmasi', (t) async {

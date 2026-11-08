@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/l10n.dart';
 import '../../core/session.dart';
-import '../admin/moderation_screen.dart';
+import '../admin/admin_screen.dart';
 import '../appointments/appointments_screen.dart';
 import '../doctor_portal/doctor_schedule_screen.dart';
 import '../doctors/doctors_screen.dart';
@@ -91,10 +91,10 @@ class _HomeShellState extends State<HomeShell> {
       if (role == UserRole.admin)
         (
           'moderation',
-          const ModerationScreen(),
-          Icons.verified_user_outlined,
-          Icons.verified_user_rounded,
-          l.tabModeration,
+          const AdminScreen(),
+          Icons.admin_panel_settings_outlined,
+          Icons.admin_panel_settings_rounded,
+          l.tabAdmin,
         ),
       (
         'profile',

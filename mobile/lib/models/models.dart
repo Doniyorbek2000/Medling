@@ -120,6 +120,7 @@ class Appointment {
           : Conclusion.fromJson(j['conclusion'] as Map<String, dynamic>),
       myRole = j['myRole'] as String?,
       patientName = j['patientName'] as String?,
+      refundStatus = j['refundStatus'] as String? ?? 'none',
       videoAvailable = j['videoAvailable'] as bool? ?? false;
 
   final String id;
@@ -139,6 +140,13 @@ class Appointment {
 
   /// Faqat shifokorga: bemor ismi (tibbiy profildan).
   final String? patientName;
+
+  /// `none` | `requested` | `refunded`.
+  final String refundStatus;
+
+  /// Bemor bekor qilsa pul qaytariladimi (qabulgacha kamida 24 soat).
+  bool refundableByPatientAt(DateTime now) =>
+      startsAt.difference(now) >= const Duration(hours: 24);
   final bool videoAvailable;
 
   bool get isOnline => type == 'online';
@@ -401,4 +409,53 @@ class PatientInfo {
   final MedicalProfile profile;
   final TriageResult? triage;
   final String? triageInput;
+}
+
+/// Admin paneli ko'rsatkichlari.
+class AdminStats {
+  AdminStats.fromJson(Map<String, dynamic> j)
+    : users = j['users'] as int,
+      doctorsApproved = j['doctorsApproved'] as int,
+      doctorsPending = j['doctorsPending'] as int,
+      appointmentsByStatus = (j['appointmentsByStatus'] as Map)
+          .cast<String, int>(),
+      appointmentsToday = j['appointmentsToday'] as int,
+      onlineShare = j['onlineShare'] as int,
+      revenue30dUzs = j['revenue30dUzs'] as int,
+      refundsPending = j['refundsPending'] as int,
+      refundsPendingUzs = j['refundsPendingUzs'] as int;
+
+  final int users;
+  final int doctorsApproved;
+  final int doctorsPending;
+  final Map<String, int> appointmentsByStatus;
+  final int appointmentsToday;
+  final int onlineShare;
+  final int revenue30dUzs;
+  final int refundsPending;
+  final int refundsPendingUzs;
+}
+
+/// Admin: qaytarilishi kerak bo'lgan to'lov.
+class RefundRequest {
+  RefundRequest.fromJson(Map<String, dynamic> j)
+    : orderId = j['id'] as String,
+      appointmentId = j['appointmentId'] as String,
+      amountUzs = j['amountUzs'] as int,
+      provider = j['provider'] as String,
+      providerTxnId = j['providerTxnId'] as String?,
+      reason = j['reason'] as String? ?? '',
+      requestedAt = DateTime.parse(j['requestedAt'] as String).toLocal(),
+      appointmentStartsAt = j['appointmentStartsAt'] == null
+          ? null
+          : DateTime.parse(j['appointmentStartsAt'] as String).toUtc();
+
+  final String orderId;
+  final String appointmentId;
+  final int amountUzs;
+  final String provider;
+  final String? providerTxnId;
+  final String reason;
+  final DateTime requestedAt;
+  final DateTime? appointmentStartsAt;
 }
