@@ -220,6 +220,16 @@ class DoctorService {
 
   DoctorProfile? byId(String id) => _doctors[id];
 
+  /// Shifokor hisobi o'chirilganda profil qidiruvdan olinadi. Ism va
+  /// litsenziya o'tgan qabullar yozuvi uchun saqlanadi (tibbiy hujjat).
+  void deactivate(DoctorProfile d) {
+    d
+      ..status = ModerationStatus.suspended
+      ..moderationNote = 'account_deleted'
+      ..moderatedAt = DateTime.now().toUtc();
+    persist(d);
+  }
+
   /// Shifokor o'z jadvali va narxlarini o'zgartiradi.
   DoctorProfile updateSettings(DoctorProfile d, Map<String, dynamic> j) {
     final days = ((j['workDays'] as List?) ?? d.workDays.toList())

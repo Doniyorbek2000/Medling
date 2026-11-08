@@ -79,6 +79,17 @@ void wireAppointmentNotifications({
       );
     }
   };
+  appointments.onRescheduled = (a, previous) {
+    final doctorUser = doctors.byId(a.doctorId)?.userId;
+    if (doctorUser != null) {
+      notifications.notify(
+        doctorUser,
+        PushKind.appointmentRescheduled,
+        at: a.startsAt,
+        data: {'type': 'appointment', 'appointmentId': a.id},
+      );
+    }
+  };
   appointments.onCancelled = (a, actor) {
     final doctorUser = doctors.byId(a.doctorId)?.userId;
     // Bekor qilgan tomonga emas, ikkinchi tomonga xabar beramiz.

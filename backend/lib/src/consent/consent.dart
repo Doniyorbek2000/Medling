@@ -101,6 +101,23 @@ class ConsentService {
     );
   }
 
+  /// Hisob o'chirilganda barcha amaldagi roziliklar qaytarib olinadi
+  /// (tarix saqlanadi — qachon rozilik berilgani isbot sifatida kerak).
+  Future<void> revokeAll(String userId) async {
+    final now = DateTime.now().toUtc();
+    for (final r in (await current(userId)).values.where((r) => r.granted)) {
+      await record(
+        ConsentRecord(
+          userId: userId,
+          scope: r.scope,
+          version: r.version,
+          granted: false,
+          at: now,
+        ),
+      );
+    }
+  }
+
   Future<Map<ConsentScope, ConsentRecord>> current(String userId) async {
     final out = <ConsentScope, ConsentRecord>{};
     for (final r in _history.where((r) => r.userId == userId)) {

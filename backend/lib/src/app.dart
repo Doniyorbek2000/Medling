@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
+import 'package:shelf_web_socket/shelf_web_socket.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import 'ai/triage_service.dart';
 import 'appointments/appointments.dart';
@@ -12,6 +15,7 @@ import 'consent/consent.dart';
 import 'core/http_utils.dart';
 import 'doctors/doctors.dart';
 import 'doctors/specialties.dart';
+import 'legal/legal.dart';
 import 'payments/click.dart';
 import 'payments/orders.dart';
 import 'payments/payme.dart';
@@ -42,7 +46,9 @@ class MedLinkApi {
     AttachmentService? attachments,
     required this.publicBaseUrl,
     this.trustProxy = false,
-  }) : attachments =
+    LegalInfo legal = const LegalInfo(),
+  }) : legal = LegalPages(legal),
+       attachments =
            attachments ??
            AttachmentService(
              appointments: appointments,
@@ -69,8 +75,12 @@ class MedLinkApi {
   final AttachmentService attachments;
   final String publicBaseUrl;
   final bool trustProxy;
+  final LegalPages legal;
 
   final _rate = <String, List<DateTime>>{};
+
+  /// WebSocket ulanishining eng uzoq muddati (access token muddati).
+  static const liveMaxAge = AuthService.accessTtl;
 
   /// Oddiy sliding-window limitlovchi (OTP brute-force'ga qarshi).
   /// Mijoz IP manzili. Load balancer / Cloud Run ortida barcha so'rovlar bir
@@ -171,6 +181,32 @@ class MedLinkApi {
     };
   }
 
+  /// Bekor qilish va pul qaytarish qoidasi (bitta joyda). [role] — bekor
+  /// qilgan tomon. Natija: `none`, `requested` (admin navbatida) yoki
+  /// `refunded` (Google Pay / Apple Pay — darhol avtomatik).
+  Future<String> _cancelWithRefund(Appointment a, User u, String role) async {
+    final wasConfirmed = a.status == AppointmentStatus.confirmed;
+    appointments.cancel(a.id, u.id);
+    final paid = orders.paidOrderFor(a.id);
+    final reason = refundReason(a, role, DateTime.now().toUtc());
+    if (!wasConfirmed || paid == null || reason == null) return 'none';
+    orders.requestRefund(paid, reason);
+    if (isWallet(paid.provider) && await wallet.refund(paid)) {
+      _refunded(paid);
+      return 'refunded';
+    }
+    return 'requested';
+  }
+
+  void _refunded(PaymentOrder o) {
+    orders.completeRefund(o);
+    notifications.notify(
+      o.userId,
+      PushKind.refundCompleted,
+      data: {'type': 'appointment', 'appointmentId': o.appointmentId},
+    );
+  }
+
   /// Shifokorga bemor ismi (tibbiy profildan; to'ldirilmagan bo'lsa null).
   /// To'lanmagan bron uchun ko'rsatilmaydi.
   Future<String?> _patientName(Appointment a) async {
@@ -192,6 +228,9 @@ class MedLinkApi {
   Handler get handler {
     final r = Router()
       ..get('/health', (Request _) => jsonOk({'ok': true}))
+      // Ommaviy hujjatlar (do'kon sahifasi va ilova shu havolani ochadi).
+      ..get('/legal/privacy', legal.privacy)
+      ..get('/legal/terms', legal.terms)
       // ---------------- Auth ----------------
       ..post('/v1/auth/otp/request', (Request req) async {
         _limit(req, 'otp', 20, const Duration(minutes: 10));
@@ -478,12 +517,13 @@ class MedLinkApi {
         if (o == null || o.refundStatus != RefundStatus.requested) {
           throw ApiException(404, 'not_found');
         }
-        orders.completeRefund(o);
-        notifications.notify(
-          o.userId,
-          PushKind.refundCompleted,
-          data: {'type': 'appointment', 'appointmentId': o.appointmentId},
-        );
+        // Google Pay / Apple Pay: avtomatik urinish muvaffaqiyatsiz bo'lgan
+        // bo'lsa — admin qayta urinadi (Stripe orqali). Click/Payme — kabinetda
+        // qaytarilgach belgilanadi.
+        if (isWallet(o.provider) && !await wallet.refund(o)) {
+          throw ApiException(502, 'refund_failed');
+        }
+        _refunded(o);
         await _audit(u, 'refund.complete', 'order', id);
         return jsonOk(o.toJson());
       })
@@ -599,6 +639,39 @@ class MedLinkApi {
           },
         );
       })
+      // Real vaqtdagi chat: server yangi xabarlarni darhol yuboradi (xabar
+      // yuborish — oddiy POST orqali, bazaga yozilishi kafolatlangan).
+      // Token sarlavhada (URL'da emas — loglarga tushmasligi uchun).
+      // Ulanish [liveMaxAge] dan keyin yopiladi: mijoz yangi token bilan
+      // qayta ulanadi, shu bilan muddati o'tgan token ishlashda qolmaydi.
+      ..get('/v1/appointments/<id>/live', (Request req, String id) {
+        final u = requireUser(req);
+        appointments.requireParticipant(id, u.id);
+        return webSocketHandler((WebSocketChannel ws, String? _) {
+          final sub = chat.live(id).listen((m) async {
+            ws.sink.add(
+              jsonEncode({
+                'type': 'message',
+                'message': await chat.toJson(m, u.id),
+              }),
+            );
+          });
+          final timer = Timer(liveMaxAge, () => ws.sink.close(4001, 'reauth'));
+          ws.sink.add(jsonEncode({'type': 'ready'}));
+          ws.stream.listen(
+            (_) {}, // mijozdan faqat ping keladi
+            onDone: () {
+              sub.cancel();
+              timer.cancel();
+            },
+            onError: (Object _) {
+              sub.cancel();
+              timer.cancel();
+            },
+            cancelOnError: true,
+          );
+        }, pingInterval: const Duration(seconds: 25))(req);
+      })
       ..post('/v1/appointments/<id>/video', (Request req, String id) async {
         final u = requireUser(req);
         final a = appointments.requireParticipant(id, u.id);
@@ -683,18 +756,27 @@ class MedLinkApi {
       ..post('/v1/appointments/<id>/cancel', (Request req, String id) async {
         final u = requireUser(req);
         final a = appointments.requireParticipant(id, u.id);
-        final wasConfirmed = a.status == AppointmentStatus.confirmed;
         final role = appointments.participantRole(a, u.id)!;
-        appointments.cancel(id, u.id);
-        var refund = 'none';
-        final paid = orders.paidOrderFor(a.id);
-        final reason = refundReason(a, role, DateTime.now().toUtc());
-        if (wasConfirmed && paid != null && reason != null) {
-          orders.requestRefund(paid, reason);
-          refund = 'requested';
-        }
+        final refund = await _cancelWithRefund(a, u, role);
         await _audit(u, 'appointment.cancel', 'appointment', id);
         return jsonOk({'id': id, 'status': 'cancelled', 'refund': refund});
+      })
+      ..post('/v1/appointments/<id>/reschedule', (
+        Request req,
+        String id,
+      ) async {
+        final u = requireUser(req);
+        final j = await readJson(req);
+        final raw = j['startsAt'];
+        final t = raw is String ? DateTime.tryParse(raw) : null;
+        if (t == null) throw ApiException(400, 'invalid_time');
+        final a = appointments.reschedule(id, u.id, t);
+        await _audit(u, 'appointment.reschedule', 'appointment', id);
+        return jsonOk({
+          ...await appointments.toJson(a),
+          'myRole': 'patient',
+          'refundStatus': orders.refundFor(a.id).name,
+        });
       })
       // ---------------- To'lovlar ----------------
       ..post('/v1/payments/checkout', (Request req) async {
@@ -735,10 +817,12 @@ class MedLinkApi {
           amountUzs: a.priceUzs,
           provider: provider,
         );
-        final ok = await wallet.charge(o, j['token'] as String);
+        final txn = await wallet.charge(o, j['token'] as String);
+        final ok = txn != null;
         if (ok) {
           o
             ..status = OrderStatus.paid
+            ..providerTxnId = txn
             ..paidAt = DateTime.now().toUtc();
           appointments.markPaid(a.id);
         } else {
@@ -796,6 +880,33 @@ class MedLinkApi {
             for (final e in await audit.forActor(u.id)) e.toJson(),
           ],
         });
+      })
+      // Hisobni to'liq o'chirish (App Store 5.1.1(v), Google Play talabi,
+      // O'RQ-547 "unutilish huquqi"). Qonun bo'yicha saqlanishi shart bo'lgan
+      // yozuvlar (to'lovlar, shifokor xulosalari, audit) qoladi, lekin
+      // shaxsni aniqlovchi ma'lumotlar o'chiriladi.
+      ..delete('/v1/me', (Request req) async {
+        final u = requireUser(req);
+        var refunds = 0;
+        // Kelgusi qabullar bekor qilinadi (pul qaytarish qoidasi bo'yicha).
+        for (final a in appointments.activeFor(patientId: u.id)) {
+          if (await _cancelWithRefund(a, u, 'patient') != 'none') refunds++;
+        }
+        final doctor = doctors.byUser(u.id);
+        if (doctor != null) {
+          for (final a in appointments.activeFor(doctorId: doctor.id)) {
+            if (await _cancelWithRefund(a, u, 'doctor') != 'none') refunds++;
+          }
+          doctors.deactivate(doctor);
+        }
+        triage.deleteAll(u.id);
+        profiles.delete(u.id);
+        appointments.anonymizeReviews(u.id);
+        devices.removeUser(u.id);
+        await consents.revokeAll(u.id);
+        await _audit(u, 'me.delete_account', 'user', u.id);
+        auth.deleteUser(u);
+        return jsonOk({'deleted': true, 'refunds': refunds});
       })
       ..delete('/v1/me/health-data', (Request req) async {
         final u = requireUser(req);

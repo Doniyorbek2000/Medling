@@ -87,9 +87,30 @@ class AuthService {
     ),
   );
 
-  /// Ishga tushganda bazadan tiklash.
+  /// Hisobni o'chirish: foydalanuvchi tizimdan o'chiriladi (barcha tokenlar
+  /// darhol yaroqsiz), telefon raqami (shifrlangan va xeshi) yo'q qilinadi.
+  /// Qator bazada qoladi — qonun bo'yicha saqlanadigan yozuvlar (to'lovlar,
+  /// tibbiy xulosalar, audit) unga bog'langan, lekin endi shaxsni aniqlamaydi.
+  /// Shu raqam bilan qayta kirilsa — yangi, bo'sh hisob ochiladi.
+  void deleteUser(User u) {
+    _users.remove(u.id);
+    changes.save(
+      'users',
+      u.id,
+      () => (
+        columns: {'phone_hash': 'deleted:${u.id}', 'role': u.role.name},
+        data: {
+          'phoneEnc': '',
+          'deletedAt': DateTime.now().toUtc().toIso8601String(),
+        },
+      ),
+    );
+  }
+
+  /// Ishga tushganda bazadan tiklash (o'chirilgan hisoblar tiklanmaydi).
   void restoreUsers(List<Map<String, dynamic>> rows) {
     for (final r in rows) {
+      if ((r['phone_hash'] as String).startsWith('deleted:')) continue;
       final u = User(
         id: r['id'] as String,
         phoneHash: r['phone_hash'] as String,

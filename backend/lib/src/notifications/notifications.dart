@@ -17,6 +17,7 @@ enum PushKind {
   consultationStarted,
   conclusionReady,
   refundCompleted,
+  appointmentRescheduled,
 }
 
 class Device {
@@ -128,6 +129,11 @@ class PushTemplates {
       'uz': ('Qabul bekor qilindi', '{time} dagi qabul bekor qilindi.'),
       'ru': ('Приём отменён', 'Приём в {time} отменён.'),
       'en': ('Visit cancelled', 'The visit at {time} was cancelled.'),
+    },
+    PushKind.appointmentRescheduled: {
+      'uz': ("Qabul vaqti o'zgardi", "Qabul {time} ga ko'chirildi."),
+      'ru': ('Время приёма изменено', 'Приём перенесён на {time}.'),
+      'en': ('Visit rescheduled', 'The visit was moved to {time}.'),
     },
     PushKind.appointmentReminder: {
       'uz': ('Qabul eslatmasi', 'Qabulingiz soat {time} da. Kechikmang.'),

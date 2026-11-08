@@ -200,6 +200,12 @@ Future<void> main() async {
       apiSecret: env['LIVEKIT_API_SECRET'] ?? '',
     ),
     publicBaseUrl: cfg.publicBaseUrl,
+    legal: LegalInfo(
+      operatorName: env['MEDLINK_OPERATOR_NAME'] ?? 'MedLink',
+      operatorAddress: env['MEDLINK_OPERATOR_ADDRESS'] ?? '',
+      contactEmail: env['MEDLINK_CONTACT_EMAIL'] ?? '',
+      contactPhone: env['MEDLINK_CONTACT_PHONE'] ?? '',
+    ),
     // Cloud Run / load balancer ortida: true.
     trustProxy: env['MEDLINK_TRUST_PROXY'] == 'true',
   );

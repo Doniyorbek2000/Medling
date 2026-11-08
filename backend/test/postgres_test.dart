@@ -32,7 +32,10 @@ class _Model implements MedicalModel {
 
 class _Wallet implements WalletGateway {
   @override
-  Future<bool> charge(PaymentOrder order, String token) async => true;
+  Future<String?> charge(PaymentOrder order, String token) async => 'pi_1';
+
+  @override
+  Future<bool> refund(PaymentOrder order) async => true;
 }
 
 /// Bitta "server nusxasi": servislar + API + persistence middleware.
@@ -565,7 +568,31 @@ void main() {
       parameters: {'u': patientId},
     );
     expect(left.first.first, 0);
+
+    // Hisobni to'liq o'chirish: raqam bazadan yo'qoladi, qayta ishga
+    // tushganda hisob tiklanmaydi, to'lov yozuvlari (qonun bo'yicha) qoladi.
+    expect((await w.send('DELETE', '/v1/me', token: again)).$1, 200);
+    final u = await c.execute(
+      Sql.named('SELECT phone_hash, data::text FROM users WHERE id = @u'),
+      parameters: {'u': patientId},
+    );
+    expect(u.first[0], 'deleted:$patientId');
+    expect(u.first[1] as String, contains('"phoneEnc": ""'));
     await c.close();
+    await store.close();
+
+    store = await PostgresStore.open(url);
+    w = _World(store);
+    final counts2 = await w.restore();
+    expect(counts2['users'], 3); // qatorlar o'qiladi, o'chirilgan tiklanmaydi
+    expect(w.auth.userById(patientId), isNull);
+    expect(w.auth.userCount, 2);
+    expect(w.orders.byId(o1['id'] as String), isNotNull);
+    expect(w.devices.forUser(patientId), isEmpty);
+    expect(await w.consents.hasAllRequired(patientId), isFalse);
+    // Shu raqam bilan kirish — yangi hisob.
+    await w.login('+998901234567', consent: false);
+    expect(w.auth.userCount, 3);
     await store.close();
   }, timeout: const Timeout(Duration(minutes: 2)));
 }

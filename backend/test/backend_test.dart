@@ -1,3 +1,9 @@
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:shelf/shelf_io.dart' as io;
+
+import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -31,9 +37,18 @@ class _FakeModel implements MedicalModel {
 }
 
 class _FakeWallet implements WalletGateway {
+  final refunded = <String>[];
+  bool refundOk = true;
+
   @override
-  Future<bool> charge(PaymentOrder order, String token) async =>
-      token == 'tok_ok';
+  Future<String?> charge(PaymentOrder order, String token) async =>
+      token == 'tok_ok' ? 'pi_${order.id}' : null;
+
+  @override
+  Future<bool> refund(PaymentOrder order) async {
+    if (refundOk) refunded.add(order.providerTxnId!);
+    return refundOk;
+  }
 }
 
 void main() {
@@ -443,8 +458,11 @@ void main() {
     late NotificationService notifications;
     late ChatService chat;
     late VideoTokenIssuer video;
+    late _FakeWallet wallet;
+    late AuthService authService;
 
     setUp(() {
+      wallet = _FakeWallet();
       final enc = FieldEncryption({'k1': _key}, 'k1');
       otp = _CapturingOtp();
       doctors = DoctorService(enc);
@@ -471,7 +489,7 @@ void main() {
         apiSecret: 's' * 40,
       );
       api = MedLinkApi(
-        auth: AuthService(
+        auth: authService = AuthService(
           jwtSecret: 'x' * 40,
           encryption: enc,
           otpSender: otp,
@@ -501,7 +519,7 @@ void main() {
           onPaid: (_) {},
           onRefunded: (_) {},
         ),
-        wallet: _FakeWallet(),
+        wallet: wallet,
         audit: InMemoryAuditLog(),
         profiles: MedicalProfileService(enc),
         devices: devices,
@@ -1223,6 +1241,8 @@ void main() {
         return a['id'] as String;
       }
 
+      // Stripe vaqtincha ishlamayapti — qaytarish admin navbatiga tushadi.
+      wallet.refundOk = false;
       // Bemor 3 kun oldin bekor qiladi — qaytariladi.
       final early = await bookAndPay(3);
       final (_, c1) = await send(
@@ -1261,12 +1281,23 @@ void main() {
       expect((stats['appointmentsByStatus'] as Map)['cancelled'], 2);
       expect(stats['doctorsApproved'], greaterThanOrEqualTo(1));
 
+      // Stripe hali ham ishlamasa — admin xato ko'radi, navbat saqlanadi.
+      expect(
+        (await send(
+          'POST',
+          '/v1/admin/refunds/${first['id']}/complete',
+          token: admin,
+        )).$1,
+        502,
+      );
+      wallet.refundOk = true;
       final (cc, done) = await send(
         'POST',
         '/v1/admin/refunds/${first['id']}/complete',
         token: admin,
       );
       expect(cc, 200);
+      expect(wallet.refunded, ['pi_${first['id']}']);
       expect(done['refundStatus'], 'refunded');
       expect(done['status'], 'refunded');
       // Takroriy yakunlash — topilmaydi.
@@ -1287,6 +1318,354 @@ void main() {
         (await send('GET', '/v1/admin/refunds', token: admin)).$2['items'],
         hasLength(1),
       );
+
+      // Stripe ishlayotganda Google Pay qaytarishi darhol avtomatik.
+      final auto = await bookAndPay(5);
+      final (_, c3) = await send(
+        'POST',
+        '/v1/appointments/$auto/cancel',
+        token: patient,
+      );
+      expect(c3['refund'], 'refunded');
+      expect(wallet.refunded, hasLength(2));
+      final (_, a4) = await send(
+        'GET',
+        '/v1/appointments/$auto',
+        token: patient,
+      );
+      expect(a4['refundStatus'], 'refunded');
+    });
+
+    Future<({String doctorId, String docToken})> approvedDoctor(
+      String phone,
+    ) async {
+      final admin = await login('+998900000001');
+      await consentAll(admin);
+      var doc = await login(phone);
+      await consentAll(doc);
+      final (_, app) = await send(
+        'POST',
+        '/v1/doctors/apply',
+        token: doc,
+        body: {
+          'fullName': 'Jalilov Bekzod Akmalovich',
+          'specialty': 'therapist',
+          'licenseNumber': 'LIC-$phone',
+          'documentRefs': ['gs://x'],
+          'priceUzs': 90000,
+        },
+      );
+      await send(
+        'POST',
+        '/v1/admin/doctors/${app['id']}/moderate',
+        token: admin,
+        body: {'decision': 'approved'},
+      );
+      doc = await login(phone);
+      await send(
+        'PUT',
+        '/v1/doctor/settings',
+        token: doc,
+        body: {
+          'workDays': [1, 2, 3, 4, 5, 6, 7],
+        },
+      );
+      return (doctorId: app['id'] as String, docToken: doc);
+    }
+
+    Future<List<String>> slotsOn(String doctorId, int daysAhead) async {
+      final day = DateTime.now()
+          .toUtc()
+          .add(Duration(days: daysAhead))
+          .toIso8601String()
+          .substring(0, 10);
+      final (_, s) = await send('GET', '/v1/doctors/$doctorId/slots?date=$day');
+      return (s['items'] as List).cast<String>();
+    }
+
+    Future<String> bookPaid(String token, String doctorId, String at) async {
+      final (_, a) = await send(
+        'POST',
+        '/v1/appointments',
+        token: token,
+        body: {'doctorId': doctorId, 'startsAt': at, 'reason': 'yo\'tal'},
+      );
+      await send(
+        'POST',
+        '/v1/payments/wallet',
+        token: token,
+        body: {
+          'appointmentId': a['id'],
+          'provider': 'applePay',
+          'token': 'tok_ok',
+        },
+      );
+      return a['id'] as String;
+    }
+
+    test('qabul vaqtini ko\'chirish: qoidalar va bildirishnoma', () async {
+      final (:doctorId, :docToken) = await approvedDoctor('+998907777771');
+      await send(
+        'POST',
+        '/v1/me/devices',
+        token: docToken,
+        body: {'token': 'fid-doc', 'platform': 'android', 'locale': 'uz'},
+      );
+      final patient = await login('+998907777772');
+      await consentAll(patient);
+      final day3 = await slotsOn(doctorId, 3);
+      final id = await bookPaid(patient, doctorId, day3.first);
+
+      // Begona foydalanuvchi va shifokor ko'chira olmaydi.
+      expect(
+        (await send(
+          'POST',
+          '/v1/appointments/$id/reschedule',
+          token: docToken,
+          body: {'startsAt': day3[1]},
+        )).$1,
+        403,
+      );
+      // Band yoki noto'g'ri vaqt.
+      expect(
+        (await send(
+          'POST',
+          '/v1/appointments/$id/reschedule',
+          token: patient,
+          body: {'startsAt': day3.first},
+        )).$1,
+        409,
+      );
+      expect(
+        (await send(
+          'POST',
+          '/v1/appointments/$id/reschedule',
+          token: patient,
+          body: {'startsAt': 'ertaga'},
+        )).$1,
+        400,
+      );
+
+      final (code, moved) = await send(
+        'POST',
+        '/v1/appointments/$id/reschedule',
+        token: patient,
+        body: {'startsAt': day3[2]},
+      );
+      expect(code, 200);
+      expect(
+        DateTime.parse(moved['startsAt'] as String),
+        DateTime.parse(day3[2]),
+      );
+      expect(moved['status'], 'confirmed');
+      expect(moved['reschedulesLeft'], 1);
+      // Eski vaqt bo'shadi, yangisi band.
+      final after = await slotsOn(doctorId, 3);
+      expect(after, contains(day3.first));
+      expect(after, isNot(contains(day3[2])));
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        push.sent.map((p) => p.$2.data['kind']),
+        contains('appointmentRescheduled'),
+      );
+
+      // Ikkinchi ko'chirish mumkin, uchinchisi — yo'q.
+      expect(
+        (await send(
+          'POST',
+          '/v1/appointments/$id/reschedule',
+          token: patient,
+          body: {'startsAt': day3[3]},
+        )).$1,
+        200,
+      );
+      final (limit, lj) = await send(
+        'POST',
+        '/v1/appointments/$id/reschedule',
+        token: patient,
+        body: {'startsAt': day3[4]},
+      );
+      expect(limit, 409);
+      expect((lj['error'] as Map)['code'], 'reschedule_limit');
+
+      // Qabulgacha 24 soatdan kam qolganda ko'chirib bo'lmaydi.
+      final a = appts.byId(id)!;
+      expect(
+        () => appts.reschedule(
+          id,
+          a.patientId,
+          DateTime.parse(day3[5]),
+          now: a.startsAt.subtract(const Duration(hours: 3)),
+        ),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.code,
+            'code',
+            'too_late_to_reschedule',
+          ),
+        ),
+      );
+    });
+
+    test('hisobni o\'chirish: ma\'lumotlar, qabullar, tokenlar', () async {
+      final (:doctorId, :docToken) = await approvedDoctor('+998906666661');
+      const phone = '+998906666662';
+      final patient = await login(phone);
+      await consentAll(patient);
+      await send(
+        'PUT',
+        '/v1/me/profile',
+        token: patient,
+        body: {
+          'fullName': 'Karimova Dilnoza',
+          'allergies': ['penitsillin'],
+        },
+      );
+      await send(
+        'POST',
+        '/v1/triage',
+        token: patient,
+        body: {'symptoms': 'yo\'tal', 'ageYears': 30, 'sex': 'female'},
+      );
+      await send(
+        'POST',
+        '/v1/me/devices',
+        token: patient,
+        body: {'token': 'fid-del', 'platform': 'ios', 'locale': 'uz'},
+      );
+      final slots = await slotsOn(doctorId, 3);
+      final future = await bookPaid(patient, doctorId, slots.first);
+      final before = authService.userCount;
+
+      final (code, j) = await send('DELETE', '/v1/me', token: patient);
+      expect(code, 200);
+      expect(j['refunds'], 1);
+      expect(authService.userCount, before - 1);
+
+      // Eski token endi ishlamaydi.
+      expect((await send('GET', '/v1/me', token: patient)).$1, 401);
+      // Kelgusi qabul bekor qilindi, pul avtomatik qaytarildi, vaqt bo'shadi.
+      expect(appts.byId(future)!.status, AppointmentStatus.cancelled);
+      expect(wallet.refunded, hasLength(1));
+      expect(await slotsOn(doctorId, 3), contains(slots.first));
+      // Tibbiy profil va AI tahlillari o'chirildi.
+      final patientId = appts.byId(future)!.patientId;
+      final profile = await api.profiles.get(patientId);
+      expect(profile.fullName, isEmpty);
+      expect(profile.allergies, isEmpty);
+      expect(await api.triage.history(patientId), isEmpty);
+
+      // Shu raqam bilan qayta kirish — yangi, bo'sh hisob, rozilik qayta
+      // so'raladi.
+      final again = await login(phone);
+      final (_, me) = await send('GET', '/v1/me', token: again);
+      expect(me['missingConsents'], isNotEmpty);
+      expect(me['id'], isNot(patientId));
+      expect(appts.forPatient(me['id'] as String), isEmpty);
+    });
+
+    test(
+      'shifokor hisobini o\'chirsa — profil yashiriladi, pul qaytadi',
+      () async {
+        final (:doctorId, :docToken) = await approvedDoctor('+998905555551');
+        final patient = await login('+998905555552');
+        await consentAll(patient);
+        final slots = await slotsOn(doctorId, 1);
+        final id = await bookPaid(patient, doctorId, slots.last);
+        final (code, j) = await send('DELETE', '/v1/me', token: docToken);
+        expect(code, 200);
+        expect(j['refunds'], 1);
+        expect(appts.byId(id)!.status, AppointmentStatus.cancelled);
+        final (_, a) = await send(
+          'GET',
+          '/v1/appointments/$id',
+          token: patient,
+        );
+        expect(a['refundStatus'], 'refunded');
+        final (_, search) = await send('GET', '/v1/doctors');
+        expect(
+          (search['items'] as List).map((d) => (d as Map)['id']),
+          isNot(contains(doctorId)),
+        );
+      },
+    );
+
+    test(
+      'chat real vaqtda (WebSocket): darhol keladi, begonaga yopiq',
+      () async {
+        final (:doctorId, :docToken) = await approvedDoctor('+998904444441');
+        final patient = await login('+998904444442');
+        await consentAll(patient);
+        final slots = await slotsOn(doctorId, 2);
+        final id = await bookPaid(patient, doctorId, slots.first);
+        final server = await io.serve(h, InternetAddress.loopbackIPv4, 0);
+        addTearDown(() => server.close(force: true));
+        Uri live(String apptId) => Uri.parse(
+          'ws://127.0.0.1:${server.port}/v1/appointments/$apptId/live',
+        );
+
+        final ws = IOWebSocketChannel.connect(
+          live(id),
+          headers: {'authorization': 'Bearer $docToken'},
+        );
+        final events = StreamIterator(ws.stream);
+        expect(await events.moveNext(), isTrue);
+        expect(jsonDecode(events.current as String)['type'], 'ready');
+
+        final (code, _) = await send(
+          'POST',
+          '/v1/appointments/$id/messages',
+          token: patient,
+          body: {'text': 'Salom, doktor!'},
+        );
+        expect(code, 201);
+        expect(
+          await events.moveNext().timeout(const Duration(seconds: 5)),
+          isTrue,
+        );
+        final ev = jsonDecode(events.current as String) as Map<String, dynamic>;
+        expect(ev['type'], 'message');
+        expect(ev['message']['text'], 'Salom, doktor!');
+        expect(ev['message']['mine'], isFalse);
+        expect(ev['message']['senderRole'], 'patient');
+        await ws.sink.close();
+
+        // Boshqa bemor bu qabul chatiga ulana olmaydi; tokensiz ham.
+        final stranger = await login('+998904444443');
+        for (final headers in [
+          {'authorization': 'Bearer $stranger'},
+          <String, String>{},
+        ]) {
+          final bad = IOWebSocketChannel.connect(live(id), headers: headers);
+          await expectLater(
+            bad.ready,
+            throwsA(isA<WebSocketChannelException>()),
+          );
+        }
+      },
+    );
+
+    test('maxfiylik siyosati va shartlar: 3 tilda, ommaviy', () async {
+      Future<(int, String, Map<String, String>)> page(String path) async {
+        final res = await h(Request('GET', Uri.parse('http://localhost$path')));
+        return (res.statusCode, await res.readAsString(), res.headers);
+      }
+
+      final (c1, uz, hd) = await page('/legal/privacy');
+      expect(c1, 200);
+      expect(hd['content-type'], startsWith('text/html'));
+      expect(uz, contains('Maxfiylik siyosati'));
+      expect(uz, contains("O'RQ-547"));
+      expect(uz, contains(currentConsentVersions[ConsentScope.personalData]));
+      final (_, ru, _) = await page('/legal/privacy?lang=ru');
+      expect(ru, contains('Политика конфиденциальности'));
+      final (_, en, _) = await page('/legal/terms?lang=en');
+      expect(en, contains('Terms of Use'));
+      expect(en, contains('24 hours'));
+      // Noma'lum til — o'zbekcha; HTML kiritish mumkin emas.
+      final (_, x, _) = await page('/legal/terms?lang=<script>');
+      expect(x, contains('Foydalanish shartlari'));
+      expect(x, isNot(contains('<script>')));
     });
   });
 }

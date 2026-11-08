@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:uuid/uuid.dart';
 
 import '../appointments/appointments.dart';
@@ -51,6 +53,12 @@ class ChatService {
 
   /// Yangi xabar (bildirishnoma uchun).
   void Function(Appointment a, ChatMessage m)? onMessage;
+
+  final _live = StreamController<ChatMessage>.broadcast();
+
+  /// Real vaqt (WebSocket) obunachilari uchun yangi xabarlar oqimi.
+  Stream<ChatMessage> live(String appointmentId) =>
+      _live.stream.where((m) => m.appointmentId == appointmentId);
 
   bool canWrite(Appointment a, DateTime now) => switch (a.status) {
     AppointmentStatus.confirmed => true,
@@ -138,6 +146,7 @@ class ChatService {
       ),
     );
     onMessage?.call(a, m);
+    _live.add(m);
     return m;
   }
 

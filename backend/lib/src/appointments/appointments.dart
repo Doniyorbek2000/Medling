@@ -25,7 +25,7 @@ class Appointment {
   final String id;
   final String patientId;
   final String doctorId;
-  final DateTime startsAt;
+  DateTime startsAt;
   final int priceUzs;
   final String reasonEnc;
   final String? triageId;
@@ -45,6 +45,9 @@ class Appointment {
 
   /// Shifokor video xonaga birinchi marta kirganda bemorga xabar beriladi.
   bool doctorJoinedVideo = false;
+
+  /// Bemor qabul vaqtini necha marta ko'chirgan.
+  int rescheduleCount = 0;
 
   bool get isOnline => type == 'online';
 }
@@ -139,6 +142,12 @@ class AppointmentService {
   void Function(Appointment a)? onConfirmed;
   void Function(Appointment a, String actorUserId)? onCancelled;
   void Function(Appointment a)? onConclusion;
+  void Function(Appointment a, DateTime previous)? onRescheduled;
+
+  /// Vaqtni ko'chirish qoidasi: qabulgacha kamida 24 soat qolganda va
+  /// ko'pi bilan 2 marta (pul qaytarish qoidasi bilan bir xil chegara).
+  static const changeDeadline = Duration(hours: 24);
+  static const maxReschedules = 2;
 
   static const slot = Duration(minutes: 30);
   static const holdFor = Duration(minutes: 15);
@@ -241,6 +250,7 @@ class AppointmentService {
         'conclusionEnc': a.conclusionEnc,
         'conclusionAt': a.conclusionAt?.toIso8601String(),
         'doctorJoinedVideo': a.doctorJoinedVideo,
+        'rescheduleCount': a.rescheduleCount,
       },
     ),
   );
@@ -269,6 +279,7 @@ class AppointmentService {
                 ? null
                 : DateTime.parse(j['conclusionAt'] as String)
             ..doctorJoinedVideo = j['doctorJoinedVideo'] as bool? ?? false
+            ..rescheduleCount = j['rescheduleCount'] as int? ?? 0
             ..review = rv == null
                 ? null
                 : Review(
@@ -374,6 +385,77 @@ class AppointmentService {
     if (wasConfirmed) onCancelled?.call(a, actorUserId);
   }
 
+  /// Bemor qabulni shu shifokorning boshqa bo'sh vaqtiga ko'chiradi.
+  /// To'lov saqlanadi; eslatmalar yangi vaqt bo'yicha qayta yuboriladi.
+  Appointment reschedule(
+    String id,
+    String patientId,
+    DateTime newStartsAt, {
+    DateTime? now,
+  }) {
+    final a = _items[id] ?? (throw ApiException(404, 'not_found'));
+    if (a.patientId != patientId) throw ApiException(403, 'forbidden');
+    if (a.status != AppointmentStatus.confirmed &&
+        a.status != AppointmentStatus.awaitingPayment) {
+      throw ApiException(409, 'not_reschedulable');
+    }
+    final n = (now ?? DateTime.now()).toUtc();
+    if (a.startsAt.difference(n) < changeDeadline) {
+      throw ApiException(409, 'too_late_to_reschedule');
+    }
+    if (a.rescheduleCount >= maxReschedules) {
+      throw ApiException(409, 'reschedule_limit');
+    }
+    final d = doctors.byId(a.doctorId);
+    if (d == null ||
+        d.status != ModerationStatus.approved ||
+        !d.offers(a.type)) {
+      throw ApiException(409, 'doctor_unavailable');
+    }
+    final t = newStartsAt.toUtc();
+    if (t == a.startsAt ||
+        !freeSlots(a.doctorId, t.add(tashkent)).contains(t)) {
+      throw ApiException(409, 'slot_unavailable');
+    }
+    final previous = a.startsAt;
+    a
+      ..startsAt = t
+      ..rescheduleCount += 1
+      ..reminderSent = false
+      ..doctorJoinedVideo = false;
+    persist(a);
+    if (a.status == AppointmentStatus.confirmed) {
+      onRescheduled?.call(a, previous);
+    }
+    return a;
+  }
+
+  /// Bemor yoki shifokorning kelgusi faol qabullari (hisob o'chirilganda).
+  List<Appointment> activeFor({String? patientId, String? doctorId}) => [
+    for (final a in _items.values)
+      if ((patientId != null && a.patientId == patientId ||
+              doctorId != null && a.doctorId == doctorId) &&
+          (a.status == AppointmentStatus.confirmed ||
+              a.status == AppointmentStatus.awaitingPayment))
+        a,
+  ];
+
+  /// Hisob o'chirilganda bemor sharhidagi ism olib tashlanadi.
+  void anonymizeReviews(String patientId) {
+    for (final a in _items.values) {
+      final r = a.review;
+      if (a.patientId == patientId && r != null) {
+        a.review = Review(
+          rating: r.rating,
+          comment: r.comment,
+          authorName: '—',
+          at: r.at,
+        );
+        persist(a);
+      }
+    }
+  }
+
   /// Shifokor qabulni yakunlaydi (faqat to'langan va boshlangan qabul).
   void complete(String id, String doctorUserId) {
     final a = _items[id] ?? (throw ApiException(404, 'not_found'));
@@ -441,6 +523,7 @@ class AppointmentService {
     'reason': await encryption.decrypt(a.reasonEnc, aad: 'appt:${a.id}:reason'),
     'triageId': a.triageId,
     'type': a.type,
+    'reschedulesLeft': maxReschedules - a.rescheduleCount,
     'review': a.review?.toJson(),
     'conclusion': a.conclusionEnc == null
         ? null
