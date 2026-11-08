@@ -43,8 +43,9 @@ void main() {
     for (final f in files) {
       final text = f.readAsStringSync();
       for (final m in RegExp(r'@color/([A-Za-z0-9_]+)').allMatches(text)) {
-        if (!colors.contains(m.group(1)))
+        if (!colors.contains(m.group(1))) {
           missing.add('${f.path}: @color/${m.group(1)}');
+        }
       }
       for (final m in RegExp(r'@drawable/([A-Za-z0-9_]+)').allMatches(text)) {
         if (!drawables.contains(m.group(1))) {

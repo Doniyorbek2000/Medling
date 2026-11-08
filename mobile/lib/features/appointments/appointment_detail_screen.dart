@@ -327,7 +327,8 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
   Widget _videoCard(BuildContext context) {
     final l = context.l10n;
     final now = DateTime.now();
-    final open = _a.videoOpenAt(now);
+    // Vaqt kelgan VA video xizmati ulangan bo'lsagina "ochiq" ko'rinish.
+    final open = _a.videoOpenAt(now) && _a.videoAvailable;
     final tooLate = now.isAfter(_a.startsAt.add(Appointment.lateJoin));
     final String hint;
     if (!_a.videoAvailable) {

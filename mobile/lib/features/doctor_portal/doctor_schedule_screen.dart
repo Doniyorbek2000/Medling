@@ -107,7 +107,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
         a.status == 'confirmed' &&
         !a.isOnline &&
         a.startsAt.isBefore(DateTime.now());
-    final videoNow = a.videoOpenAt(DateTime.now());
+    final videoNow = a.videoOpenAt(DateTime.now()) && a.videoAvailable;
     return Card(
       child: InkWell(
         onTap: () async {

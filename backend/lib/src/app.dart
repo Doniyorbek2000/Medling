@@ -339,6 +339,7 @@ class MedLinkApi {
                 {
                   ...await appointments.toJson(a),
                   'patientName': await _patientName(a),
+                  'videoAvailable': video.configured && a.isOnline,
                 },
           ],
         });
@@ -412,7 +413,10 @@ class MedLinkApi {
         return jsonOk({
           'items': [
             for (final a in appointments.forPatient(u.id))
-              await appointments.toJson(a),
+              {
+                ...await appointments.toJson(a),
+                'videoAvailable': video.configured && a.isOnline,
+              },
           ],
         });
       })
