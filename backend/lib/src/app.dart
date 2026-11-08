@@ -109,6 +109,57 @@ class MedLinkApi {
     }
   }
 
+  /// Admin paneli uchun umumiy ko'rsatkichlar (shaxsiy ma'lumotsiz).
+  Map<String, dynamic> _stats() {
+    final now = DateTime.now().toUtc();
+    final monthAgo = now.subtract(const Duration(days: 30));
+    final allDoctors = doctors.all.toList();
+    final appts = appointments.all.toList();
+    final paid = orders.all.where(
+      (o) => o.status == OrderStatus.paid || o.status == OrderStatus.refunded,
+    );
+    final byStatus = <String, int>{
+      for (final s in AppointmentStatus.values)
+        s.name: appts.where((a) => a.status == s).length,
+    };
+    final tashkentToday = DateTime.utc(
+      now.add(const Duration(hours: 5)).year,
+      now.add(const Duration(hours: 5)).month,
+      now.add(const Duration(hours: 5)).day,
+    ).subtract(const Duration(hours: 5));
+    return {
+      'users': auth.userCount,
+      'doctorsApproved': allDoctors
+          .where((d) => d.status == ModerationStatus.approved)
+          .length,
+      'doctorsPending': allDoctors
+          .where((d) => d.status == ModerationStatus.pending)
+          .length,
+      'appointmentsByStatus': byStatus,
+      'appointmentsToday': appts
+          .where(
+            (a) =>
+                a.status == AppointmentStatus.confirmed &&
+                !a.startsAt.isBefore(tashkentToday) &&
+                a.startsAt.isBefore(tashkentToday.add(const Duration(days: 1))),
+          )
+          .length,
+      'onlineShare': appts.isEmpty
+          ? 0
+          : (appts.where((a) => a.isOnline).length / appts.length * 100)
+                .round(),
+      'revenue30dUzs': paid
+          .where((o) => (o.paidAt ?? now).isAfter(monthAgo))
+          .where((o) => o.status == OrderStatus.paid)
+          .fold<int>(0, (s, o) => s + o.amountUzs),
+      'refundsPending': orders.pendingRefunds().length,
+      'refundsPendingUzs': orders.pendingRefunds().fold<int>(
+        0,
+        (s, o) => s + o.amountUzs,
+      ),
+    };
+  }
+
   /// Shifokorga bemor ismi (tibbiy profildan; to'ldirilmagan bo'lsa null).
   /// To'lanmagan bron uchun ko'rsatilmaydi.
   Future<String?> _patientName(Appointment a) async {
@@ -391,6 +442,45 @@ class MedLinkApi {
         await _audit(u, 'doctor.moderate.${decision.name}', 'doctor', id);
         return jsonOk({'id': d.id, 'status': d.status.name});
       })
+      ..get('/v1/admin/refunds', (Request req) async {
+        final u = requireUser(req, {Role.admin});
+        await _audit(u, 'refund.list', 'order');
+        return jsonOk({
+          'items': [
+            for (final o in orders.pendingRefunds())
+              {
+                ...o.toJson(),
+                'providerTxnId': o.providerTxnId,
+                'reason': o.refundReason,
+                'requestedAt': o.refundRequestedAt!.toIso8601String(),
+                'appointmentStartsAt': appointments
+                    .byId(o.appointmentId)
+                    ?.startsAt
+                    .toIso8601String(),
+              },
+          ],
+        });
+      })
+      ..post('/v1/admin/refunds/<id>/complete', (Request req, String id) async {
+        final u = requireUser(req, {Role.admin});
+        final o = orders.byId(id);
+        if (o == null || o.refundStatus != RefundStatus.requested) {
+          throw ApiException(404, 'not_found');
+        }
+        orders.completeRefund(o);
+        notifications.notify(
+          o.userId,
+          PushKind.refundCompleted,
+          data: {'type': 'appointment', 'appointmentId': o.appointmentId},
+        );
+        await _audit(u, 'refund.complete', 'order', id);
+        return jsonOk(o.toJson());
+      })
+      ..get('/v1/admin/stats', (Request req) async {
+        final u = requireUser(req, {Role.admin});
+        await _audit(u, 'stats.read', 'admin');
+        return jsonOk(_stats());
+      })
       // ---------------- Qabullar ----------------
       ..post('/v1/appointments', (Request req) async {
         final u = requireUser(req);
@@ -430,6 +520,7 @@ class MedLinkApi {
         return jsonOk({
           ...await appointments.toJson(a),
           'myRole': role,
+          'refundStatus': orders.refundFor(a.id).name,
           'videoAvailable': video.configured && a.isOnline,
           if (role == 'doctor') 'patientName': await _patientName(a),
         });
@@ -535,9 +626,19 @@ class MedLinkApi {
       })
       ..post('/v1/appointments/<id>/cancel', (Request req, String id) async {
         final u = requireUser(req);
+        final a = appointments.requireParticipant(id, u.id);
+        final wasConfirmed = a.status == AppointmentStatus.confirmed;
+        final role = appointments.participantRole(a, u.id)!;
         appointments.cancel(id, u.id);
+        var refund = 'none';
+        final paid = orders.paidOrderFor(a.id);
+        final reason = refundReason(a, role, DateTime.now().toUtc());
+        if (wasConfirmed && paid != null && reason != null) {
+          orders.requestRefund(paid, reason);
+          refund = 'requested';
+        }
         await _audit(u, 'appointment.cancel', 'appointment', id);
-        return jsonOk({'id': id, 'status': 'cancelled'});
+        return jsonOk({'id': id, 'status': 'cancelled', 'refund': refund});
       })
       // ---------------- To'lovlar ----------------
       ..post('/v1/payments/checkout', (Request req) async {

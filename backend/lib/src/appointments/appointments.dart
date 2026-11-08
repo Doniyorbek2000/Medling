@@ -49,6 +49,17 @@ class Appointment {
   bool get isOnline => type == 'online';
 }
 
+/// Pul qaytarish siyosati: shifokor bekor qilsa — har doim; bemor qabuldan
+/// kamida 24 soat oldin bekor qilsa — to'liq. Aks holda qaytarilmaydi.
+/// Qaytariladigan bo'lsa — sabab, aks holda null.
+String? refundReason(Appointment a, String cancelledByRole, DateTime now) {
+  if (cancelledByRole == 'doctor') return 'doctor_cancelled';
+  if (a.startsAt.difference(now) >= const Duration(hours: 24)) {
+    return 'patient_cancelled_early';
+  }
+  return null;
+}
+
 /// Retseptdagi bitta dori.
 class Prescription {
   Prescription({
@@ -134,6 +145,8 @@ class AppointmentService {
   static const tashkent = Duration(hours: 5);
 
   Appointment? byId(String id) => _items[id];
+
+  Iterable<Appointment> get all => _items.values;
 
   bool _blocks(Appointment a) =>
       a.status == AppointmentStatus.confirmed ||

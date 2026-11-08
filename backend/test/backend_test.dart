@@ -326,6 +326,27 @@ void main() {
     });
   });
 
+  test('pul qaytarish siyosati', () {
+    final start = DateTime.utc(2026, 11, 10, 5);
+    final a = Appointment(
+      id: 'a',
+      patientId: 'p',
+      doctorId: 'd',
+      startsAt: start,
+      priceUzs: 1,
+      reasonEnc: 'x',
+    );
+    expect(refundReason(a, 'doctor', start), 'doctor_cancelled');
+    expect(
+      refundReason(a, 'patient', start.subtract(const Duration(hours: 24))),
+      'patient_cancelled_early',
+    );
+    expect(
+      refundReason(a, 'patient', start.subtract(const Duration(hours: 23))),
+      isNull,
+    );
+  });
+
   group('Eskiz SMS', () {
     test('login, yuborish va token eskirsa qayta kirish', () async {
       final calls = <String>[];
@@ -1060,6 +1081,146 @@ void main() {
         headers: {'x-forwarded-for': '203.0.113.7, 10.0.0.1'},
       );
       expect(api.clientIp(req), 'unknown'); // trustProxy o'chiq
+    });
+
+    test('pul qaytarish: 24 soat qoidasi, admin navbati, statistika', () async {
+      final doc = await login('+998908888881');
+      final admin = await login('+998900000001');
+      final patient = await login('+998908888882');
+      for (final t in [doc, admin, patient]) {
+        await consentAll(t);
+      }
+      await send(
+        'POST',
+        '/v1/me/devices',
+        token: patient,
+        body: {'token': 'fid-r', 'platform': 'ios', 'locale': 'uz'},
+      );
+      final (_, app) = await send(
+        'POST',
+        '/v1/doctors/apply',
+        token: doc,
+        body: {
+          'fullName': 'Qodirov Anvar Botirovich',
+          'specialty': 'therapist',
+          'licenseNumber': 'LIC-R1',
+          'documentRefs': ['gs://x'],
+          'priceUzs': 100000,
+        },
+      );
+      await send(
+        'POST',
+        '/v1/admin/doctors/${app['id']}/moderate',
+        token: admin,
+        body: {'decision': 'approved'},
+      );
+      final docT = await login('+998908888881');
+      await send(
+        'PUT',
+        '/v1/doctor/settings',
+        token: docT,
+        body: {
+          'workDays': [1, 2, 3, 4, 5, 6, 7],
+        },
+      );
+
+      Future<String> bookAndPay(int daysAhead) async {
+        final day = DateTime.now()
+            .toUtc()
+            .add(Duration(days: daysAhead))
+            .toIso8601String()
+            .substring(0, 10);
+        final (_, slots) = await send(
+          'GET',
+          '/v1/doctors/${app['id']}/slots?date=$day',
+        );
+        final (_, a) = await send(
+          'POST',
+          '/v1/appointments',
+          token: patient,
+          body: {
+            'doctorId': app['id'],
+            'startsAt': (slots['items'] as List).first,
+            'reason': 'x',
+          },
+        );
+        await send(
+          'POST',
+          '/v1/payments/wallet',
+          token: patient,
+          body: {
+            'appointmentId': a['id'],
+            'provider': 'googlePay',
+            'token': 'tok_ok',
+          },
+        );
+        return a['id'] as String;
+      }
+
+      // Bemor 3 kun oldin bekor qiladi — qaytariladi.
+      final early = await bookAndPay(3);
+      final (_, c1) = await send(
+        'POST',
+        '/v1/appointments/$early/cancel',
+        token: patient,
+      );
+      expect(c1['refund'], 'requested');
+      // Shifokor bekor qiladi — har doim qaytariladi.
+      final byDoctor = await bookAndPay(4);
+      final (_, c2) = await send(
+        'POST',
+        '/v1/appointments/$byDoctor/cancel',
+        token: docT,
+      );
+      expect(c2['refund'], 'requested');
+      // To'lanmagan bron bekor qilinsa — qaytariladigan narsa yo'q.
+      final (_, a3) = await send(
+        'GET',
+        '/v1/appointments/$early',
+        token: patient,
+      );
+      expect(a3['refundStatus'], 'requested');
+
+      // Bemor/shifokor admin navbatini ko'ra olmaydi.
+      expect((await send('GET', '/v1/admin/refunds', token: patient)).$1, 403);
+      final (_, queue) = await send('GET', '/v1/admin/refunds', token: admin);
+      expect(queue['items'], hasLength(2));
+      final first = (queue['items'] as List).first as Map;
+      expect(first['amountUzs'], 100000);
+      expect(first['reason'], 'patient_cancelled_early');
+
+      final (_, stats) = await send('GET', '/v1/admin/stats', token: admin);
+      expect(stats['refundsPending'], 2);
+      expect(stats['refundsPendingUzs'], 200000);
+      expect((stats['appointmentsByStatus'] as Map)['cancelled'], 2);
+      expect(stats['doctorsApproved'], greaterThanOrEqualTo(1));
+
+      final (cc, done) = await send(
+        'POST',
+        '/v1/admin/refunds/${first['id']}/complete',
+        token: admin,
+      );
+      expect(cc, 200);
+      expect(done['refundStatus'], 'refunded');
+      expect(done['status'], 'refunded');
+      // Takroriy yakunlash — topilmaydi.
+      expect(
+        (await send(
+          'POST',
+          '/v1/admin/refunds/${first['id']}/complete',
+          token: admin,
+        )).$1,
+        404,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        push.sent.map((p) => p.$2.data['kind']),
+        contains('refundCompleted'),
+      );
+      expect(
+        (await send('GET', '/v1/admin/refunds', token: admin)).$2['items'],
+        hasLength(1),
+      );
     });
   });
 }

@@ -16,6 +16,7 @@ enum PushKind {
   newMessage,
   consultationStarted,
   conclusionReady,
+  refundCompleted,
 }
 
 class Device {
@@ -147,6 +148,17 @@ class PushTemplates {
       'uz': ('Shifokor xulosasi', 'Qabul xulosasi tayyor. Ilovada ko\'ring.'),
       'ru': ('Заключение врача', 'Заключение по приёму готово.'),
       'en': ('Doctor\'s summary', 'Your visit summary is ready in the app.'),
+    },
+    PushKind.refundCompleted: {
+      'uz': (
+        "To'lov qaytarildi",
+        "Bekor qilingan qabul uchun to'lov qaytarildi.",
+      ),
+      'ru': ('Возврат выполнен', 'Оплата за отменённый приём возвращена.'),
+      'en': (
+        'Refund completed',
+        'Your payment for the cancelled visit was refunded.',
+      ),
     },
     PushKind.doctorApproved: {
       'uz': ('Ariza tasdiqlandi', 'Profilingiz endi bemorlarga ko\'rinadi.'),

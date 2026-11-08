@@ -75,6 +75,8 @@ class AuthService {
 
   User? userById(String id) => _users[id];
 
+  int get userCount => _users.length;
+
   /// Foydalanuvchini bazaga yozish uchun belgilaydi (yangi yoki rol o'zgardi).
   void saveUser(User u) => changes.save(
     'users',

@@ -198,7 +198,10 @@ class PaymeMerchant {
       ..reason = reason;
     if (t.state == 2) {
       t.state = -2;
-      o.status = OrderStatus.refunded;
+      o
+        ..status = OrderStatus.refunded
+        ..refundStatus = RefundStatus.refunded
+        ..refundedAt = DateTime.now().toUtc();
       onRefunded(o);
     } else {
       t.state = -1;
