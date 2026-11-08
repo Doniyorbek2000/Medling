@@ -1412,4 +1412,197 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveConnected => 'Live';
+
+  @override
+  String get users => 'Users';
+
+  @override
+  String get appointmentsAll => 'Appointments';
+
+  @override
+  String get payments => 'Payments';
+
+  @override
+  String get auditLog => 'Audit log';
+
+  @override
+  String get statusApproved => 'Approved';
+
+  @override
+  String get statusSuspended => 'Suspended';
+
+  @override
+  String get statusRejected => 'Rejected';
+
+  @override
+  String get statusPending => 'Pending';
+
+  @override
+  String get blocked => 'Blocked';
+
+  @override
+  String get searchByPhone => 'Phone number: +998901234567';
+
+  @override
+  String get noResults => 'Nothing found';
+
+  @override
+  String get suspendDoctor => 'Suspend profile';
+
+  @override
+  String get suspendReasonHint => 'e.g. licence expired';
+
+  @override
+  String suspendWarning(int count) {
+    return '$count upcoming visit(s) will be cancelled and patients fully refunded.';
+  }
+
+  @override
+  String get reinstateDoctor => 'Reinstate profile';
+
+  @override
+  String reinstateConfirm(String name) {
+    return '$name\'s profile will be visible to patients again.';
+  }
+
+  @override
+  String get reason => 'Reason';
+
+  @override
+  String get hideReview => 'Hide';
+
+  @override
+  String get showReview => 'Restore';
+
+  @override
+  String get hideReviewTitle => 'Hide review';
+
+  @override
+  String get hideReviewHint => 'e.g. abuse or personal data';
+
+  @override
+  String hiddenReview(String reason) {
+    return 'Hidden: $reason';
+  }
+
+  @override
+  String get noReviewsYet => 'No reviews';
+
+  @override
+  String get blockUser => 'Block';
+
+  @override
+  String get unblockUser => 'Unblock';
+
+  @override
+  String get blockReasonHint => 'e.g. fake bookings';
+
+  @override
+  String get blockWarning =>
+      'The user will be signed out and unable to sign in. Upcoming visits are cancelled and refunded.';
+
+  @override
+  String get unblockConfirm => 'The user will be able to sign in again.';
+
+  @override
+  String registeredAt(String date) {
+    return 'Registered: $date';
+  }
+
+  @override
+  String appointmentsCount(int count) {
+    return 'Visits: $count';
+  }
+
+  @override
+  String get paidLabel => 'Paid';
+
+  @override
+  String get unpaidLabel => 'Unpaid';
+
+  @override
+  String totalPaid(String amount) {
+    return 'Total paid: $amount';
+  }
+
+  @override
+  String get orderPending => 'Pending';
+
+  @override
+  String get orderProcessing => 'Processing';
+
+  @override
+  String get orderCancelled => 'Cancelled';
+
+  @override
+  String get orderRefunded => 'Refunded';
+
+  @override
+  String get refundReasonAdmin => 'Cancelled by an administrator';
+
+  @override
+  String get refundReasonLate => 'Paid after the hold expired';
+
+  @override
+  String get medicalData => 'Medical data';
+
+  @override
+  String actorLabel(String id) {
+    return 'By: $id';
+  }
+
+  @override
+  String get noNotifications => 'No notifications yet';
+
+  @override
+  String get markAllRead => 'Mark all as read';
+
+  @override
+  String get statCompleted30d => 'Completed in 30 days';
+
+  @override
+  String get statEarnings30d => 'Earnings, 30 days';
+
+  @override
+  String get statAwaitingConclusion => 'Awaiting conclusion';
+
+  @override
+  String get daysOff => 'Days off';
+
+  @override
+  String get daysOffHint =>
+      'Patients cannot book on these days. Existing visits are not changed.';
+
+  @override
+  String get addDayOff => 'Add a day';
+
+  @override
+  String get noDaysOff => 'No days off set';
+
+  @override
+  String get errorAccountBlocked =>
+      'Your account is blocked. Please contact support.';
+
+  @override
+  String get errorNoteRequired => 'Please enter a reason';
+
+  @override
+  String get errorCannotBlockAdmin => 'An administrator cannot be blocked';
+
+  @override
+  String get doctorWorkspace => 'Workspace';
+
+  @override
+  String get myPayments => 'My payments';
+
+  @override
+  String get myPaymentsSubtitle => 'Receipts and refunds';
+
+  @override
+  String get noPayments => 'No payments yet';
+
+  @override
+  String visitOn(String date) {
+    return 'Visit: $date';
+  }
 }

@@ -8,6 +8,7 @@ import '../../data/repository.dart';
 import '../../models/models.dart';
 import '../../widgets/brand.dart';
 import '../appointments/appointment_detail_screen.dart';
+import '../notifications/notifications_screen.dart';
 import '../doctors/doctors_screen.dart';
 import '../doctors/specialty.dart';
 import '../medical_profile/medical_profile_screen.dart';
@@ -77,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const BrandName(fontSize: 20),
                 ],
               ),
+              actions: const [NotificationBell(), SizedBox(width: 4)],
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),

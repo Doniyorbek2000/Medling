@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/clinic_time.dart';
+import '../../core/format.dart';
 import '../../core/l10n.dart';
 import '../../core/theme.dart';
 import '../../data/repository.dart';
@@ -78,6 +80,22 @@ class _DoctorSettingsScreenState extends State<DoctorSettingsScreen> {
     }
   }
 
+  Future<void> _addDayOff(DoctorSettings s) async {
+    final today = clinicToday();
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 365)),
+      initialDate: today.add(const Duration(days: 1)),
+    );
+    if (picked == null || !mounted) return;
+    final key =
+        '${picked.year.toString().padLeft(4, '0')}-'
+        '${picked.month.toString().padLeft(2, '0')}-'
+        '${picked.day.toString().padLeft(2, '0')}';
+    setState(() => s.daysOff.add(key));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -149,6 +167,46 @@ class _DoctorSettingsScreenState extends State<DoctorSettingsScreen> {
                         style: context.text.bodySmall?.copyWith(
                           color: context.colors.onSurfaceVariant,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SectionCard(
+                  title: l.daysOff,
+                  icon: Icons.beach_access_outlined,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.daysOffHint,
+                        style: context.text.bodySmall?.copyWith(
+                          color: context.colors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (s.daysOff.isEmpty)
+                        Text(l.noDaysOff)
+                      else
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            for (final d in s.daysOff.toList()..sort())
+                              InputChip(
+                                label: Text(
+                                  context.fmt.date(DateTime.parse(d)),
+                                ),
+                                onDeleted: () =>
+                                    setState(() => s.daysOff.remove(d)),
+                              ),
+                          ],
+                        ),
+                      const SizedBox(height: 4),
+                      TextButton.icon(
+                        onPressed: () => _addDayOff(s),
+                        icon: const Icon(Icons.add_rounded),
+                        label: Text(l.addDayOff),
                       ),
                     ],
                   ),

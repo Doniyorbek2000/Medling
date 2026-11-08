@@ -2655,6 +2655,354 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Jonli aloqa'**
   String get liveConnected;
+
+  /// No description provided for @users.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchilar'**
+  String get users;
+
+  /// No description provided for @appointmentsAll.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabullar'**
+  String get appointmentsAll;
+
+  /// No description provided for @payments.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lovlar'**
+  String get payments;
+
+  /// No description provided for @auditLog.
+  ///
+  /// In uz, this message translates to:
+  /// **'Audit jurnali'**
+  String get auditLog;
+
+  /// No description provided for @statusApproved.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tasdiqlangan'**
+  String get statusApproved;
+
+  /// No description provided for @statusSuspended.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'xtatilgan'**
+  String get statusSuspended;
+
+  /// No description provided for @statusRejected.
+  ///
+  /// In uz, this message translates to:
+  /// **'Rad etilgan'**
+  String get statusRejected;
+
+  /// No description provided for @statusPending.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ko\'rib chiqilmoqda'**
+  String get statusPending;
+
+  /// No description provided for @blocked.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklangan'**
+  String get blocked;
+
+  /// No description provided for @searchByPhone.
+  ///
+  /// In uz, this message translates to:
+  /// **'Telefon raqami: +998901234567'**
+  String get searchByPhone;
+
+  /// No description provided for @noResults.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hech narsa topilmadi'**
+  String get noResults;
+
+  /// No description provided for @suspendDoctor.
+  ///
+  /// In uz, this message translates to:
+  /// **'Profilni to\'xtatish'**
+  String get suspendDoctor;
+
+  /// No description provided for @suspendReasonHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Masalan: litsenziya muddati tugagan'**
+  String get suspendReasonHint;
+
+  /// No description provided for @suspendWarning.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kelgusi qabullar ({count} ta) bekor qilinadi va bemorlarga pul to\'liq qaytariladi.'**
+  String suspendWarning(int count);
+
+  /// No description provided for @reinstateDoctor.
+  ///
+  /// In uz, this message translates to:
+  /// **'Profilni tiklash'**
+  String get reinstateDoctor;
+
+  /// No description provided for @reinstateConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'{name} profili yana bemorlarga ko\'rinadi.'**
+  String reinstateConfirm(String name);
+
+  /// No description provided for @reason.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sabab'**
+  String get reason;
+
+  /// No description provided for @hideReview.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yashirish'**
+  String get hideReview;
+
+  /// No description provided for @showReview.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaytarish'**
+  String get showReview;
+
+  /// No description provided for @hideReviewTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sharhni yashirish'**
+  String get hideReviewTitle;
+
+  /// No description provided for @hideReviewHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Masalan: haqorat yoki shaxsiy ma\'lumot'**
+  String get hideReviewHint;
+
+  /// No description provided for @hiddenReview.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yashirilgan: {reason}'**
+  String hiddenReview(String reason);
+
+  /// No description provided for @noReviewsYet.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sharhlar yo\'q'**
+  String get noReviewsYet;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklash'**
+  String get blockUser;
+
+  /// No description provided for @unblockUser.
+  ///
+  /// In uz, this message translates to:
+  /// **'Blokdan chiqarish'**
+  String get unblockUser;
+
+  /// No description provided for @blockReasonHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Masalan: soxta bronlar'**
+  String get blockReasonHint;
+
+  /// No description provided for @blockWarning.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchi tizimdan chiqariladi va kira olmaydi. Kelgusi qabullari bekor qilinib, pul qaytariladi.'**
+  String get blockWarning;
+
+  /// No description provided for @unblockConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchi yana tizimga kira oladi.'**
+  String get unblockConfirm;
+
+  /// No description provided for @registeredAt.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ro\'yxatdan o\'tgan: {date}'**
+  String registeredAt(String date);
+
+  /// No description provided for @appointmentsCount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabullar: {count}'**
+  String appointmentsCount(int count);
+
+  /// No description provided for @paidLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'langan'**
+  String get paidLabel;
+
+  /// No description provided for @unpaidLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lanmagan'**
+  String get unpaidLabel;
+
+  /// No description provided for @totalPaid.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jami to\'langan: {amount}'**
+  String totalPaid(String amount);
+
+  /// No description provided for @orderPending.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kutilmoqda'**
+  String get orderPending;
+
+  /// No description provided for @orderProcessing.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jarayonda'**
+  String get orderProcessing;
+
+  /// No description provided for @orderCancelled.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilingan'**
+  String get orderCancelled;
+
+  /// No description provided for @orderRefunded.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaytarilgan'**
+  String get orderRefunded;
+
+  /// No description provided for @refundReasonAdmin.
+  ///
+  /// In uz, this message translates to:
+  /// **'Administrator bekor qildi'**
+  String get refundReasonAdmin;
+
+  /// No description provided for @refundReasonLate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bron muddati o\'tgach to\'langan'**
+  String get refundReasonLate;
+
+  /// No description provided for @medicalData.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tibbiy ma\'lumot'**
+  String get medicalData;
+
+  /// No description provided for @actorLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kim: {id}'**
+  String actorLabel(String id);
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hozircha bildirishnomalar yo\'q'**
+  String get noNotifications;
+
+  /// No description provided for @markAllRead.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hammasini o\'qilgan deb belgilash'**
+  String get markAllRead;
+
+  /// No description provided for @statCompleted30d.
+  ///
+  /// In uz, this message translates to:
+  /// **'30 kunda yakunlangan'**
+  String get statCompleted30d;
+
+  /// No description provided for @statEarnings30d.
+  ///
+  /// In uz, this message translates to:
+  /// **'30 kunlik daromad'**
+  String get statEarnings30d;
+
+  /// No description provided for @statAwaitingConclusion.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xulosa kutmoqda'**
+  String get statAwaitingConclusion;
+
+  /// No description provided for @daysOff.
+  ///
+  /// In uz, this message translates to:
+  /// **'Dam olish kunlari'**
+  String get daysOff;
+
+  /// No description provided for @daysOffHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bu kunlarda bemorlar yozila olmaydi. Oldin yozilganlar o\'zgarmaydi.'**
+  String get daysOffHint;
+
+  /// No description provided for @addDayOff.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kun qo\'shish'**
+  String get addDayOff;
+
+  /// No description provided for @noDaysOff.
+  ///
+  /// In uz, this message translates to:
+  /// **'Dam olish kunlari belgilanmagan'**
+  String get noDaysOff;
+
+  /// No description provided for @errorAccountBlocked.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobingiz bloklangan. Qo\'llab-quvvatlash xizmatiga murojaat qiling.'**
+  String get errorAccountBlocked;
+
+  /// No description provided for @errorNoteRequired.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sababni yozing'**
+  String get errorNoteRequired;
+
+  /// No description provided for @errorCannotBlockAdmin.
+  ///
+  /// In uz, this message translates to:
+  /// **'Administratorni bloklab bo\'lmaydi'**
+  String get errorCannotBlockAdmin;
+
+  /// No description provided for @doctorWorkspace.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ish stoli'**
+  String get doctorWorkspace;
+
+  /// No description provided for @myPayments.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lovlarim'**
+  String get myPayments;
+
+  /// No description provided for @myPaymentsSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kvitansiyalar va qaytarishlar'**
+  String get myPaymentsSubtitle;
+
+  /// No description provided for @noPayments.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hozircha to\'lovlar yo\'q'**
+  String get noPayments;
+
+  /// No description provided for @visitOn.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qabul: {date}'**
+  String visitOn(String date);
 }
 
 class _AppLocalizationsDelegate

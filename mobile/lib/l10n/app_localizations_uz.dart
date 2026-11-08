@@ -1423,4 +1423,197 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get liveConnected => 'Jonli aloqa';
+
+  @override
+  String get users => 'Foydalanuvchilar';
+
+  @override
+  String get appointmentsAll => 'Qabullar';
+
+  @override
+  String get payments => 'To\'lovlar';
+
+  @override
+  String get auditLog => 'Audit jurnali';
+
+  @override
+  String get statusApproved => 'Tasdiqlangan';
+
+  @override
+  String get statusSuspended => 'To\'xtatilgan';
+
+  @override
+  String get statusRejected => 'Rad etilgan';
+
+  @override
+  String get statusPending => 'Ko\'rib chiqilmoqda';
+
+  @override
+  String get blocked => 'Bloklangan';
+
+  @override
+  String get searchByPhone => 'Telefon raqami: +998901234567';
+
+  @override
+  String get noResults => 'Hech narsa topilmadi';
+
+  @override
+  String get suspendDoctor => 'Profilni to\'xtatish';
+
+  @override
+  String get suspendReasonHint => 'Masalan: litsenziya muddati tugagan';
+
+  @override
+  String suspendWarning(int count) {
+    return 'Kelgusi qabullar ($count ta) bekor qilinadi va bemorlarga pul to\'liq qaytariladi.';
+  }
+
+  @override
+  String get reinstateDoctor => 'Profilni tiklash';
+
+  @override
+  String reinstateConfirm(String name) {
+    return '$name profili yana bemorlarga ko\'rinadi.';
+  }
+
+  @override
+  String get reason => 'Sabab';
+
+  @override
+  String get hideReview => 'Yashirish';
+
+  @override
+  String get showReview => 'Qaytarish';
+
+  @override
+  String get hideReviewTitle => 'Sharhni yashirish';
+
+  @override
+  String get hideReviewHint => 'Masalan: haqorat yoki shaxsiy ma\'lumot';
+
+  @override
+  String hiddenReview(String reason) {
+    return 'Yashirilgan: $reason';
+  }
+
+  @override
+  String get noReviewsYet => 'Sharhlar yo\'q';
+
+  @override
+  String get blockUser => 'Bloklash';
+
+  @override
+  String get unblockUser => 'Blokdan chiqarish';
+
+  @override
+  String get blockReasonHint => 'Masalan: soxta bronlar';
+
+  @override
+  String get blockWarning =>
+      'Foydalanuvchi tizimdan chiqariladi va kira olmaydi. Kelgusi qabullari bekor qilinib, pul qaytariladi.';
+
+  @override
+  String get unblockConfirm => 'Foydalanuvchi yana tizimga kira oladi.';
+
+  @override
+  String registeredAt(String date) {
+    return 'Ro\'yxatdan o\'tgan: $date';
+  }
+
+  @override
+  String appointmentsCount(int count) {
+    return 'Qabullar: $count';
+  }
+
+  @override
+  String get paidLabel => 'To\'langan';
+
+  @override
+  String get unpaidLabel => 'To\'lanmagan';
+
+  @override
+  String totalPaid(String amount) {
+    return 'Jami to\'langan: $amount';
+  }
+
+  @override
+  String get orderPending => 'Kutilmoqda';
+
+  @override
+  String get orderProcessing => 'Jarayonda';
+
+  @override
+  String get orderCancelled => 'Bekor qilingan';
+
+  @override
+  String get orderRefunded => 'Qaytarilgan';
+
+  @override
+  String get refundReasonAdmin => 'Administrator bekor qildi';
+
+  @override
+  String get refundReasonLate => 'Bron muddati o\'tgach to\'langan';
+
+  @override
+  String get medicalData => 'Tibbiy ma\'lumot';
+
+  @override
+  String actorLabel(String id) {
+    return 'Kim: $id';
+  }
+
+  @override
+  String get noNotifications => 'Hozircha bildirishnomalar yo\'q';
+
+  @override
+  String get markAllRead => 'Hammasini o\'qilgan deb belgilash';
+
+  @override
+  String get statCompleted30d => '30 kunda yakunlangan';
+
+  @override
+  String get statEarnings30d => '30 kunlik daromad';
+
+  @override
+  String get statAwaitingConclusion => 'Xulosa kutmoqda';
+
+  @override
+  String get daysOff => 'Dam olish kunlari';
+
+  @override
+  String get daysOffHint =>
+      'Bu kunlarda bemorlar yozila olmaydi. Oldin yozilganlar o\'zgarmaydi.';
+
+  @override
+  String get addDayOff => 'Kun qo\'shish';
+
+  @override
+  String get noDaysOff => 'Dam olish kunlari belgilanmagan';
+
+  @override
+  String get errorAccountBlocked =>
+      'Hisobingiz bloklangan. Qo\'llab-quvvatlash xizmatiga murojaat qiling.';
+
+  @override
+  String get errorNoteRequired => 'Sababni yozing';
+
+  @override
+  String get errorCannotBlockAdmin => 'Administratorni bloklab bo\'lmaydi';
+
+  @override
+  String get doctorWorkspace => 'Ish stoli';
+
+  @override
+  String get myPayments => 'To\'lovlarim';
+
+  @override
+  String get myPaymentsSubtitle => 'Kvitansiyalar va qaytarishlar';
+
+  @override
+  String get noPayments => 'Hozircha to\'lovlar yo\'q';
+
+  @override
+  String visitOn(String date) {
+    return 'Qabul: $date';
+  }
 }

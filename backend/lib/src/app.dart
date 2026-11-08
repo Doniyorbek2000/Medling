@@ -1154,6 +1154,39 @@ class MedLinkApi {
         await _audit(u, 'payment.wallet', 'order', o.id);
         return jsonOk(o.toJson(), status: ok ? 200 : 402);
       })
+      // Bemorning to'lovlar tarixi (kvitansiya sifatida).
+      ..get('/v1/me/payments', (Request req) async {
+        final u = requireUser(req);
+        final mine =
+            orders.all
+                .where(
+                  (o) =>
+                      o.userId == u.id &&
+                      (o.status == OrderStatus.paid ||
+                          o.status == OrderStatus.refunded),
+                )
+                .toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return jsonOk({
+          'items': [
+            for (final o in mine)
+              {
+                ...o.toJson(),
+                'paidAt': o.paidAt?.toIso8601String(),
+                'createdAt': o.createdAt.toIso8601String(),
+                'providerTxnId': o.providerTxnId,
+                'doctorName': switch (appointments.byId(o.appointmentId)) {
+                  final a? => doctors.byId(a.doctorId)?.fullName,
+                  null => null,
+                },
+                'appointmentStartsAt': appointments
+                    .byId(o.appointmentId)
+                    ?.startsAt
+                    .toIso8601String(),
+              },
+          ],
+        });
+      })
       ..get('/v1/payments/<id>', (Request req, String id) {
         final u = requireUser(req);
         final o = orders.byId(id);

@@ -20,6 +20,7 @@ import '../consent/consent_screen.dart';
 import '../doctor_portal/doctor_apply_screen.dart';
 import '../doctor_portal/doctor_settings_screen.dart';
 import '../medical_profile/medical_profile_screen.dart';
+import '../payments/my_payments_screen.dart';
 import '../settings/language_picker.dart';
 import '../triage/triage_history_screen.dart';
 
@@ -259,6 +260,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icons.history_rounded,
                 l.triageHistory,
                 onTap: () => _push(const TriageHistoryScreen()),
+              ),
+              _tile(
+                Icons.receipt_long_outlined,
+                l.myPayments,
+                subtitle: l.myPaymentsSubtitle,
+                onTap: () => _push(const MyPaymentsScreen()),
               ),
             ]),
             if (session.role != UserRole.admin) _doctorSection(l, session),

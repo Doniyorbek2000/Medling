@@ -317,6 +317,120 @@ class MedLinkRepository {
       api.post('/v1/doctor/appointments/$id/complete');
 
   // ---- Admin ----
+  // ---- Admin: boshqaruv ----
+  Future<List<Map<String, dynamic>>> adminDoctors({
+    String? status,
+    String? q,
+  }) async {
+    final res = await api.get('/v1/admin/doctors', {
+      'status': ?status,
+      if (q != null && q.isNotEmpty) 'q': q,
+    });
+    return (res['items'] as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> adminDoctor(String id) =>
+      api.get('/v1/admin/doctors/$id');
+
+  Future<void> setReviewHidden(
+    String appointmentId, {
+    required bool hidden,
+    String? reason,
+  }) => api.post('/v1/admin/reviews/$appointmentId/hide', {
+    'hidden': hidden,
+    'reason': ?reason,
+  });
+
+  Future<List<AdminUser>> adminUsers({
+    String? q,
+    String? role,
+    bool blockedOnly = false,
+  }) async {
+    final res = await api.get('/v1/admin/users', {
+      if (q != null && q.isNotEmpty) 'q': q,
+      'role': ?role,
+      if (blockedOnly) 'blocked': 'true',
+    });
+    return [
+      for (final j in res['items'] as List)
+        AdminUser.fromJson(j as Map<String, dynamic>),
+    ];
+  }
+
+  Future<AdminUser> setUserBlocked(
+    String id, {
+    required bool blocked,
+    String? reason,
+  }) async => AdminUser.fromJson(
+    await api.post('/v1/admin/users/$id/block', {
+      'blocked': blocked,
+      'reason': ?reason,
+    }),
+  );
+
+  Future<List<AdminAppointment>> adminAppointments({String? status}) async {
+    final res = await api.get('/v1/admin/appointments', {'status': ?status});
+    return [
+      for (final j in res['items'] as List)
+        AdminAppointment.fromJson(j as Map<String, dynamic>),
+    ];
+  }
+
+  Future<({int sumPaidUzs, List<AdminPayment> items})> adminPayments({
+    String? status,
+    String? provider,
+  }) async {
+    final res = await api.get('/v1/admin/payments', {
+      'status': ?status,
+      'provider': ?provider,
+    });
+    return (
+      sumPaidUzs: res['sumPaidUzs'] as int,
+      items: [
+        for (final j in res['items'] as List)
+          AdminPayment.fromJson(j as Map<String, dynamic>),
+      ],
+    );
+  }
+
+  Future<List<AuditEntry>> auditLog({String? action}) async {
+    final res = await api.get('/v1/admin/audit', {'action': ?action});
+    return [
+      for (final j in res['items'] as List)
+        AuditEntry.fromJson(j as Map<String, dynamic>),
+    ];
+  }
+
+  // ---- Bildirishnomalar tarixi ----
+  Future<({int unread, List<InboxNotification> items})> notifications(
+    String lang,
+  ) async {
+    final res = await api.get('/v1/me/notifications', {'lang': lang});
+    return (
+      unread: res['unread'] as int,
+      items: [
+        for (final j in res['items'] as List)
+          InboxNotification.fromJson(j as Map<String, dynamic>),
+      ],
+    );
+  }
+
+  /// [ids] bo'lmasa — hammasi o'qilgan.
+  Future<int> markNotificationsRead([List<String>? ids]) async =>
+      (await api.post('/v1/me/notifications/read', {'ids': ?ids}))['unread']
+          as int;
+
+  Future<List<MyPayment>> myPayments() async {
+    final res = await api.get('/v1/me/payments');
+    return [
+      for (final j in res['items'] as List)
+        MyPayment.fromJson(j as Map<String, dynamic>),
+    ];
+  }
+
+  Future<DoctorStats> doctorStats() async =>
+      DoctorStats.fromJson(await api.get('/v1/doctor/stats'));
+
   Future<AdminStats> adminStats() async =>
       AdminStats.fromJson(await api.get('/v1/admin/stats'));
 

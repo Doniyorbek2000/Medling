@@ -1413,4 +1413,197 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get liveConnected => 'На связи';
+
+  @override
+  String get users => 'Пользователи';
+
+  @override
+  String get appointmentsAll => 'Приёмы';
+
+  @override
+  String get payments => 'Платежи';
+
+  @override
+  String get auditLog => 'Журнал аудита';
+
+  @override
+  String get statusApproved => 'Одобрен';
+
+  @override
+  String get statusSuspended => 'Приостановлен';
+
+  @override
+  String get statusRejected => 'Отклонён';
+
+  @override
+  String get statusPending => 'На рассмотрении';
+
+  @override
+  String get blocked => 'Заблокирован';
+
+  @override
+  String get searchByPhone => 'Номер телефона: +998901234567';
+
+  @override
+  String get noResults => 'Ничего не найдено';
+
+  @override
+  String get suspendDoctor => 'Приостановить профиль';
+
+  @override
+  String get suspendReasonHint => 'Например: истёк срок лицензии';
+
+  @override
+  String suspendWarning(int count) {
+    return 'Будущие приёмы ($count) будут отменены, пациентам вернут оплату полностью.';
+  }
+
+  @override
+  String get reinstateDoctor => 'Восстановить профиль';
+
+  @override
+  String reinstateConfirm(String name) {
+    return 'Профиль $name снова станет виден пациентам.';
+  }
+
+  @override
+  String get reason => 'Причина';
+
+  @override
+  String get hideReview => 'Скрыть';
+
+  @override
+  String get showReview => 'Вернуть';
+
+  @override
+  String get hideReviewTitle => 'Скрыть отзыв';
+
+  @override
+  String get hideReviewHint => 'Например: оскорбление или личные данные';
+
+  @override
+  String hiddenReview(String reason) {
+    return 'Скрыт: $reason';
+  }
+
+  @override
+  String get noReviewsYet => 'Отзывов нет';
+
+  @override
+  String get blockUser => 'Заблокировать';
+
+  @override
+  String get unblockUser => 'Разблокировать';
+
+  @override
+  String get blockReasonHint => 'Например: фиктивные записи';
+
+  @override
+  String get blockWarning =>
+      'Пользователь будет разлогинен и не сможет войти. Будущие приёмы отменятся, оплата вернётся.';
+
+  @override
+  String get unblockConfirm => 'Пользователь снова сможет войти.';
+
+  @override
+  String registeredAt(String date) {
+    return 'Регистрация: $date';
+  }
+
+  @override
+  String appointmentsCount(int count) {
+    return 'Приёмов: $count';
+  }
+
+  @override
+  String get paidLabel => 'Оплачен';
+
+  @override
+  String get unpaidLabel => 'Не оплачен';
+
+  @override
+  String totalPaid(String amount) {
+    return 'Всего оплачено: $amount';
+  }
+
+  @override
+  String get orderPending => 'Ожидает';
+
+  @override
+  String get orderProcessing => 'В обработке';
+
+  @override
+  String get orderCancelled => 'Отменён';
+
+  @override
+  String get orderRefunded => 'Возвращён';
+
+  @override
+  String get refundReasonAdmin => 'Отменено администратором';
+
+  @override
+  String get refundReasonLate => 'Оплачено после истечения брони';
+
+  @override
+  String get medicalData => 'Медданные';
+
+  @override
+  String actorLabel(String id) {
+    return 'Кто: $id';
+  }
+
+  @override
+  String get noNotifications => 'Пока нет уведомлений';
+
+  @override
+  String get markAllRead => 'Отметить все как прочитанные';
+
+  @override
+  String get statCompleted30d => 'Завершено за 30 дней';
+
+  @override
+  String get statEarnings30d => 'Доход за 30 дней';
+
+  @override
+  String get statAwaitingConclusion => 'Ждут заключения';
+
+  @override
+  String get daysOff => 'Выходные дни';
+
+  @override
+  String get daysOffHint =>
+      'В эти дни записаться нельзя. Существующие записи не меняются.';
+
+  @override
+  String get addDayOff => 'Добавить день';
+
+  @override
+  String get noDaysOff => 'Выходные не отмечены';
+
+  @override
+  String get errorAccountBlocked =>
+      'Ваш аккаунт заблокирован. Обратитесь в поддержку.';
+
+  @override
+  String get errorNoteRequired => 'Укажите причину';
+
+  @override
+  String get errorCannotBlockAdmin => 'Нельзя заблокировать администратора';
+
+  @override
+  String get doctorWorkspace => 'Рабочий стол';
+
+  @override
+  String get myPayments => 'Мои платежи';
+
+  @override
+  String get myPaymentsSubtitle => 'Квитанции и возвраты';
+
+  @override
+  String get noPayments => 'Платежей пока нет';
+
+  @override
+  String visitOn(String date) {
+    return 'Приём: $date';
+  }
 }

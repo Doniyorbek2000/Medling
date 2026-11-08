@@ -51,6 +51,12 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
   va 1 soat oldin eslatma. Ruxsat birinchi to'lovdan keyin yoki sozlamalarda
   so'raladi. Bildirishnoma bosilsa qabul sahifasi ochiladi (biometrik qulf
   ochilgandan keyin).
+- Bildirishnomalar markazi: barcha xabarlar ilova ichida saqlanadi (push
+  o'chiq bo'lsa ham), o'qilmaganlar soni, bosilsa qabul ochiladi.
+- To'lovlarim: summa, usul, sana, qaytarish holati.
+- Bron 15 daqiqa saqlanadi; to'lanmasa 30 daqiqada avtomatik bekor
+  qilinadi. Shu vaqtdan keyin kelgan to'lov avtomatik qaytarish navbatiga
+  tushadi.
 - Sozlamalar: til (o'zbek, rus, ingliz), mavzu (yorug', qorong'i, tizim
   bo'yicha), Face ID / barmoq izi bilan qulflash.
 - Maxfiylik: rozilikni qaytarib olish, ma'lumotlar nusxasini olish, tibbiy
@@ -66,14 +72,29 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 - Ish jadvali: ish kunlari, soatlari, klinika va onlayn qabul narxlari.
 - Onlayn qabul: video qo'ng'iroq, chat, qabul oldidan bemorning tibbiy
   profili va AI tahlilini ko'rish (audit bilan), xulosa va retsept yozish.
-- Push: yangi bemor yozildi, qabul bekor qilindi, qabul eslatmasi, ariza
-  natijasi.
+- Push: yangi bemor yozildi, qabul bekor qilindi yoki ko'chirildi, qabul
+  eslatmasi, ariza natijasi.
+- Ish stoli: bugungi va kelgusi qabullar, xulosa kutayotganlar, 30 kunlik
+  daromad.
+- Dam olish kunlari: tanlangan sanalarda bemorlar yozila olmaydi.
 - Tasdiqlangandan keyin "Bemorlarim" bo'limi ochiladi (rol ilova qayta
   ochilganda avtomatik yangilanadi). Qabulni yakunlash.
 
-**Admin uchun**
+**Admin uchun** (8 bo'lim)
 - Statistika: foydalanuvchilar, faol shifokorlar, kutilayotgan arizalar,
   bugungi qabullar, 30 kunlik tushum, onlayn ulushi, qabullar holati.
+- Shifokorlar: holat va ism bo'yicha qidiruv, hujjatlar, ko'rsatkichlar.
+  Profilni sabab bilan to'xtatish (kelgusi qabullar bekor qilinadi, bemorlarga
+  pul to'liq qaytadi) va qayta tiklash. Sharhlarni sabab bilan yashirish —
+  reyting qayta hisoblanadi.
+- Foydalanuvchilar: to'liq telefon raqami bo'yicha qidiruv (raqam bazada
+  ochiq saqlanmaydi, ro'yxatda yashirilgan), rol va bloklanganlar filtri.
+  Bloklash sabab bilan: tokenlar darhol ishlamaydi, kirish taqiqlanadi,
+  kelgusi qabullar bekor qilinib pul qaytadi. Adminni bloklab bo'lmaydi.
+- Qabullar va to'lovlar ro'yxati (shikoyat va xulosa ko'rsatilmaydi),
+  provayder bo'yicha filtr va jami summa.
+- Audit jurnali: kim, qachon, qaysi amal (foydalanuvchilar, shifokorlar,
+  qaytarishlar, tibbiy ma'lumotga murojaat, sharhlar).
 - Pul qaytarish navbati. Admin pulni Click yoki Payme kabinetida qaytaradi va
   ilovada "qaytarildi" deb belgilaydi, bemorga push yuboriladi. Payme
   `CancelTransaction` kelsa, qaytarish avtomatik belgilanadi.

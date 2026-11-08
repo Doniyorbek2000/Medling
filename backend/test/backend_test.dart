@@ -1976,6 +1976,15 @@ void main() {
             'reason': 'x',
           },
         );
+        final (_, myPays) = await send(
+          'GET',
+          '/v1/me/payments',
+          token: patient,
+        );
+        final pay = (myPays['items'] as List).single as Map;
+        expect(pay['amountUzs'], 90000);
+        expect(pay['doctorName'], 'Jalilov Bekzod Akmalovich');
+        expect(pay['status'], 'paid');
         final (_, st) = await send('GET', '/v1/doctor/stats', token: docToken);
         expect(st['upcoming'], 1);
         expect(st['earnings30dUzs'], 90000);

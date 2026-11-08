@@ -397,7 +397,8 @@ class DoctorSettings {
     required this.workDays,
     required this.startHour,
     required this.endHour,
-  });
+    Set<String>? daysOff,
+  }) : daysOff = daysOff ?? {};
 
   DoctorSettings.fromJson(Map<String, dynamic> j)
     : clinicEnabled = j['clinicEnabled'] as bool,
@@ -406,7 +407,8 @@ class DoctorSettings {
       onlinePriceUzs = j['onlinePriceUzs'] as int,
       workDays = (j['workDays'] as List).cast<int>().toSet(),
       startHour = j['startHour'] as int,
-      endHour = j['endHour'] as int;
+      endHour = j['endHour'] as int,
+      daysOff = ((j['daysOff'] as List?) ?? const []).cast<String>().toSet();
 
   bool clinicEnabled;
   int priceUzs;
@@ -424,7 +426,173 @@ class DoctorSettings {
     'workDays': workDays.toList()..sort(),
     'startHour': startHour,
     'endHour': endHour,
+    'daysOff': daysOff.toList()..sort(),
   };
+
+  /// Dam olish kunlari (`YYYY-MM-DD`, Toshkent sanasi).
+  Set<String> daysOff;
+}
+
+/// Shifokor kabineti ko'rsatkichlari.
+class DoctorStats {
+  DoctorStats.fromJson(Map<String, dynamic> j)
+    : today = j['today'] as int,
+      upcoming = j['upcoming'] as int,
+      completed30d = j['completed30d'] as int,
+      earnings30dUzs = j['earnings30dUzs'] as int,
+      awaitingConclusion = j['awaitingConclusion'] as int,
+      rating = (j['rating'] as num).toDouble(),
+      reviewCount = j['reviewCount'] as int;
+
+  final int today;
+  final int upcoming;
+  final int completed30d;
+  final int earnings30dUzs;
+  final int awaitingConclusion;
+  final double rating;
+  final int reviewCount;
+}
+
+/// Ilova ichidagi bildirishnoma (tarix).
+class InboxNotification {
+  InboxNotification.fromJson(Map<String, dynamic> j)
+    : id = j['id'] as String,
+      kind = j['kind'] as String,
+      title = j['title'] as String,
+      body = j['body'] as String,
+      data = (j['data'] as Map? ?? const {}).cast<String, String>(),
+      at = DateTime.parse(j['at'] as String).toLocal(),
+      read = j['read'] as bool;
+
+  final String id;
+  final String kind;
+  final String title;
+  final String body;
+  final Map<String, String> data;
+  final DateTime at;
+  bool read;
+
+  String? get appointmentId => data['appointmentId'];
+}
+
+/// Admin: foydalanuvchi (telefon raqami yashirilgan).
+class AdminUser {
+  AdminUser.fromJson(Map<String, dynamic> j)
+    : id = j['id'] as String,
+      role = j['role'] as String,
+      phone = j['phone'] as String,
+      createdAt = DateTime.parse(j['createdAt'] as String).toLocal(),
+      blocked = j['blocked'] as bool,
+      blockReason = j['blockReason'] as String?,
+      appointments = j['appointments'] as int,
+      doctorId = j['doctorId'] as String?;
+
+  final String id;
+  final String role;
+  final String phone;
+  final DateTime createdAt;
+  final bool blocked;
+  final String? blockReason;
+  final int appointments;
+  final String? doctorId;
+}
+
+/// Admin: qabul (tibbiy mazmunsiz).
+class AdminAppointment {
+  AdminAppointment.fromJson(Map<String, dynamic> j)
+    : id = j['id'] as String,
+      startsAt = DateTime.parse(j['startsAt'] as String).toUtc(),
+      status = j['status'] as String,
+      type = j['type'] as String,
+      priceUzs = j['priceUzs'] as int,
+      patientId = j['patientId'] as String,
+      doctorName = (j['doctor'] as Map?)?['fullName'] as String?,
+      doctorSpecialty = (j['doctor'] as Map?)?['specialty'] as String?,
+      paid = j['paid'] as bool,
+      refundStatus = j['refundStatus'] as String,
+      hasConclusion = j['hasConclusion'] as bool;
+
+  final String id;
+  final DateTime startsAt;
+  final String status;
+  final String type;
+  final int priceUzs;
+  final String patientId;
+  final String? doctorName;
+  final String? doctorSpecialty;
+  final bool paid;
+  final String refundStatus;
+  final bool hasConclusion;
+}
+
+/// Admin: to'lov.
+class AdminPayment {
+  AdminPayment.fromJson(Map<String, dynamic> j)
+    : id = j['id'] as String,
+      appointmentId = j['appointmentId'] as String,
+      amountUzs = j['amountUzs'] as int,
+      provider = j['provider'] as String,
+      status = j['status'] as String,
+      refundStatus = j['refundStatus'] as String,
+      createdAt = DateTime.parse(j['createdAt'] as String).toLocal(),
+      providerTxnId = j['providerTxnId'] as String?;
+
+  final String id;
+  final String appointmentId;
+  final int amountUzs;
+  final String provider;
+  final String status;
+  final String refundStatus;
+  final DateTime createdAt;
+  final String? providerTxnId;
+}
+
+/// Bemorning to'lovi (kvitansiya).
+class MyPayment {
+  MyPayment.fromJson(Map<String, dynamic> j)
+    : id = j['id'] as String,
+      appointmentId = j['appointmentId'] as String,
+      amountUzs = j['amountUzs'] as int,
+      provider = j['provider'] as String,
+      status = j['status'] as String,
+      refundStatus = j['refundStatus'] as String,
+      paidAt = j['paidAt'] == null
+          ? null
+          : DateTime.parse(j['paidAt'] as String).toLocal(),
+      providerTxnId = j['providerTxnId'] as String?,
+      doctorName = j['doctorName'] as String?,
+      appointmentStartsAt = j['appointmentStartsAt'] == null
+          ? null
+          : DateTime.parse(j['appointmentStartsAt'] as String).toUtc();
+
+  final String id;
+  final String appointmentId;
+  final int amountUzs;
+  final String provider;
+  final String status;
+  final String refundStatus;
+  final DateTime? paidAt;
+  final String? providerTxnId;
+  final String? doctorName;
+  final DateTime? appointmentStartsAt;
+}
+
+/// Admin: audit jurnali yozuvi.
+class AuditEntry {
+  AuditEntry.fromJson(Map<String, dynamic> j)
+    : actorId = j['actorId'] as String,
+      action = j['action'] as String,
+      resource = j['resource'] as String,
+      resourceId = j['resourceId'] as String?,
+      outcome = j['outcome'] as String,
+      at = DateTime.parse(j['at'] as String).toLocal();
+
+  final String actorId;
+  final String action;
+  final String resource;
+  final String? resourceId;
+  final String outcome;
+  final DateTime at;
 }
 
 /// Shifokor uchun: qabul oldidan bemor haqida ma'lumot.

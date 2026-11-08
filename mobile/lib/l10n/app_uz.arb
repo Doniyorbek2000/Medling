@@ -631,5 +631,119 @@
   "errorDoctorUnavailable": "Shifokor hozir bu turdagi qabulni olib bormayapti",
   "errorRefundFailed": "To'lov tizimi pulni qaytarmadi. Keyinroq qayta urinib ko'ring",
   "refundCompletedNow": "Qabul bekor qilindi. Pul kartangizga qaytarildi — bank odatda 5–10 kunda o'tkazadi.",
-  "liveConnected": "Jonli aloqa"
+  "liveConnected": "Jonli aloqa",
+  "users": "Foydalanuvchilar",
+  "appointmentsAll": "Qabullar",
+  "payments": "To'lovlar",
+  "auditLog": "Audit jurnali",
+  "statusApproved": "Tasdiqlangan",
+  "statusSuspended": "To'xtatilgan",
+  "statusRejected": "Rad etilgan",
+  "statusPending": "Ko'rib chiqilmoqda",
+  "blocked": "Bloklangan",
+  "searchByPhone": "Telefon raqami: +998901234567",
+  "noResults": "Hech narsa topilmadi",
+  "suspendDoctor": "Profilni to'xtatish",
+  "suspendReasonHint": "Masalan: litsenziya muddati tugagan",
+  "suspendWarning": "Kelgusi qabullar ({count} ta) bekor qilinadi va bemorlarga pul to'liq qaytariladi.",
+  "@suspendWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reinstateDoctor": "Profilni tiklash",
+  "reinstateConfirm": "{name} profili yana bemorlarga ko'rinadi.",
+  "@reinstateConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reason": "Sabab",
+  "hideReview": "Yashirish",
+  "showReview": "Qaytarish",
+  "hideReviewTitle": "Sharhni yashirish",
+  "hideReviewHint": "Masalan: haqorat yoki shaxsiy ma'lumot",
+  "hiddenReview": "Yashirilgan: {reason}",
+  "@hiddenReview": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "noReviewsYet": "Sharhlar yo'q",
+  "blockUser": "Bloklash",
+  "unblockUser": "Blokdan chiqarish",
+  "blockReasonHint": "Masalan: soxta bronlar",
+  "blockWarning": "Foydalanuvchi tizimdan chiqariladi va kira olmaydi. Kelgusi qabullari bekor qilinib, pul qaytariladi.",
+  "unblockConfirm": "Foydalanuvchi yana tizimga kira oladi.",
+  "registeredAt": "Ro'yxatdan o'tgan: {date}",
+  "@registeredAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "appointmentsCount": "Qabullar: {count}",
+  "@appointmentsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paidLabel": "To'langan",
+  "unpaidLabel": "To'lanmagan",
+  "totalPaid": "Jami to'langan: {amount}",
+  "@totalPaid": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderPending": "Kutilmoqda",
+  "orderProcessing": "Jarayonda",
+  "orderCancelled": "Bekor qilingan",
+  "orderRefunded": "Qaytarilgan",
+  "refundReasonAdmin": "Administrator bekor qildi",
+  "refundReasonLate": "Bron muddati o'tgach to'langan",
+  "medicalData": "Tibbiy ma'lumot",
+  "actorLabel": "Kim: {id}",
+  "@actorLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "noNotifications": "Hozircha bildirishnomalar yo'q",
+  "markAllRead": "Hammasini o'qilgan deb belgilash",
+  "statCompleted30d": "30 kunda yakunlangan",
+  "statEarnings30d": "30 kunlik daromad",
+  "statAwaitingConclusion": "Xulosa kutmoqda",
+  "daysOff": "Dam olish kunlari",
+  "daysOffHint": "Bu kunlarda bemorlar yozila olmaydi. Oldin yozilganlar o'zgarmaydi.",
+  "addDayOff": "Kun qo'shish",
+  "noDaysOff": "Dam olish kunlari belgilanmagan",
+  "errorAccountBlocked": "Hisobingiz bloklangan. Qo'llab-quvvatlash xizmatiga murojaat qiling.",
+  "errorNoteRequired": "Sababni yozing",
+  "errorCannotBlockAdmin": "Administratorni bloklab bo'lmaydi",
+  "doctorWorkspace": "Ish stoli",
+  "myPayments": "To'lovlarim",
+  "myPaymentsSubtitle": "Kvitansiyalar va qaytarishlar",
+  "noPayments": "Hozircha to'lovlar yo'q",
+  "visitOn": "Qabul: {date}",
+  "@visitOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  }
 }

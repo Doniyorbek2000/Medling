@@ -33,6 +33,9 @@ String errorText(BuildContext context, Object e) {
     'reschedule_limit' => l.errorRescheduleLimit,
     'doctor_unavailable' => l.errorDoctorUnavailable,
     'refund_failed' => l.errorRefundFailed,
+    'account_blocked' => l.errorAccountBlocked,
+    'note_required' => l.errorNoteRequired,
+    'cannot_block_admin' => l.errorCannotBlockAdmin,
     _ => l.errorGeneric,
   };
 }

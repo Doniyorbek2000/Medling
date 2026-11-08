@@ -57,6 +57,8 @@ void main() {
     expect(find.text('35%'), findsOneWidget);
     expect(find.text('Bugungi qabullar'), findsOneWidget);
 
+    await t.ensureVisible(find.text('Qaytarishlar'));
+    await t.pumpAndSettle();
     await t.tap(find.text('Qaytarishlar'));
     await t.pumpAndSettle();
     expect(find.text('Shifokor bekor qildi'), findsOneWidget);

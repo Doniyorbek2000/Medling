@@ -9,6 +9,7 @@ import '../../models/models.dart';
 import '../../widgets/states.dart';
 import '../appointments/appointment_detail_screen.dart';
 import '../appointments/appointment_status.dart';
+import '../notifications/notifications_screen.dart';
 import 'doctor_settings_screen.dart';
 
 /// Tasdiqlangan shifokor uchun: unga yozilgan bemorlar ro'yxati.
@@ -49,6 +50,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
         title: Text(l.tabPatients),
         automaticallyImplyLeading: false,
         actions: [
+          const NotificationBell(),
           IconButton(
             tooltip: l.scheduleAndPrices,
             icon: const Icon(Icons.tune_rounded),
@@ -60,6 +62,7 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
       ),
       body: Column(
         children: [
+          _StatsStrip(key: ValueKey(_version)),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
             child: SizedBox(
@@ -168,6 +171,78 @@ class _DoctorScheduleScreenState extends State<DoctorScheduleScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Shifokor ish stoli: bugun, kelgusi, xulosa kutayotganlar, 30 kunlik
+/// daromad.
+class _StatsStrip extends StatefulWidget {
+  const _StatsStrip({super.key});
+
+  @override
+  State<_StatsStrip> createState() => _StatsStripState();
+}
+
+class _StatsStripState extends State<_StatsStrip> {
+  DoctorStats? _s;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<MedLinkRepository>().doctorStats().then(
+      (s) => mounted ? setState(() => _s = s) : null,
+      onError: (Object _) {},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final s = _s;
+    if (s == null) return const SizedBox(height: 8);
+    final items = <(String, String, Color)>[
+      ('${s.today}', l.today, Brand.blue),
+      ('${s.upcoming}', l.upcoming, Brand.teal),
+      (
+        '${s.awaitingConclusion}',
+        l.statAwaitingConclusion,
+        s.awaitingConclusion > 0 ? Brand.warning : Brand.success,
+      ),
+      (context.fmt.money(s.earnings30dUzs), l.statEarnings30d, Brand.success),
+    ];
+    return SizedBox(
+      height: 84,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final (value, label, color) = items[i];
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: context.text.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: context.ink(color),
+                  ),
+                ),
+                Text(label, style: context.text.bodySmall),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

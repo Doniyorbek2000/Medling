@@ -8,9 +8,12 @@ import '../../core/theme.dart';
 import '../../data/repository.dart';
 import '../../models/models.dart';
 import '../../widgets/states.dart';
+import '../notifications/notifications_screen.dart';
+import 'admin_tabs.dart';
 import 'moderation_screen.dart';
 
-/// Admin paneli: statistika, shifokor arizalari, pul qaytarish navbati.
+/// Admin paneli: statistika, arizalar, shifokorlar, foydalanuvchilar,
+/// qabullar, to'lovlar, pul qaytarish navbati va audit jurnali.
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
 
@@ -18,16 +21,24 @@ class AdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return DefaultTabController(
-      length: 3,
+      length: 8,
       child: Scaffold(
         appBar: AppBar(
           title: Text(l.tabAdmin),
           automaticallyImplyLeading: false,
+          actions: const [NotificationBell()],
           bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: l.statistics),
               Tab(text: l.applications),
+              Tab(text: l.tabDoctors),
+              Tab(text: l.users),
+              Tab(text: l.appointmentsAll),
+              Tab(text: l.payments),
               Tab(text: l.refunds),
+              Tab(text: l.auditLog),
             ],
           ),
         ),
@@ -35,7 +46,12 @@ class AdminScreen extends StatelessWidget {
           children: [
             _StatsTab(),
             ModerationScreen(embedded: true),
+            AdminDoctorsTab(),
+            AdminUsersTab(),
+            AdminAppointmentsTab(),
+            AdminPaymentsTab(),
             _RefundsTab(),
+            AdminAuditTab(),
           ],
         ),
       ),
@@ -212,6 +228,8 @@ class _RefundsTabState extends State<_RefundsTab> {
   String _reason(AppLocalizations l, String r) => switch (r) {
     'doctor_cancelled' => l.refundReasonDoctor,
     'patient_cancelled_early' => l.refundReasonPatient,
+    'admin_cancelled' => l.refundReasonAdmin,
+    'late_payment' => l.refundReasonLate,
     _ => r,
   };
 
@@ -220,7 +238,11 @@ class _RefundsTabState extends State<_RefundsTab> {
     final ok = await confirmDialog(
       context,
       title: l.markRefunded,
-      message: l.markRefundedConfirm(r.provider == 'payme' ? 'Payme' : 'Click'),
+      message: l.markRefundedConfirm(switch (r.provider) {
+        'payme' => 'Payme',
+        'googlePay' || 'applePay' => 'Stripe',
+        _ => 'Click',
+      }),
       confirm: l.markRefunded,
     );
     if (!ok || !mounted) return;
