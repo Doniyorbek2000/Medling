@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../core/http_utils.dart';
 import '../doctors/doctors.dart';
+import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
 
 enum AppointmentStatus { awaitingPayment, confirmed, completed, cancelled }
@@ -18,7 +19,8 @@ class Appointment {
     required this.reasonEnc,
     this.triageId,
     this.type = 'clinic',
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now().toUtc();
 
   final String id;
   final String patientId;
@@ -31,7 +33,7 @@ class Appointment {
   /// `clinic` — klinikada, `online` — video konsultatsiya.
   final String type;
   AppointmentStatus status = AppointmentStatus.awaitingPayment;
-  final DateTime createdAt = DateTime.now().toUtc();
+  final DateTime createdAt;
   Review? review;
 
   /// Server push eslatmasi yuborilganmi (takror yubormaslik uchun).
@@ -97,13 +99,14 @@ class Review {
     required this.rating,
     required this.comment,
     required this.authorName,
-  });
+    DateTime? at,
+  }) : at = at ?? DateTime.now().toUtc();
   final int rating;
   final String comment;
 
   /// Faqat ism (familiyasiz) ko'rsatiladi.
   final String authorName;
-  final DateTime at = DateTime.now().toUtc();
+  final DateTime at;
 
   Map<String, dynamic> toJson() => {
     'rating': rating,
@@ -188,6 +191,7 @@ class AppointmentService {
       reasonEnc: await encryption.encrypt(reason, aad: 'appt:$id:reason'),
     );
     _items[id] = a;
+    persist(a);
     return a;
   }
 
@@ -195,7 +199,72 @@ class AppointmentService {
     final a = _items[id];
     if (a != null && a.status == AppointmentStatus.awaitingPayment) {
       a.status = AppointmentStatus.confirmed;
+      persist(a);
       onConfirmed?.call(a);
+    }
+  }
+
+  /// Qabulni bazaga yozish uchun belgilaydi.
+  void persist(Appointment a) => changes.save(
+    'appointments',
+    a.id,
+    () => (
+      columns: {
+        'patient_id': a.patientId,
+        'doctor_id': a.doctorId,
+        'starts_at': a.startsAt,
+        'status': a.status.name,
+      },
+      data: {
+        'priceUzs': a.priceUzs,
+        'reasonEnc': a.reasonEnc,
+        'triageId': a.triageId,
+        'type': a.type,
+        'createdAt': a.createdAt.toIso8601String(),
+        'review': a.review == null
+            ? null
+            : {...a.review!.toJson(), 'at': a.review!.at.toIso8601String()},
+        'reminderSent': a.reminderSent,
+        'conclusionEnc': a.conclusionEnc,
+        'conclusionAt': a.conclusionAt?.toIso8601String(),
+        'doctorJoinedVideo': a.doctorJoinedVideo,
+      },
+    ),
+  );
+
+  /// Ishga tushganda bazadan tiklash.
+  void restore(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      final j = r['data'] as Map<String, dynamic>;
+      final rv = j['review'] as Map<String, dynamic>?;
+      final a =
+          Appointment(
+              id: r['id'] as String,
+              patientId: r['patient_id'] as String,
+              doctorId: r['doctor_id'] as String,
+              startsAt: (r['starts_at'] as DateTime).toUtc(),
+              priceUzs: j['priceUzs'] as int,
+              reasonEnc: j['reasonEnc'] as String,
+              triageId: j['triageId'] as String?,
+              type: j['type'] as String? ?? 'clinic',
+              createdAt: DateTime.parse(j['createdAt'] as String),
+            )
+            ..status = AppointmentStatus.values.byName(r['status'] as String)
+            ..reminderSent = j['reminderSent'] as bool? ?? false
+            ..conclusionEnc = j['conclusionEnc'] as String?
+            ..conclusionAt = j['conclusionAt'] == null
+                ? null
+                : DateTime.parse(j['conclusionAt'] as String)
+            ..doctorJoinedVideo = j['doctorJoinedVideo'] as bool? ?? false
+            ..review = rv == null
+                ? null
+                : Review(
+                    rating: rv['rating'] as int,
+                    comment: rv['comment'] as String,
+                    authorName: rv['authorName'] as String,
+                    at: DateTime.parse(rv['at'] as String),
+                  );
+      _items[a.id] = a;
     }
   }
 
@@ -261,6 +330,7 @@ class AppointmentService {
       )
       ..conclusionAt = DateTime.now().toUtc()
       ..status = AppointmentStatus.completed;
+    persist(a);
     onConclusion?.call(a);
   }
 
@@ -287,6 +357,7 @@ class AppointmentService {
     // bron haqida shifokor bilmagan).
     final wasConfirmed = a.status == AppointmentStatus.confirmed;
     a.status = AppointmentStatus.cancelled;
+    persist(a);
     if (wasConfirmed) onCancelled?.call(a, actorUserId);
   }
 
@@ -303,6 +374,7 @@ class AppointmentService {
       throw ApiException(409, 'not_started');
     }
     a.status = AppointmentStatus.completed;
+    persist(a);
   }
 
   /// Bemor yakunlangan qabul uchun bir marta baho qoldiradi.
@@ -330,6 +402,8 @@ class AppointmentService {
     final d = doctors.byId(a.doctorId)!;
     d.rating = (d.rating * d.reviewCount + rating) / (d.reviewCount + 1);
     d.reviewCount++;
+    persist(a);
+    doctors.persist(d);
   }
 
   List<Review> reviewsFor(String doctorId) => [

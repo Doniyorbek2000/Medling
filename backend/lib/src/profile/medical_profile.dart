@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../core/http_utils.dart';
+import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
 
 /// Bemorning tibbiy profili (allergiyalar, surunkali kasalliklar, dorilar).
@@ -105,12 +106,27 @@ class MedicalProfileService {
 
   Future<MedicalProfile> put(String userId, Map<String, dynamic> j) async {
     final p = MedicalProfile.fromJson(j);
-    _store[userId] = await encryption.encrypt(
+    final enc = await encryption.encrypt(
       jsonEncode(p.toJson()),
       aad: _aad(userId),
+    );
+    _store[userId] = enc;
+    changes.save(
+      'medical_profiles',
+      userId,
+      () => (columns: const <String, Object?>{}, data: {'enc': enc}),
     );
     return p;
   }
 
-  void delete(String userId) => _store.remove(userId);
+  void delete(String userId) {
+    _store.remove(userId);
+    changes.delete('medical_profiles', 'id', userId);
+  }
+
+  void restore(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      _store[r['id'] as String] = (r['data'] as Map)['enc'] as String;
+    }
+  }
 }

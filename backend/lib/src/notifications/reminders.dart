@@ -33,6 +33,7 @@ class ReminderScheduler {
     final due = appointments.dueForReminder(now, lead);
     for (final a in due) {
       a.reminderSent = true;
+      appointments.persist(a);
       final data = {'type': 'appointment', 'appointmentId': a.id};
       await notifications.notify(
         a.patientId,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:uuid/uuid.dart';
 
 import '../doctors/specialties.dart';
+import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
 import 'medical_model.dart';
 
@@ -265,14 +266,23 @@ Symptoms (patient's words): """${deidentify(i.symptoms)}"""
       );
     }
     final payload = jsonEncode({'input': input.symptoms, ...result.toJson()});
-    (_store[userId] ??= []).add((
+    final entry = (
       id: result.id,
       enc: await encryption.encrypt(
         payload,
         aad: 'triage:$userId:${result.id}',
       ),
       at: DateTime.now().toUtc(),
-    ));
+    );
+    (_store[userId] ??= []).add(entry);
+    changes.save(
+      'triage_results',
+      entry.id,
+      () => (
+        columns: {'user_id': userId, 'at': entry.at},
+        data: {'enc': entry.enc},
+      ),
+    );
     return result;
   }
 
@@ -299,5 +309,21 @@ Symptoms (patient's words): """${deidentify(i.symptoms)}"""
   }
 
   /// "Unutilish huquqi": foydalanuvchi so'rovi bilan barcha tahlillar o'chiriladi.
-  void deleteAll(String userId) => _store.remove(userId);
+  void deleteAll(String userId) {
+    _store.remove(userId);
+    changes.delete('triage_results', 'user_id', userId);
+  }
+
+  /// Ishga tushganda bazadan tiklash.
+  void restore(List<Map<String, dynamic>> rows) {
+    final sorted = [...rows]
+      ..sort((a, b) => (a['at'] as DateTime).compareTo(b['at'] as DateTime));
+    for (final r in sorted) {
+      (_store[r['user_id'] as String] ??= []).add((
+        id: r['id'] as String,
+        enc: (r['data'] as Map)['enc'] as String,
+        at: (r['at'] as DateTime).toUtc(),
+      ));
+    }
+  }
 }

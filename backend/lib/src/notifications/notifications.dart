@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../ai/medical_model.dart';
+import '../persistence/changes.dart';
 
 /// Push bildirishnoma turlari.
 enum PushKind {
@@ -58,17 +59,40 @@ class DeviceRegistry {
       locale: locales.contains(locale) ? locale : 'uz',
     );
     _byToken[token] = d;
+    changes.save(
+      'devices',
+      token,
+      () => (
+        columns: {'user_id': d.userId},
+        data: {'platform': d.platform, 'locale': d.locale},
+      ),
+    );
     return d;
   }
 
   void unregister(String userId, String token) {
-    if (_byToken[token]?.userId == userId) _byToken.remove(token);
+    if (_byToken[token]?.userId == userId) removeToken(token);
   }
 
-  void removeToken(String token) => _byToken.remove(token);
+  void removeToken(String token) {
+    _byToken.remove(token);
+    changes.delete('devices', 'id', token);
+  }
+
+  void restore(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      final j = r['data'] as Map;
+      _byToken[r['id'] as String] = Device(
+        userId: r['user_id'] as String,
+        token: r['id'] as String,
+        platform: j['platform'] as String,
+        locale: j['locale'] as String,
+      );
+    }
+  }
 
   void removeUser(String userId) =>
-      _byToken.removeWhere((_, d) => d.userId == userId);
+      forUser(userId).map((d) => d.token).toList().forEach(removeToken);
 
   List<Device> forUser(String userId) =>
       _byToken.values.where((d) => d.userId == userId).toList();

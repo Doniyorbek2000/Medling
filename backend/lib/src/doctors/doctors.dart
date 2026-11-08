@@ -1,6 +1,7 @@
 import 'package:uuid/uuid.dart';
 
 import '../core/http_utils.dart';
+import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
 import 'specialties.dart';
 
@@ -146,7 +147,75 @@ class DoctorService {
       ),
     );
     _doctors[id] = d;
+    persist(d);
     return d;
+  }
+
+  /// Shifokor profilini bazaga yozish uchun belgilaydi.
+  void persist(DoctorProfile d) => changes.save(
+    'doctors',
+    d.id,
+    () => (
+      columns: {
+        'user_id': d.userId,
+        'status': d.status.name,
+        'specialty': d.specialty,
+      },
+      data: {
+        'fullName': d.fullName,
+        'experienceYears': d.experienceYears,
+        'clinic': d.clinic,
+        'city': d.city,
+        'priceUzs': d.priceUzs,
+        'bio': d.bio,
+        'languages': d.languages,
+        'licenseNumberEnc': d.licenseNumberEnc,
+        'documentRefsEnc': d.documentRefsEnc,
+        'moderatorId': d.moderatorId,
+        'moderationNote': d.moderationNote,
+        'moderatedAt': d.moderatedAt?.toIso8601String(),
+        'rating': d.rating,
+        'reviewCount': d.reviewCount,
+        ...d.settingsJson(),
+      },
+    ),
+  );
+
+  /// Ishga tushganda bazadan tiklash.
+  void restore(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      final j = r['data'] as Map<String, dynamic>;
+      final d =
+          DoctorProfile(
+              id: r['id'] as String,
+              userId: r['user_id'] as String,
+              fullName: j['fullName'] as String,
+              specialty: r['specialty'] as String,
+              experienceYears: j['experienceYears'] as int,
+              clinic: j['clinic'] as String,
+              city: j['city'] as String,
+              priceUzs: j['priceUzs'] as int,
+              bio: j['bio'] as String? ?? '',
+              languages: (j['languages'] as List).cast<String>(),
+              licenseNumberEnc: j['licenseNumberEnc'] as String,
+              documentRefsEnc: j['documentRefsEnc'] as String,
+              status: ModerationStatus.values.byName(r['status'] as String),
+              rating: (j['rating'] as num).toDouble(),
+              reviewCount: j['reviewCount'] as int,
+            )
+            ..moderatorId = j['moderatorId'] as String?
+            ..moderationNote = j['moderationNote'] as String?
+            ..moderatedAt = j['moderatedAt'] == null
+                ? null
+                : DateTime.parse(j['moderatedAt'] as String)
+            ..clinicEnabled = j['clinicEnabled'] as bool
+            ..onlineEnabled = j['onlineEnabled'] as bool
+            ..onlinePriceUzs = j['onlinePriceUzs'] as int
+            ..workDays = (j['workDays'] as List).cast<int>().toSet()
+            ..startHour = j['startHour'] as int
+            ..endHour = j['endHour'] as int;
+      _doctors[d.id] = d;
+    }
   }
 
   DoctorProfile? byId(String id) => _doctors[id];
@@ -182,6 +251,7 @@ class DoctorService {
       ..onlineEnabled = online
       ..priceUzs = price
       ..onlinePriceUzs = onlinePrice;
+    persist(d);
     return d;
   }
 
@@ -275,6 +345,7 @@ class DoctorService {
         // Ko'pchilik demo shifokorlar onlayn ham qabul qiladi.
         ..onlineEnabled = spec != 'traumatologist'
         ..onlinePriceUzs = (price * 0.8).round();
+      persist(d);
     }
   }
 
@@ -344,6 +415,7 @@ class DoctorService {
       ..moderatorId = moderatorId
       ..moderationNote = note
       ..moderatedAt = DateTime.now().toUtc();
+    persist(d);
     return d;
   }
 }

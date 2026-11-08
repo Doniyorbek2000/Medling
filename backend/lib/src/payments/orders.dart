@@ -1,5 +1,7 @@
 import 'package:uuid/uuid.dart';
 
+import '../persistence/changes.dart';
+
 enum PaymentProvider { click, payme, googlePay, applePay }
 
 enum OrderStatus { pending, processing, paid, cancelled, refunded }
@@ -52,8 +54,48 @@ class OrderRepository {
       provider: provider,
     );
     _orders[o.id] = o;
+    persist(o);
     return o;
   }
 
   PaymentOrder? byId(String id) => _orders[id];
+
+  /// Buyurtmani bazaga yozish uchun belgilaydi (holat o'zgarganda chaqiring).
+  void persist(PaymentOrder o) => changes.save(
+    'payment_orders',
+    o.id,
+    () => (
+      columns: {
+        'appointment_id': o.appointmentId,
+        'user_id': o.userId,
+        'status': o.status.name,
+      },
+      data: {
+        'amountUzs': o.amountUzs,
+        'provider': o.provider.name,
+        'providerTxnId': o.providerTxnId,
+        'paidAt': o.paidAt?.toIso8601String(),
+      },
+    ),
+  );
+
+  void restore(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      final j = r['data'] as Map<String, dynamic>;
+      final o =
+          PaymentOrder(
+              id: r['id'] as String,
+              appointmentId: r['appointment_id'] as String,
+              userId: r['user_id'] as String,
+              amountUzs: j['amountUzs'] as int,
+              provider: PaymentProvider.values.byName(j['provider'] as String),
+            )
+            ..status = OrderStatus.values.byName(r['status'] as String)
+            ..providerTxnId = j['providerTxnId'] as String?
+            ..paidAt = j['paidAt'] == null
+                ? null
+                : DateTime.parse(j['paidAt'] as String);
+      _orders[o.id] = o;
+    }
+  }
 }

@@ -8,7 +8,7 @@ tahlil qiladi, tekshirilgan shifokorni topadi, qabulga yoziladi va to'laydi.
 | Qism | Texnologiya | Papka |
 |---|---|---|
 | Mobil ilova (Android, iOS) | Flutter 3.47 / Dart 3.13 | [`mobile/`](mobile) |
-| API server | Dart + shelf | [`backend/`](backend) |
+| API server | Dart + shelf, PostgreSQL 16 | [`backend/`](backend) |
 | AI diagnostika | Google Med-PaLM 2 (Vertex AI MedLM) | `backend/lib/src/ai` |
 | To'lovlar | Click, Payme, Google Pay, Apple Pay | `backend/lib/src/payments` |
 
@@ -157,6 +157,23 @@ mobile/lib/
 | OTP | Xeshlangan, 5 daqiqa amal qiladi, 5 ta urinish, IP bo'yicha cheklov |
 | To'lov xavfsizligi | Click imzosi (MD5) va Payme Basic auth konstant vaqtda tekshiriladi. Summa serverda olinadi. Karta ma'lumotlari serverga tushmaydi |
 
+## PostgreSQL
+
+| | |
+|---|---|
+| Ulash | `DATABASE_URL=postgresql://user:pass@host:5432/medlink?sslmode=require`. Prod'da majburiy. SSL standart holatda talab qilinadi |
+| Sxema | `backend/lib/src/persistence/schema.dart`. Migratsiyalar ishga tushganda avtomatik, tartib bilan, har biri alohida tranzaksiyada qo'llanadi (`schema_migrations`) |
+| Jadvallar | `users`, `consents` (faqat qo'shiladi), `medical_profiles`, `triage_results`, `doctors`, `appointments`, `payment_orders`, `click_prepared`, `payme_transactions`, `chat_messages`, `devices`, `audit_log` (faqat qo'shiladi). Foreign key va indekslar bor |
+| Shifrlash | Tibbiy maydonlar ilova darajasida AES-256-GCM bilan shifrlanib keladi, bazada ochiq matn yo'q (integratsion test tekshiradi) |
+| Yozish | Har bir HTTP so'rovdagi o'zgarishlar javobdan **oldin** bitta tranzaksiyada yoziladi. Masalan, Click/Payme "muvaffaqiyatli" javobini faqat yozuv bazaga tushgandan keyin oladi. Baza ishlamasa, mijoz `503` oladi, o'zgarishlar yo'qolmaydi va qayta urinib yoziladi |
+| O'qish | Ishga tushganda butun holat bazadan xotiraga yuklanadi, so'rovlar xotiradan tez javob beradi |
+| Cheklov | Bir vaqtda faqat **bitta** server nusxasi ishlaydi. Bu `pg_try_advisory_lock` bilan kafolatlanadi: ikkinchi nusxa ishga tushmaydi, shuning uchun ma'lumotlar ikkiga bo'linib ketmaydi. Cloud Run'da `max-instances=1` qo'ying |
+| To'xtash | SIGTERM kelganda qolgan o'zgarishlar yoziladi va ulanishlar yopiladi |
+| Testlar | `test/postgres_test.dart`: to'liq oqim, keyin "qayta ishga tushirish" va holatni tiklash; advisory lock; migratsiyalarni qayta qo'llash; shifrlash; o'chirish. CI'da PostgreSQL 16 xizmati bilan ishlaydi |
+
+Lokal: `docker compose up --build` (PostgreSQL + API). Yoki mavjud bazaga
+qarshi: `TEST_DATABASE_URL=postgresql://...?sslmode=disable dart test`.
+
 ## Ishga tushirish
 
 ```bash
@@ -223,10 +240,11 @@ chiqarishdan oldin hal qilinishi shart:
    ko'p yurisdiksiyalarda tibbiy dasturiy ta'minot (SaMD) hisoblanishi mumkin.
    Ilova natijani "tashxis emas" deb aniq ko'rsatadi, lekin regulyator bilan
    maslahatlashing.
-6. **Doimiy saqlash.** Hozircha repozitoriylar xotirada ishlaydi (server faqat
-   `MEDLINK_ENV=dev` rejimida ishga tushadi). Prod uchun PostgreSQL, KMS orqali
-   kalit boshqaruvi, faqat qo'shiladigan audit jurnali va haqiqiy SMS shlyuzi
-   (Eskiz, Play Mobile) kerak.
+6. **Bitta server nusxasi.** PostgreSQL ulangan, lekin hozirgi arxitektura
+   bitta yozuvchi nusxani talab qiladi (ikkinchisi ishga tushmaydi).
+   Gorizontal masshtablash uchun servislarni "har so'rovda bazadan o'qish"
+   rejimiga o'tkazish kerak (pastdagi "PostgreSQL" bo'limiga qarang).
+   Shifrlash kalitlarini KMS / Secret Manager'da saqlang.
 7. **Rozilik matnlari** (`mobile/lib/l10n/app_*.arb`, `consent*` kalitlari)
    namunaviy, uchala tilda ham. Ularni yurist tekshirishi kerak.
 8. **Firebase loyihasi.** Push kodi tayyor, lekin Firebase loyihasi, APNs

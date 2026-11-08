@@ -376,6 +376,7 @@ class MedLinkApi {
           owner.role = d.status == ModerationStatus.approved
               ? Role.doctor
               : Role.patient;
+          auth.saveUser(owner);
         }
         if (decision == ModerationStatus.approved ||
             decision == ModerationStatus.rejected) {
@@ -458,6 +459,7 @@ class MedLinkApi {
         final t = video.issue(a, userId: u.id, role: role);
         if (role == 'doctor' && !a.doctorJoinedVideo) {
           a.doctorJoinedVideo = true;
+          appointments.persist(a);
           notifications.notify(
             a.patientId,
             PushKind.consultationStarted,
@@ -585,6 +587,7 @@ class MedLinkApi {
         } else {
           o.status = OrderStatus.cancelled;
         }
+        orders.persist(o);
         await _audit(u, 'payment.wallet', 'order', o.id);
         return jsonOk(o.toJson(), status: ok ? 200 : 402);
       })

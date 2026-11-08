@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 
+import '../persistence/changes.dart';
 import 'orders.dart';
 
 class PaymeError implements Exception {
@@ -18,13 +19,21 @@ class PaymeError implements Exception {
 }
 
 class _PaymeTxn {
-  _PaymeTxn(this.paymeId, this.orderId, this.amount, this.time);
-  final String id = const Uuid().v4();
+  _PaymeTxn(
+    this.paymeId,
+    this.orderId,
+    this.amount,
+    this.time, {
+    String? id,
+    int? createTime,
+  }) : id = id ?? const Uuid().v4(),
+       createTime = createTime ?? DateTime.now().millisecondsSinceEpoch;
+  final String id;
   final String paymeId;
   final String orderId;
   final int amount;
   final int time; // Payme vaqti (ms)
-  final int createTime = DateTime.now().millisecondsSinceEpoch;
+  final int createTime;
   int performTime = 0;
   int cancelTime = 0;
   int state = 1; // 1 yaratildi, 2 bajarildi, -1/-2 bekor qilindi
@@ -52,6 +61,49 @@ class PaymeMerchant {
 
   static const timeoutMs = 12 * 60 * 60 * 1000;
   final _txns = <String, _PaymeTxn>{};
+
+  /// Tranzaksiya va uning buyurtmasini bazaga yozish uchun belgilaydi.
+  void _persist(_PaymeTxn t) {
+    changes.save(
+      'payme_transactions',
+      t.paymeId,
+      () => (
+        columns: {'order_id': t.orderId},
+        data: {
+          'id': t.id,
+          'amount': t.amount,
+          'time': t.time,
+          'createTime': t.createTime,
+          'performTime': t.performTime,
+          'cancelTime': t.cancelTime,
+          'state': t.state,
+          'reason': t.reason,
+        },
+      ),
+    );
+    final o = orders.byId(t.orderId);
+    if (o != null) orders.persist(o);
+  }
+
+  /// Ishga tushganda bazadan tiklash.
+  void restore(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      final j = r['data'] as Map<String, dynamic>;
+      _txns[r['id'] as String] =
+          _PaymeTxn(
+              r['id'] as String,
+              r['order_id'] as String,
+              j['amount'] as int,
+              j['time'] as int,
+              id: j['id'] as String,
+              createTime: j['createTime'] as int,
+            )
+            ..performTime = j['performTime'] as int
+            ..cancelTime = j['cancelTime'] as int
+            ..state = j['state'] as int
+            ..reason = j['reason'] as int?;
+    }
+  }
 
   Uri checkoutUrl(PaymentOrder o, String returnUrl) {
     final params =
@@ -152,6 +204,7 @@ class PaymeMerchant {
       t.state = -1;
       o.status = OrderStatus.pending;
     }
+    _persist(t);
   }
 
   Map<String, Object?> _create(Map<String, dynamic> p) {
@@ -182,6 +235,7 @@ class PaymeMerchant {
     o
       ..status = OrderStatus.processing
       ..providerTxnId = t.paymeId;
+    _persist(t);
     return _createResult(t);
   }
 
@@ -205,6 +259,7 @@ class PaymeMerchant {
       o
         ..status = OrderStatus.paid
         ..paidAt = DateTime.now().toUtc();
+      _persist(t);
       onPaid(o);
     } else if (t.state != 2) {
       throw PaymeError(-31008, 'Amalni bajarib bo\'lmaydi');

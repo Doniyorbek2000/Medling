@@ -23,11 +23,24 @@ env:
 
 jobs:
   backend:
-    name: Backend (Dart)
+    name: Backend (Dart + PostgreSQL)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: medlink_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      # Integratsion testlar (test/postgres_test.dart) shu bazada ishlaydi.
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/medlink_test?sslmode=disable
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -38,6 +51,14 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: dart analyze --fatal-infos
       - run: dart test
+
+  docker:
+    name: Backend Docker image
+    needs: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t medlink-backend backend
 
   mobile:
     name: Mobil — analyze va testlar

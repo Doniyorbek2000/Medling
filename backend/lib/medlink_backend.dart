@@ -20,3 +20,7 @@ export 'src/notifications/reminders.dart';
 export 'src/consultations/chat.dart';
 export 'src/consultations/video.dart';
 export 'src/auth/eskiz.dart';
+export 'src/persistence/bootstrap.dart';
+export 'src/persistence/changes.dart';
+export 'src/persistence/postgres_store.dart';
+export 'src/persistence/schema.dart';

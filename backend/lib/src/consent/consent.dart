@@ -1,3 +1,7 @@
+import 'package:uuid/uuid.dart';
+
+import '../persistence/changes.dart';
+
 /// Aniq (explicit), alohida (granular), versiyalangan va qaytarib olinadigan
 /// rozilik. O'zbekiston "Shaxsga doir ma'lumotlar to'g'risida"gi Qonuni
 /// (O'RQ-547) va HIPAA (§164.508 avtorizatsiya) talablariga mos ravishda
@@ -50,8 +54,10 @@ class ConsentRecord {
     required this.at,
     this.ip,
     this.userAgent,
-  });
+    String? id,
+  }) : id = id ?? const Uuid().v4();
 
+  final String id;
   final String userId;
   final ConsentScope scope;
   final String version;
@@ -79,6 +85,20 @@ class ConsentService {
       throw StateError('Eskirgan rozilik versiyasi: ${r.scope.name}');
     }
     _history.add(r);
+    changes.save(
+      'consents',
+      r.id,
+      () => (
+        columns: {
+          'user_id': r.userId,
+          'scope': r.scope.name,
+          'version': r.version,
+          'granted': r.granted,
+          'at': r.at,
+        },
+        data: {'ip': r.ip, 'userAgent': r.userAgent},
+      ),
+    );
   }
 
   Future<Map<ConsentScope, ConsentRecord>> current(String userId) async {
@@ -90,6 +110,24 @@ class ConsentService {
   }
 
   /// Rozilik amalda bo'lishi uchun: oxirgi yozuv `granted` va versiya joriy.
+  /// Ishga tushganda bazadan tiklash (vaqt bo'yicha tartibda).
+  void restore(List<Map<String, dynamic>> rows) {
+    final list = [
+      for (final r in rows)
+        ConsentRecord(
+          id: r['id'] as String,
+          userId: r['user_id'] as String,
+          scope: ConsentScope.parse(r['scope'] as String),
+          version: r['version'] as String,
+          granted: r['granted'] as bool,
+          at: (r['at'] as DateTime).toUtc(),
+          ip: (r['data'] as Map)['ip'] as String?,
+          userAgent: (r['data'] as Map)['userAgent'] as String?,
+        ),
+    ]..sort((a, b) => a.at.compareTo(b.at));
+    _history.addAll(list);
+  }
+
   Future<bool> has(String userId, ConsentScope scope) async {
     final r = (await current(userId))[scope];
     return r != null && r.granted && r.version == currentConsentVersions[scope];

@@ -2,6 +2,7 @@ import 'package:uuid/uuid.dart';
 
 import '../appointments/appointments.dart';
 import '../core/http_utils.dart';
+import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
 
 class ChatMessage {
@@ -12,7 +13,8 @@ class ChatMessage {
     required this.senderRole,
     required this.textEnc,
     required this.seq,
-  });
+    DateTime? at,
+  }) : at = at ?? DateTime.now().toUtc();
 
   final String id;
   final String appointmentId;
@@ -23,7 +25,7 @@ class ChatMessage {
   /// Qabul ichida o'suvchi tartib raqami — mijoz `after=seq` bilan faqat
   /// yangilarini so'raydi.
   final int seq;
-  final DateTime at = DateTime.now().toUtc();
+  final DateTime at;
 }
 
 /// Bemor va shifokor o'rtasidagi qabul chati.
@@ -53,6 +55,25 @@ class ChatService {
     _ => false,
   };
 
+  /// Ishga tushganda bazadan tiklash.
+  void restore(List<Map<String, dynamic>> rows) {
+    final list = [
+      for (final r in rows)
+        ChatMessage(
+          id: r['id'] as String,
+          appointmentId: r['appointment_id'] as String,
+          senderId: (r['data'] as Map)['senderId'] as String,
+          senderRole: (r['data'] as Map)['senderRole'] as String,
+          textEnc: (r['data'] as Map)['textEnc'] as String,
+          seq: r['seq'] as int,
+          at: DateTime.parse((r['data'] as Map)['at'] as String),
+        ),
+    ]..sort((a, b) => a.seq.compareTo(b.seq));
+    for (final m in list) {
+      _messages.putIfAbsent(m.appointmentId, () => []).add(m);
+    }
+  }
+
   Future<ChatMessage> send(
     String appointmentId,
     String userId,
@@ -80,6 +101,19 @@ class ChatService {
       seq: list.length + 1,
     );
     list.add(m);
+    changes.save(
+      'chat_messages',
+      m.id,
+      () => (
+        columns: {'appointment_id': m.appointmentId, 'seq': m.seq},
+        data: {
+          'senderId': m.senderId,
+          'senderRole': m.senderRole,
+          'textEnc': m.textEnc,
+          'at': m.at.toIso8601String(),
+        },
+      ),
+    );
     onMessage?.call(a, m);
     return m;
   }

@@ -8,6 +8,7 @@ import 'package:shelf/shelf.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/http_utils.dart';
+import '../persistence/changes.dart';
 import '../security/field_encryption.dart';
 
 enum Role { patient, doctor, admin }
@@ -74,6 +75,29 @@ class AuthService {
 
   User? userById(String id) => _users[id];
 
+  /// Foydalanuvchini bazaga yozish uchun belgilaydi (yangi yoki rol o'zgardi).
+  void saveUser(User u) => changes.save(
+    'users',
+    u.id,
+    () => (
+      columns: {'phone_hash': u.phoneHash, 'role': u.role.name},
+      data: {'phoneEnc': u.phoneEnc},
+    ),
+  );
+
+  /// Ishga tushganda bazadan tiklash.
+  void restoreUsers(List<Map<String, dynamic>> rows) {
+    for (final r in rows) {
+      final u = User(
+        id: r['id'] as String,
+        phoneHash: r['phone_hash'] as String,
+        phoneEnc: (r['data'] as Map)['phoneEnc'] as String,
+        role: Role.values.byName(r['role'] as String),
+      );
+      _users[u.id] = u;
+    }
+  }
+
   Future<void> requestOtp(String phone) async {
     if (!_phoneRe.hasMatch(phone)) {
       throw ApiException(400, 'invalid_phone', 'Format: +998XXXXXXXXX');
@@ -115,6 +139,7 @@ class AuthService {
         role: _adminPhones.contains(phone) ? Role.admin : Role.patient,
       );
       _users[id] = user;
+      saveUser(user);
     }
     return (token: issueToken(user), user: user);
   }
