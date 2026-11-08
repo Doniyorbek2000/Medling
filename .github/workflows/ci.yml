@@ -97,6 +97,26 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter pub get
+      # Gradle tarqatmasi va kutubxonalari keshlanadi: tashqi serverlar
+      # (github.com releases) vaqtincha 5xx qaytarsa ham build buzilmaydi.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper/dists
+            ~/.gradle/caches
+          key: gradle-${{ runner.os }}-${{ hashFiles('mobile/android/gradle/wrapper/gradle-wrapper.properties', 'mobile/android/**/*.gradle.kts') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - name: Gradle'ni yuklab olish (qayta urinish bilan)
+        run: |
+          # gradlew Flutter tomonidan yaratiladi (repozitoriyda saqlanmaydi).
+          flutter build apk --config-only
+          cd android
+          for i in 1 2 3 4 5; do
+            ./gradlew --version && exit 0
+            echo "Gradle yuklab olinmadi (urinish $i), $((i * 20)) s kutamiz..."
+            sleep $((i * 20))
+          done
+          exit 1
       # Release kaliti repozitoriy secret'larida bo'lsa — u bilan imzolanadi,
       # aks holda debug kalit bilan (faqat sinov uchun).
       - name: Release kalitini tiklash
