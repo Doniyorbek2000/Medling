@@ -20,9 +20,11 @@ class PaymentOrder {
     required this.userId,
     required this.amountUzs,
     required this.provider,
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now().toUtc();
 
   final String id;
+  final DateTime createdAt;
   final String appointmentId;
   final String userId;
   final int amountUzs;
@@ -75,6 +77,19 @@ class OrderRepository {
 
   static DateTime? _date(Object? v) =>
       v == null ? null : DateTime.parse(v as String);
+
+  /// Qabul muddati o'tganda boshlangan, lekin yakunlanmagan to'lovlar bekor
+  /// qilinadi — keyin kelgan Click/Payme so'rovi rad etiladi.
+  void cancelPendingFor(String appointmentId) {
+    for (final o in _orders.values) {
+      if (o.appointmentId == appointmentId &&
+          (o.status == OrderStatus.pending ||
+              o.status == OrderStatus.processing)) {
+        o.status = OrderStatus.cancelled;
+        persist(o);
+      }
+    }
+  }
 
   /// Qabul uchun to'langan buyurtma (bo'lsa).
   PaymentOrder? paidOrderFor(String appointmentId) => _orders.values
@@ -131,6 +146,7 @@ class OrderRepository {
       data: {
         'amountUzs': o.amountUzs,
         'provider': o.provider.name,
+        'createdAt': o.createdAt.toIso8601String(),
         'providerTxnId': o.providerTxnId,
         'paidAt': o.paidAt?.toIso8601String(),
         'refundStatus': o.refundStatus.name,
@@ -151,6 +167,7 @@ class OrderRepository {
               userId: r['user_id'] as String,
               amountUzs: j['amountUzs'] as int,
               provider: PaymentProvider.values.byName(j['provider'] as String),
+              createdAt: _date(j['createdAt']) ?? _date(j['paidAt']),
             )
             ..status = OrderStatus.values.byName(r['status'] as String)
             ..providerTxnId = j['providerTxnId'] as String?

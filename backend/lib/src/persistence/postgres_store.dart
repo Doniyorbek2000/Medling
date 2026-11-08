@@ -226,24 +226,42 @@ class PostgresAuditLog implements AuditLog {
   }
 
   @override
-  Future<List<AuditEvent>> forActor(String actorId) async {
-    final rows = await _pool.execute(
+  Future<List<AuditEvent>> forActor(String actorId) async => _map(
+    await _pool.execute(
       Sql.named('SELECT * FROM audit_log WHERE actor_id = @a ORDER BY at, id'),
       parameters: {'a': actorId},
-    );
-    return [
-      for (final r in rows)
-        () {
-          final m = r.toColumnMap();
-          return AuditEvent(
-            actorId: m['actor_id'] as String,
-            action: m['action'] as String,
-            resource: m['resource'] as String,
-            resourceId: m['resource_id'] as String?,
-            outcome: m['outcome'] as String,
-            at: (m['at'] as DateTime).toUtc(),
-          );
-        }(),
-    ];
-  }
+    ),
+  );
+
+  @override
+  Future<List<AuditEvent>> recent({
+    String? actorId,
+    String? actionPrefix,
+    int limit = 100,
+  }) async => _map(
+    await _pool.execute(
+      Sql.named(
+        'SELECT * FROM audit_log '
+        'WHERE (@a::text IS NULL OR actor_id = @a::text) '
+        "AND (@p::text IS NULL OR action LIKE @p::text || '%') "
+        'ORDER BY at DESC, id DESC LIMIT @l:int4',
+      ),
+      parameters: {'a': actorId, 'p': actionPrefix, 'l': limit},
+    ),
+  );
+
+  List<AuditEvent> _map(Result rows) => [
+    for (final r in rows)
+      () {
+        final m = r.toColumnMap();
+        return AuditEvent(
+          actorId: m['actor_id'] as String,
+          action: m['action'] as String,
+          resource: m['resource'] as String,
+          resourceId: m['resource_id'] as String?,
+          outcome: m['outcome'] as String,
+          at: (m['at'] as DateTime).toUtc(),
+        );
+      }(),
+  ];
 }

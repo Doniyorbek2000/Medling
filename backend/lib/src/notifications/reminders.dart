@@ -21,6 +21,9 @@ class ReminderScheduler {
   final Duration lead;
   Timer? _timer;
 
+  /// Bron muddati o'tib bekor qilingan qabul (to'lovni bekor qilish uchun).
+  void Function(Appointment a)? onExpired;
+
   void start({Duration every = const Duration(minutes: 1)}) {
     _timer?.cancel();
     _timer = Timer.periodic(every, (_) => tick(DateTime.now().toUtc()));
@@ -30,6 +33,10 @@ class ReminderScheduler {
 
   /// Bitta tekshiruv (testlarda to'g'ridan-to'g'ri chaqiriladi).
   Future<int> tick(DateTime now) async {
+    // Bron muddati o'tgan to'lanmagan qabullar va ularning to'lovlari.
+    for (final a in appointments.expireUnpaid(now)) {
+      onExpired?.call(a);
+    }
     final due = appointments.dueForReminder(now, lead);
     for (final a in due) {
       a.reminderSent = true;
@@ -92,11 +99,15 @@ void wireAppointmentNotifications({
   };
   appointments.onCancelled = (a, actor) {
     final doctorUser = doctors.byId(a.doctorId)?.userId;
-    // Bekor qilgan tomonga emas, ikkinchi tomonga xabar beramiz.
-    final other = actor == a.patientId ? doctorUser : a.patientId;
-    if (other != null) {
+    // Bekor qilgan tomonga emas, ikkinchi tomonga xabar beramiz; admin
+    // bekor qilsa — ikkalasiga.
+    final to = <String?>{
+      if (actor != a.patientId) a.patientId,
+      if (actor != doctorUser) doctorUser,
+    }.whereType<String>();
+    for (final u in to) {
       notifications.notify(
-        other,
+        u,
         PushKind.appointmentCancelled,
         at: a.startsAt,
         data: {'type': 'appointment', 'appointmentId': a.id},

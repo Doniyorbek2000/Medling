@@ -186,7 +186,7 @@ class MedLinkApi {
   /// `refunded` (Google Pay / Apple Pay — darhol avtomatik).
   Future<String> _cancelWithRefund(Appointment a, User u, String role) async {
     final wasConfirmed = a.status == AppointmentStatus.confirmed;
-    appointments.cancel(a.id, u.id);
+    appointments.cancel(a.id, u.id, bySystem: role == 'admin');
     final paid = orders.paidOrderFor(a.id);
     final reason = refundReason(a, role, DateTime.now().toUtc());
     if (!wasConfirmed || paid == null || reason == null) return 'none';
@@ -206,6 +206,71 @@ class MedLinkApi {
       data: {'type': 'appointment', 'appointmentId': o.appointmentId},
     );
   }
+
+  Map<String, dynamic> _doctorStats(DoctorProfile d) {
+    final now = DateTime.now().toUtc();
+    final monthAgo = now.subtract(const Duration(days: 30));
+    final mine = appointments.forDoctor(d.id);
+    final local = now.add(AppointmentService.tashkent);
+    final todayStart = DateTime.utc(
+      local.year,
+      local.month,
+      local.day,
+    ).subtract(AppointmentService.tashkent);
+    final todayEnd = todayStart.add(const Duration(days: 1));
+    final earned = orders.all.where(
+      (o) =>
+          o.status == OrderStatus.paid &&
+          (o.paidAt ?? o.createdAt).isAfter(monthAgo) &&
+          appointments.byId(o.appointmentId)?.doctorId == d.id,
+    );
+    return {
+      'upcoming': mine
+          .where(
+            (a) =>
+                a.status == AppointmentStatus.confirmed &&
+                a.startsAt.isAfter(now),
+          )
+          .length,
+      'today': mine
+          .where(
+            (a) =>
+                a.status == AppointmentStatus.confirmed &&
+                !a.startsAt.isBefore(todayStart) &&
+                a.startsAt.isBefore(todayEnd),
+          )
+          .length,
+      'completed30d': mine
+          .where(
+            (a) =>
+                a.status == AppointmentStatus.completed &&
+                a.startsAt.isAfter(monthAgo),
+          )
+          .length,
+      'earnings30dUzs': earned.fold<int>(0, (s, o) => s + o.amountUzs),
+      'awaitingConclusion': mine
+          .where(
+            (a) =>
+                a.status == AppointmentStatus.confirmed &&
+                a.startsAt.isBefore(now) &&
+                a.conclusionEnc == null,
+          )
+          .length,
+      'rating': d.rating,
+      'reviewCount': d.reviewCount,
+    };
+  }
+
+  Future<Map<String, dynamic>> _userView(User x) async => {
+    'id': x.id,
+    'role': x.role.name,
+    'phone': await auth.maskedPhone(x),
+    'createdAt': x.createdAt.toIso8601String(),
+    'blocked': x.blocked,
+    'blockReason': x.blockReason,
+    'appointments': appointments.forPatient(x.id).length,
+    'doctorId': doctors.byUser(x.id)?.id,
+  };
 
   /// Shifokorga bemor ismi (tibbiy profildan; to'ldirilmagan bo'lsa null).
   /// To'lanmagan bron uchun ko'rsatilmaydi.
@@ -264,6 +329,27 @@ class MedLinkApi {
           'missingConsents': (await consents.missing(u.id))
               .map((s) => s.name)
               .toList(),
+        });
+      })
+      // ---------------- Bildirishnomalar tarixi ----------------
+      ..get('/v1/me/notifications', (Request req) {
+        final u = requireUser(req);
+        final lang = req.url.queryParameters['lang'] ?? 'uz';
+        return jsonOk({
+          'unread': notifications.inbox.unread(u.id),
+          'items': [
+            for (final i in notifications.inbox.list(u.id)) i.toJson(lang),
+          ],
+        });
+      })
+      ..post('/v1/me/notifications/read', (Request req) async {
+        final u = requireUser(req);
+        final j = await readJson(req);
+        final ids = (j['ids'] as List?)?.whereType<String>().toSet();
+        final n = notifications.inbox.markRead(u.id, ids);
+        return jsonOk({
+          'marked': n,
+          'unread': notifications.inbox.unread(u.id),
         });
       })
       // ---------------- Push qurilmalari ----------------
@@ -479,6 +565,18 @@ class MedLinkApi {
               : Role.patient;
           auth.saveUser(owner);
         }
+        var refunds = 0;
+        if (decision == ModerationStatus.suspended) {
+          // Kelgusi qabullar bekor qilinadi, bemorlarga pul to'liq qaytadi.
+          for (final a in appointments.activeFor(doctorId: d.id)) {
+            if (await _cancelWithRefund(a, u, 'admin') != 'none') refunds++;
+          }
+          notifications.notify(
+            d.userId,
+            PushKind.doctorSuspended,
+            data: {'type': 'doctor_application'},
+          );
+        }
         if (decision == ModerationStatus.approved ||
             decision == ModerationStatus.rejected) {
           notifications.notify(
@@ -490,7 +588,11 @@ class MedLinkApi {
           );
         }
         await _audit(u, 'doctor.moderate.${decision.name}', 'doctor', id);
-        return jsonOk({'id': d.id, 'status': d.status.name});
+        return jsonOk({
+          'id': d.id,
+          'status': d.status.name,
+          'refunds': refunds,
+        });
       })
       ..get('/v1/admin/refunds', (Request req) async {
         final u = requireUser(req, {Role.admin});
@@ -526,6 +628,220 @@ class MedLinkApi {
         _refunded(o);
         await _audit(u, 'refund.complete', 'order', id);
         return jsonOk(o.toJson());
+      })
+      ..get('/v1/admin/doctors', (Request req) async {
+        final u = requireUser(req, {Role.admin});
+        final q = req.url.queryParameters;
+        final status = q['status'];
+        final text = (q['q'] ?? '').trim().toLowerCase();
+        final list =
+            doctors.all
+                .where((d) => status == null || d.status.name == status)
+                .where(
+                  (d) =>
+                      text.isEmpty ||
+                      d.fullName.toLowerCase().contains(text) ||
+                      d.clinic.toLowerCase().contains(text),
+                )
+                .toList()
+              ..sort((a, b) => a.fullName.compareTo(b.fullName));
+        await _audit(u, 'doctor.admin.list', 'doctor');
+        return jsonOk({
+          'total': list.length,
+          'items': [
+            for (final d in list.take(200))
+              {
+                ...d.toPublicJson(),
+                'status': d.status.name,
+                'moderationNote': d.moderationNote,
+                'upcoming': appointments.activeFor(doctorId: d.id).length,
+              },
+          ],
+        });
+      })
+      ..get('/v1/admin/doctors/<id>', (Request req, String id) async {
+        final u = requireUser(req, {Role.admin});
+        final d = doctors.byId(id) ?? (throw ApiException(404, 'not_found'));
+        await _audit(u, 'doctor.admin.read', 'doctor', id);
+        return jsonOk({
+          ...await doctors.moderationView(d),
+          'moderationNote': d.moderationNote,
+          'moderatedAt': d.moderatedAt?.toIso8601String(),
+          'stats': _doctorStats(d),
+          'reviews': [
+            for (final a in appointments.reviewedFor(d.id))
+              {
+                'appointmentId': a.id,
+                ...a.review!.toJson(),
+                'hidden': a.review!.hidden,
+                'hiddenReason': a.review!.hiddenReason,
+              },
+          ],
+        });
+      })
+      ..post('/v1/admin/reviews/<id>/hide', (Request req, String id) async {
+        final u = requireUser(req, {Role.admin});
+        final j = await readJson(req);
+        final hidden = j['hidden'] as bool? ?? true;
+        final reason = (j['reason'] as String? ?? '').trim();
+        if (hidden && reason.isEmpty) {
+          throw ApiException(400, 'note_required');
+        }
+        final a = appointments.setReviewHidden(
+          id,
+          hidden: hidden,
+          reason: reason,
+        );
+        await _audit(u, hidden ? 'review.hide' : 'review.unhide', 'review', id);
+        return jsonOk({
+          'appointmentId': a.id,
+          'hidden': a.review!.hidden,
+          'doctorRating': doctors.byId(a.doctorId)!.rating,
+        });
+      })
+      ..get('/v1/admin/users', (Request req) async {
+        final u = requireUser(req, {Role.admin});
+        final q = req.url.queryParameters;
+        final text = (q['q'] ?? '').replaceAll(' ', '');
+        final role = q['role'];
+        final blocked = q['blocked'] == 'true';
+        Iterable<User> list;
+        if (text.startsWith('+')) {
+          final found = auth.byPhone(text);
+          list = found == null ? const [] : [found];
+        } else {
+          list = auth.users.where((x) => text.isEmpty || x.id.startsWith(text));
+        }
+        final filtered =
+            list
+                .where((x) => role == null || x.role.name == role)
+                .where((x) => !blocked || x.blocked)
+                .toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        await _audit(u, 'user.admin.list', 'user');
+        return jsonOk({
+          'total': filtered.length,
+          'items': [for (final x in filtered.take(100)) await _userView(x)],
+        });
+      })
+      ..post('/v1/admin/users/<id>/block', (Request req, String id) async {
+        final u = requireUser(req, {Role.admin});
+        final target =
+            auth.userById(id) ?? (throw ApiException(404, 'not_found'));
+        final j = await readJson(req);
+        final block = j['blocked'] as bool? ?? true;
+        final reason = (j['reason'] as String? ?? '').trim();
+        if (target.id == u.id || target.role == Role.admin) {
+          throw ApiException(409, 'cannot_block_admin');
+        }
+        if (block && reason.isEmpty) throw ApiException(400, 'note_required');
+        var refunds = 0;
+        if (block && !target.blocked) {
+          // Kelgusi qabullar bekor qilinadi (pul to'liq qaytadi), shifokor
+          // profili to'xtatiladi, push qurilmalari o'chiriladi.
+          for (final a in appointments.activeFor(patientId: target.id)) {
+            if (await _cancelWithRefund(a, u, 'admin') != 'none') refunds++;
+          }
+          final d = doctors.byUser(target.id);
+          if (d != null && d.status == ModerationStatus.approved) {
+            for (final a in appointments.activeFor(doctorId: d.id)) {
+              if (await _cancelWithRefund(a, u, 'admin') != 'none') refunds++;
+            }
+            doctors.moderate(d.id, u.id, ModerationStatus.suspended, reason);
+            target.role = Role.patient;
+          }
+          await notifications.notify(target.id, PushKind.accountBlocked);
+          devices.removeUser(target.id);
+        }
+        auth.setBlocked(target, blocked: block, reason: reason);
+        await _audit(u, block ? 'user.block' : 'user.unblock', 'user', id);
+        return jsonOk({...await _userView(target), 'refunds': refunds});
+      })
+      ..get('/v1/admin/appointments', (Request req) async {
+        final u = requireUser(req, {Role.admin});
+        final q = req.url.queryParameters;
+        final status = q['status'];
+        final doctorId = q['doctorId'];
+        final list =
+            appointments.all
+                .where((a) => status == null || a.status.name == status)
+                .where((a) => doctorId == null || a.doctorId == doctorId)
+                .toList()
+              ..sort((a, b) => b.startsAt.compareTo(a.startsAt));
+        await _audit(u, 'appointment.admin.list', 'appointment');
+        // Shikoyat sababi va xulosa (tibbiy mazmun) adminga ko'rsatilmaydi.
+        return jsonOk({
+          'total': list.length,
+          'items': [
+            for (final a in list.take(200))
+              {
+                'id': a.id,
+                'startsAt': a.startsAt.toIso8601String(),
+                'status': a.status.name,
+                'type': a.type,
+                'priceUzs': a.priceUzs,
+                'patientId': a.patientId,
+                'doctor': switch (doctors.byId(a.doctorId)) {
+                  final d? => {
+                    'id': d.id,
+                    'fullName': d.fullName,
+                    'specialty': d.specialty,
+                  },
+                  null => null,
+                },
+                'paid': orders.paidOrderFor(a.id) != null,
+                'refundStatus': orders.refundFor(a.id).name,
+                'hasConclusion': a.conclusionEnc != null,
+                'rescheduleCount': a.rescheduleCount,
+              },
+          ],
+        });
+      })
+      ..get('/v1/admin/payments', (Request req) async {
+        final u = requireUser(req, {Role.admin});
+        final q = req.url.queryParameters;
+        final list =
+            orders.all
+                .where(
+                  (o) => q['status'] == null || o.status.name == q['status'],
+                )
+                .where(
+                  (o) =>
+                      q['provider'] == null || o.provider.name == q['provider'],
+                )
+                .toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        await _audit(u, 'payment.admin.list', 'order');
+        return jsonOk({
+          'total': list.length,
+          'sumPaidUzs': list
+              .where((o) => o.status == OrderStatus.paid)
+              .fold<int>(0, (s, o) => s + o.amountUzs),
+          'items': [
+            for (final o in list.take(200))
+              {
+                ...o.toJson(),
+                'createdAt': o.createdAt.toIso8601String(),
+                'paidAt': o.paidAt?.toIso8601String(),
+                'providerTxnId': o.providerTxnId,
+                'refundReason': o.refundReason,
+              },
+          ],
+        });
+      })
+      ..get('/v1/admin/audit', (Request req) async {
+        final u = requireUser(req, {Role.admin});
+        final q = req.url.queryParameters;
+        final limit = (int.tryParse(q['limit'] ?? '') ?? 100).clamp(1, 500);
+        final events = await audit.recent(
+          actorId: q['actorId'],
+          actionPrefix: q['action'],
+          limit: limit,
+        );
+        await _audit(u, 'audit.read', 'audit');
+        return jsonOk({
+          'items': [for (final e in events) e.toJson()],
+        });
       })
       ..get('/v1/admin/stats', (Request req) async {
         final u = requireUser(req, {Role.admin});
@@ -724,6 +1040,12 @@ class MedLinkApi {
         await _audit(u, 'conclusion.write', 'appointment', id);
         return jsonOk(await appointments.toJson(appointments.byId(id)!));
       })
+      ..get('/v1/doctor/stats', (Request req) async {
+        final u = requireUser(req, {Role.doctor});
+        final d =
+            doctors.byUser(u.id) ?? (throw ApiException(404, 'not_found'));
+        return jsonOk(_doctorStats(d));
+      })
       ..get('/v1/doctor/settings', (Request req) {
         final u = requireUser(req, {Role.doctor});
         final d =
@@ -903,6 +1225,7 @@ class MedLinkApi {
         profiles.delete(u.id);
         appointments.anonymizeReviews(u.id);
         devices.removeUser(u.id);
+        notifications.inbox.deleteUser(u.id);
         await consents.revokeAll(u.id);
         await _audit(u, 'me.delete_account', 'user', u.id);
         auth.deleteUser(u);

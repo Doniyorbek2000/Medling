@@ -26,3 +26,4 @@ export 'src/persistence/postgres_store.dart';
 export 'src/persistence/schema.dart';
 export 'src/consultations/attachments.dart';
 export 'src/legal/legal.dart';
+export 'src/notifications/inbox.dart';

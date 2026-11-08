@@ -83,8 +83,18 @@ Future<void> main() async {
   final orders = OrderRepository();
   final chat = ChatService(appointments, enc);
   final devices = DeviceRegistry();
+  final inbox = NotificationInbox();
 
-  void paid(PaymentOrder o) => appointments.markPaid(o.appointmentId);
+  // To'lov bekor qilingan qabul uchun kelsa (masalan, bron muddati o'tgach),
+  // pul avtomatik qaytarish navbatiga qo'yiladi.
+  void paid(PaymentOrder o) {
+    appointments.markPaid(o.appointmentId);
+    if (appointments.byId(o.appointmentId)?.status ==
+        AppointmentStatus.cancelled) {
+      orders.requestRefund(o, 'late_payment');
+    }
+  }
+
   void refunded(PaymentOrder o) {
     final a = appointments.byId(o.appointmentId);
     if (a == null) return;
@@ -126,6 +136,7 @@ Future<void> main() async {
       payme: payme,
       chat: chat,
       devices: devices,
+      inbox: inbox,
     );
     log('INFO', 'PostgreSQL: holat yuklandi $counts');
     audit = PostgresAuditLog(store.pool);
@@ -146,6 +157,7 @@ Future<void> main() async {
   final fcmProject = env['FCM_PROJECT_ID'] ?? '';
   final notifications = NotificationService(
     devices: devices,
+    inbox: inbox,
     sender: fcmProject.isEmpty
         ? LogPushSender()
         : FcmPushSender(
@@ -165,11 +177,14 @@ Future<void> main() async {
     chat: chat,
     notifications: notifications,
   );
-  final reminders = ReminderScheduler(
-    appointments: appointments,
-    doctors: doctors,
-    notifications: notifications,
-  )..start();
+  final reminders =
+      ReminderScheduler(
+          appointments: appointments,
+          doctors: doctors,
+          notifications: notifications,
+        )
+        ..onExpired = ((a) => orders.cancelPendingFor(a.id))
+        ..start();
 
   final api = MedLinkApi(
     auth: auth,

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../ai/medical_model.dart';
 import '../persistence/changes.dart';
+import 'inbox.dart';
 
 /// Push bildirishnoma turlari.
 enum PushKind {
@@ -18,6 +19,8 @@ enum PushKind {
   conclusionReady,
   refundCompleted,
   appointmentRescheduled,
+  doctorSuspended,
+  accountBlocked,
 }
 
 class Device {
@@ -174,6 +177,28 @@ class PushTemplates {
         'Your profile is now visible to patients.',
       ),
     },
+    PushKind.doctorSuspended: {
+      'uz': (
+        "Profil to'xtatildi",
+        "Profilingiz vaqtincha ko'rinmaydi. Tafsilotlar ilovada.",
+      ),
+      'ru': (
+        'Профиль приостановлен',
+        'Ваш профиль временно скрыт. Подробности в приложении.',
+      ),
+      'en': (
+        'Profile suspended',
+        'Your profile is temporarily hidden. See the app for details.',
+      ),
+    },
+    PushKind.accountBlocked: {
+      'uz': (
+        'Hisob bloklandi',
+        "Qo'llab-quvvatlash xizmatiga murojaat qiling.",
+      ),
+      'ru': ('Аккаунт заблокирован', 'Обратитесь в службу поддержки.'),
+      'en': ('Account blocked', 'Please contact support.'),
+    },
     PushKind.doctorRejected: {
       'uz': ('Ariza ko\'rib chiqildi', 'Natijani ilovada ko\'ring.'),
       'ru': ('Заявка рассмотрена', 'Результат смотрите в приложении.'),
@@ -283,9 +308,14 @@ class FcmPushSender implements PushSender {
 /// Bildirishnoma yuborish. Hech qachon asosiy jarayonni (to'lov, bron)
 /// buzmaydi: xatolar yutiladi.
 class NotificationService {
-  NotificationService({required this.devices, required this.sender});
+  NotificationService({
+    required this.devices,
+    required this.sender,
+    NotificationInbox? inbox,
+  }) : inbox = inbox ?? NotificationInbox();
   final DeviceRegistry devices;
   final PushSender sender;
+  final NotificationInbox inbox;
 
   Future<void> notify(
     String userId,
@@ -293,6 +323,7 @@ class NotificationService {
     DateTime? at,
     Map<String, String> data = const {},
   }) async {
+    inbox.add(userId, kind, eventAt: at, data: data);
     for (final d in devices.forUser(userId)) {
       try {
         final r = await sender.send(

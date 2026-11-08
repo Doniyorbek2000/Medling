@@ -4,6 +4,7 @@ import '../auth/auth.dart';
 import '../consent/consent.dart';
 import '../consultations/chat.dart';
 import '../doctors/doctors.dart';
+import '../notifications/inbox.dart';
 import '../notifications/notifications.dart';
 import '../payments/click.dart';
 import '../payments/orders.dart';
@@ -26,6 +27,7 @@ Future<Map<String, int>> restoreAll(
   required PaymeMerchant payme,
   required ChatService chat,
   required DeviceRegistry devices,
+  NotificationInbox? inbox,
 }) async {
   final restorers = <String, void Function(List<Map<String, dynamic>>)>{
     'users': auth.restoreUsers,
@@ -39,6 +41,7 @@ Future<Map<String, int>> restoreAll(
     'payme_transactions': payme.restore,
     'chat_messages': chat.restore,
     'devices': devices.restore,
+    'notifications': ?inbox?.restore,
   };
   final counts = <String, int>{};
   for (final e in restorers.entries) {

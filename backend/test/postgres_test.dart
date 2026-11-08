@@ -82,6 +82,7 @@ class _World {
       notifications: NotificationService(
         devices: devices,
         sender: LogPushSender(),
+        inbox: inbox,
       ),
       chat: chat,
       attachments: AttachmentService(
@@ -112,6 +113,7 @@ class _World {
   late final ClickMerchant click;
   late final PaymeMerchant payme;
   final devices = DeviceRegistry();
+  final inbox = NotificationInbox();
   late final MedLinkApi api;
   late final Handler handler;
 
@@ -128,6 +130,7 @@ class _World {
     payme: payme,
     chat: chat,
     devices: devices,
+    inbox: inbox,
   );
 
   Future<(int, Map<String, dynamic>)> send(
@@ -471,6 +474,12 @@ void main() {
     expect((await w.profiles.get(patientId)).allergies, ['Penitsillin']);
     expect(await w.triage.history(patientId), hasLength(1));
     expect(w.devices.forUser(patientId).single.token, 'fid-1');
+    // Bildirishnomalar tarixi ham tiklanadi.
+    expect(counts['notifications'], greaterThan(0));
+    expect(
+      w.inbox.list(w.doctors.byId(doctorId)!.userId).map((i) => i.kind),
+      contains(PushKind.doctorApproved),
+    );
 
     // Shifokor: tasdiqlangan, jadval va onlayn sozlamalari, reyting.
     final d = w.doctors.byId(doctorId)!;
@@ -545,6 +554,11 @@ void main() {
 
     // Audit jurnali bazada.
     expect(await PostgresAuditLog(store.pool).forActor(patientId), isNotEmpty);
+    final recent = await PostgresAuditLog(store.pool)
+        .recent(actorId: patientId, actionPrefix: 'appointment.', limit: 3);
+    expect(recent, hasLength(3));
+    expect(recent.every((e) => e.action.startsWith('appointment.')), isTrue);
+    expect(recent.first.at.isBefore(recent.last.at), isFalse);
 
     // Bazada ochiq tibbiy matn yo'q (shifrlangan).
     final c = await Connection.openFromUrl(url);
@@ -589,6 +603,7 @@ void main() {
     expect(w.auth.userCount, 2);
     expect(w.orders.byId(o1['id'] as String), isNotNull);
     expect(w.devices.forUser(patientId), isEmpty);
+    expect(w.inbox.list(patientId), isEmpty);
     expect(await w.consents.hasAllRequired(patientId), isFalse);
     // Shu raqam bilan kirish — yangi hisob.
     await w.login('+998901234567', consent: false);

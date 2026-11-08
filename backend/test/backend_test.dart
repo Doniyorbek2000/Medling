@@ -1667,5 +1667,330 @@ void main() {
       expect(x, contains('Foydalanish shartlari'));
       expect(x, isNot(contains('<script>')));
     });
+
+    group('admin paneli', () {
+      late String admin;
+      setUp(() async {
+        admin = await login('+998900000001');
+        await consentAll(admin);
+      });
+
+      Future<(int, Map<String, dynamic>)> asAdmin(
+        String method,
+        String path, [
+        Object? body,
+      ]) => send(method, path, token: admin, body: body);
+
+      test(
+        'shifokorni to\'xtatish: sabab majburiy, qabullar bekor, pul qaytadi',
+        () async {
+          final (:doctorId, :docToken) = await approvedDoctor('+998903333331');
+          final patient = await login('+998903333332');
+          await consentAll(patient);
+          final id = await bookPaid(
+            patient,
+            doctorId,
+            (await slotsOn(doctorId, 2)).first,
+          );
+
+          // Bemor admin API'ga kira olmaydi.
+          expect(
+            (await send('GET', '/v1/admin/doctors', token: patient)).$1,
+            403,
+          );
+          final (_, list) = await asAdmin(
+            'GET',
+            '/v1/admin/doctors?status=approved',
+          );
+          final row = (list['items'] as List).cast<Map>().firstWhere(
+            (d) => d['id'] == doctorId,
+          );
+          expect(row['upcoming'], 1);
+          final (_, detail) = await asAdmin(
+            'GET',
+            '/v1/admin/doctors/$doctorId',
+          );
+          expect(detail['licenseNumber'], 'LIC-+998903333331');
+          expect((detail['stats'] as Map)['upcoming'], 1);
+
+          expect(
+            (await asAdmin('POST', '/v1/admin/doctors/$doctorId/moderate', {
+              'decision': 'suspended',
+            })).$1,
+            400,
+          );
+          final (code, res) = await asAdmin(
+            'POST',
+            '/v1/admin/doctors/$doctorId/moderate',
+            {'decision': 'suspended', 'note': 'Litsenziya muddati tugagan'},
+          );
+          expect(code, 200);
+          expect(res['refunds'], 1);
+          expect(appts.byId(id)!.status, AppointmentStatus.cancelled);
+          final (_, a) = await send(
+            'GET',
+            '/v1/appointments/$id',
+            token: patient,
+          );
+          expect(a['refundStatus'], 'refunded'); // Apple Pay — avtomatik
+          final (_, search) = await send('GET', '/v1/doctors');
+          expect(
+            (search['items'] as List).map((d) => (d as Map)['id']),
+            isNot(contains(doctorId)),
+          );
+          // Shifokor kabineti yopildi (rol bemorga qaytdi).
+          expect(
+            (await send('GET', '/v1/doctor/settings', token: docToken)).$1,
+            403,
+          );
+          // Qayta tiklash.
+          final (_, back) = await asAdmin(
+            'POST',
+            '/v1/admin/doctors/$doctorId/moderate',
+            {'decision': 'approved'},
+          );
+          expect(back['status'], 'approved');
+        },
+      );
+
+      test('foydalanuvchilar: raqam bo\'yicha qidiruv, bloklash, blokdan chiqarish', () async {
+        const phone = '+998902020202';
+        final user = await login(phone);
+        await consentAll(user);
+
+        final (_, found) = await asAdmin(
+          'GET',
+          '/v1/admin/users?q=${Uri.encodeQueryComponent(phone)}',
+        );
+        final items = (found['items'] as List).cast<Map>();
+        expect(items, hasLength(1));
+        expect(items.single['phone'], '+99890***0202');
+        final id = items.single['id'] as String;
+
+        // Sababsiz bloklab bo'lmaydi; admin o'zini bloklay olmaydi.
+        expect(
+          (await asAdmin('POST', '/v1/admin/users/$id/block', {})).$1,
+          400,
+        );
+        final (_, me) = await send('GET', '/v1/me', token: admin);
+        expect(
+          (await asAdmin('POST', '/v1/admin/users/${me['id']}/block', {
+            'reason': 'x',
+          })).$1,
+          409,
+        );
+
+        final (bc, b) = await asAdmin('POST', '/v1/admin/users/$id/block', {
+          'reason': 'Soxta qabullar',
+        });
+        expect(bc, 200);
+        expect(b['blocked'], isTrue);
+        expect((await send('GET', '/v1/me', token: user)).$1, 401);
+        await send('POST', '/v1/auth/otp/request', body: {'phone': phone});
+        final (lc, lj) = await send(
+          'POST',
+          '/v1/auth/otp/verify',
+          body: {'phone': phone, 'code': otp.codes[phone]},
+        );
+        expect(lc, 403);
+        expect((lj['error'] as Map)['code'], 'account_blocked');
+        final (_, onlyBlocked) = await asAdmin(
+          'GET',
+          '/v1/admin/users?blocked=true',
+        );
+        expect((onlyBlocked['items'] as List).map((u) => (u as Map)['id']), [
+          id,
+        ]);
+
+        await asAdmin('POST', '/v1/admin/users/$id/block', {'blocked': false});
+        final again = await login(phone);
+        expect((await send('GET', '/v1/me', token: again)).$1, 200);
+
+        // Audit jurnalida admin amallari bor.
+        final (_, audit) = await asAdmin('GET', '/v1/admin/audit?action=user.');
+        final actions = (audit['items'] as List).map(
+          (e) => (e as Map)['action'],
+        );
+        expect(actions, containsAll(['user.block', 'user.unblock']));
+        expect(actions.first, 'user.unblock'); // eng yangisi birinchi
+      });
+
+      test('qabullar va to\'lovlar ro\'yxati tibbiy mazmunsiz', () async {
+        final (:doctorId, docToken: _) = await approvedDoctor('+998901010101');
+        final patient = await login('+998901010102');
+        await consentAll(patient);
+        final id = await bookPaid(
+          patient,
+          doctorId,
+          (await slotsOn(doctorId, 2)).first,
+        );
+        final (_, list) = await asAdmin(
+          'GET',
+          '/v1/admin/appointments?doctorId=$doctorId',
+        );
+        final row = (list['items'] as List).single as Map;
+        expect(row['id'], id);
+        expect(row['paid'], isTrue);
+        expect(row.containsKey('reason'), isFalse);
+        expect(row.containsKey('conclusion'), isFalse);
+        final (_, pays) = await asAdmin(
+          'GET',
+          '/v1/admin/payments?provider=applePay&status=paid',
+        );
+        expect(pays['sumPaidUzs'], greaterThanOrEqualTo(90000));
+        expect(
+          (pays['items'] as List).map((o) => (o as Map)['appointmentId']),
+          contains(id),
+        );
+      });
+
+      test('sharhni yashirish reytingni qayta hisoblaydi', () async {
+        final (:doctorId, :docToken) = await approvedDoctor('+998909090901');
+        final patient = await login('+998909090902');
+        await consentAll(patient);
+        final id = await bookPaid(
+          patient,
+          doctorId,
+          (await slotsOn(doctorId, 2)).first,
+        );
+        appts.byId(id)!.startsAt = DateTime.now().toUtc().subtract(
+          const Duration(hours: 1),
+        );
+        await send(
+          'POST',
+          '/v1/doctor/appointments/$id/complete',
+          token: docToken,
+        );
+        await send(
+          'POST',
+          '/v1/appointments/$id/review',
+          token: patient,
+          body: {'rating': 1, 'comment': 'Haqoratli matn'},
+        );
+        expect(doctors.byId(doctorId)!.reviewCount, 1);
+        expect(
+          (await asAdmin('POST', '/v1/admin/reviews/$id/hide', {})).$1,
+          400,
+        );
+        final (_, h) = await asAdmin('POST', '/v1/admin/reviews/$id/hide', {
+          'reason': 'Haqorat',
+        });
+        expect(h['hidden'], isTrue);
+        expect(doctors.byId(doctorId)!.reviewCount, 0);
+        final (_, pub) = await send('GET', '/v1/doctors/$doctorId/reviews');
+        expect(pub['items'], isEmpty);
+        final (_, detail) = await asAdmin('GET', '/v1/admin/doctors/$doctorId');
+        expect(((detail['reviews'] as List).single as Map)['hidden'], isTrue);
+        await asAdmin('POST', '/v1/admin/reviews/$id/hide', {'hidden': false});
+        expect(doctors.byId(doctorId)!.reviewCount, 1);
+        expect(doctors.byId(doctorId)!.rating, 1);
+      });
+    });
+
+    test('bildirishnomalar tarixi: tilda, o\'qilmaganlar soni', () async {
+      final (:doctorId, docToken: _) = await approvedDoctor('+998908080801');
+      final patient = await login('+998908080802');
+      await consentAll(patient);
+      final id = await bookPaid(
+        patient,
+        doctorId,
+        (await slotsOn(doctorId, 2)).first,
+      );
+      await send('POST', '/v1/appointments/$id/cancel', token: patient);
+      await Future<void>.delayed(Duration.zero);
+      final (_, ru) = await send(
+        'GET',
+        '/v1/me/notifications?lang=ru',
+        token: patient,
+      );
+      final items = (ru['items'] as List).cast<Map>();
+      // Eng yangisi birinchi: pul qaytarildi, keyin to'lov tasdiqlandi.
+      expect(items.map((i) => i['kind']), [
+        'refundCompleted',
+        'paymentConfirmed',
+      ]);
+      expect(items.last['title'], 'Приём подтверждён');
+      expect((items.last['data'] as Map)['appointmentId'], id);
+      expect(ru['unread'], 2);
+      final (_, r) = await send(
+        'POST',
+        '/v1/me/notifications/read',
+        token: patient,
+        body: {
+          'ids': [items.first['id']],
+        },
+      );
+      expect(r['unread'], 1);
+      await send('POST', '/v1/me/notifications/read', token: patient, body: {});
+      final (_, after) = await send(
+        'GET',
+        '/v1/me/notifications',
+        token: patient,
+      );
+      expect(after['unread'], 0);
+    });
+
+    test(
+      'shifokor: dam olish kunlari, statistika, muddati o\'tgan bron',
+      () async {
+        final (:doctorId, :docToken) = await approvedDoctor('+998907070701');
+        final day = DateTime.now().toUtc().add(const Duration(days: 3));
+        final key = day
+            .add(const Duration(hours: 5))
+            .toIso8601String()
+            .substring(0, 10);
+        expect(await slotsOn(doctorId, 3), isNotEmpty);
+        expect(
+          (await send(
+            'PUT',
+            '/v1/doctor/settings',
+            token: docToken,
+            body: {
+              'daysOff': ['2026-13-40'],
+            },
+          )).$1,
+          400,
+        );
+        final (_, s) = await send(
+          'PUT',
+          '/v1/doctor/settings',
+          token: docToken,
+          body: {
+            'daysOff': [key, '2020-01-01'], // o'tgan sana tashlab yuboriladi
+          },
+        );
+        expect(s['daysOff'], [key]);
+        expect(await slotsOn(doctorId, 3), isEmpty);
+
+        final patient = await login('+998907070702');
+        await consentAll(patient);
+        final slot = (await slotsOn(doctorId, 2)).first;
+        await bookPaid(patient, doctorId, slot);
+        final (_, unpaid) = await send(
+          'POST',
+          '/v1/appointments',
+          token: patient,
+          body: {
+            'doctorId': doctorId,
+            'startsAt': (await slotsOn(doctorId, 2)).first,
+            'reason': 'x',
+          },
+        );
+        final (_, st) = await send('GET', '/v1/doctor/stats', token: docToken);
+        expect(st['upcoming'], 1);
+        expect(st['earnings30dUzs'], 90000);
+
+        // To'lanmagan bron 30 daqiqadan keyin bekor bo'ladi.
+        expect(appts.expireUnpaid(DateTime.now().toUtc()), isEmpty);
+        final expired = appts.expireUnpaid(
+          DateTime.now().toUtc().add(const Duration(minutes: 31)),
+        );
+        expect(expired.map((a) => a.id), [unpaid['id']]);
+        expect(
+          appts.byId(unpaid['id'] as String)!.status,
+          AppointmentStatus.cancelled,
+        );
+      },
+    );
   });
 }

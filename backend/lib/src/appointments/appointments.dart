@@ -57,6 +57,7 @@ class Appointment {
 /// Qaytariladigan bo'lsa — sabab, aks holda null.
 String? refundReason(Appointment a, String cancelledByRole, DateTime now) {
   if (cancelledByRole == 'doctor') return 'doctor_cancelled';
+  if (cancelledByRole == 'admin') return 'admin_cancelled';
   if (a.startsAt.difference(now) >= const Duration(hours: 24)) {
     return 'patient_cancelled_early';
   }
@@ -114,8 +115,15 @@ class Review {
     required this.comment,
     required this.authorName,
     DateTime? at,
+    this.hidden = false,
+    this.hiddenReason,
   }) : at = at ?? DateTime.now().toUtc();
   final int rating;
+
+  /// Admin yashirgan sharh (haqorat, shaxsiy ma'lumot, reklama). Reytingga
+  /// kirmaydi va ommaviy ro'yxatda ko'rinmaydi; bemorning o'zi ko'radi.
+  bool hidden;
+  String? hiddenReason;
   final String comment;
 
   /// Faqat ism (familiyasiz) ko'rsatiladi.
@@ -166,7 +174,11 @@ class AppointmentService {
   List<DateTime> freeSlots(String doctorId, DateTime dayUtc) {
     final d = doctors.byId(doctorId);
     final localDay = DateTime.utc(dayUtc.year, dayUtc.month, dayUtc.day);
-    if (d == null || !d.workDays.contains(localDay.weekday)) return const [];
+    if (d == null ||
+        !d.workDays.contains(localDay.weekday) ||
+        d.isDayOff(localDay)) {
+      return const [];
+    }
     final taken = _items.values
         .where((a) => a.doctorId == doctorId && _blocks(a))
         .map((a) => a.startsAt)
@@ -245,7 +257,12 @@ class AppointmentService {
         'createdAt': a.createdAt.toIso8601String(),
         'review': a.review == null
             ? null
-            : {...a.review!.toJson(), 'at': a.review!.at.toIso8601String()},
+            : {
+                ...a.review!.toJson(),
+                'at': a.review!.at.toIso8601String(),
+                'hidden': a.review!.hidden,
+                'hiddenReason': a.review!.hiddenReason,
+              },
         'reminderSent': a.reminderSent,
         'conclusionEnc': a.conclusionEnc,
         'conclusionAt': a.conclusionAt?.toIso8601String(),
@@ -287,6 +304,8 @@ class AppointmentService {
                     comment: rv['comment'] as String,
                     authorName: rv['authorName'] as String,
                     at: DateTime.parse(rv['at'] as String),
+                    hidden: rv['hidden'] as bool? ?? false,
+                    hiddenReason: rv['hiddenReason'] as String?,
                   );
       _items[a.id] = a;
     }
@@ -368,10 +387,12 @@ class AppointmentService {
         a,
   ];
 
-  void cancel(String id, String actorUserId) {
+  /// [bySystem] — admin yoki tizim (hisob bloklanganda, shifokor
+  /// to'xtatilganda): ishtirokchi tekshiruvi o'tkazilmaydi.
+  void cancel(String id, String actorUserId, {bool bySystem = false}) {
     final a = _items[id] ?? (throw ApiException(404, 'not_found'));
     final d = doctors.byId(a.doctorId);
-    if (a.patientId != actorUserId && d?.userId != actorUserId) {
+    if (!bySystem && a.patientId != actorUserId && d?.userId != actorUserId) {
       throw ApiException(403, 'forbidden');
     }
     if (a.status == AppointmentStatus.completed) {
@@ -450,6 +471,8 @@ class AppointmentService {
           comment: r.comment,
           authorName: '—',
           at: r.at,
+          hidden: r.hidden,
+          hiddenReason: r.hiddenReason,
         );
         persist(a);
       }
@@ -503,8 +526,62 @@ class AppointmentService {
 
   List<Review> reviewsFor(String doctorId) => [
     for (final a in _items.values)
-      if (a.doctorId == doctorId && a.review != null) a.review!,
+      if (a.doctorId == doctorId && a.review != null && !a.review!.hidden)
+        a.review!,
   ]..sort((x, y) => y.at.compareTo(x.at));
+
+  /// Admin uchun: shifokorning barcha sharhlari (yashirilganlari bilan).
+  List<Appointment> reviewedFor(String doctorId) => [
+    for (final a in _items.values)
+      if (a.doctorId == doctorId && a.review != null) a,
+  ]..sort((x, y) => y.review!.at.compareTo(x.review!.at));
+
+  /// Sharhni yashirish/qaytarish. Shifokor reytingi qayta hisoblanadi.
+  Appointment setReviewHidden(
+    String id, {
+    required bool hidden,
+    String? reason,
+  }) {
+    final a = _items[id];
+    final r = a?.review;
+    if (a == null || r == null) throw ApiException(404, 'not_found');
+    if (r.hidden == hidden) return a;
+    final d = doctors.byId(a.doctorId)!;
+    if (hidden) {
+      d.rating = d.reviewCount <= 1
+          ? 0
+          : (d.rating * d.reviewCount - r.rating) / (d.reviewCount - 1);
+      d.reviewCount = d.reviewCount <= 1 ? 0 : d.reviewCount - 1;
+    } else {
+      d.rating = (d.rating * d.reviewCount + r.rating) / (d.reviewCount + 1);
+      d.reviewCount++;
+    }
+    r
+      ..hidden = hidden
+      ..hiddenReason = hidden ? reason : null;
+    persist(a);
+    doctors.persist(d);
+    return a;
+  }
+
+  /// To'lanmagan bronlar bron muddati tugagach bekor qilinadi (ro'yxatda
+  /// "to'lov kutilmoqda" bo'lib qolib ketmasligi uchun). Qaytaradi: bekor
+  /// qilinganlar.
+  List<Appointment> expireUnpaid(DateTime now) {
+    final out = <Appointment>[];
+    for (final a in _items.values) {
+      if (a.status == AppointmentStatus.awaitingPayment &&
+          now.difference(a.createdAt) > holdFor + paymentGrace) {
+        a.status = AppointmentStatus.cancelled;
+        persist(a);
+        out.add(a);
+      }
+    }
+    return out;
+  }
+
+  /// To'lov sahifasida boshlangan to'lov yakunlanishi uchun qo'shimcha vaqt.
+  static const paymentGrace = Duration(minutes: 15);
 
   List<Appointment> forPatient(String userId) =>
       _items.values.where((a) => a.patientId == userId).toList()

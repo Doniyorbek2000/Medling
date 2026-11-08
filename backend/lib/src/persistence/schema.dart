@@ -139,6 +139,18 @@ CREATE TABLE attachments (
 );
 CREATE INDEX attachments_appointment ON attachments(appointment_id);
 ''',
+  // 3 — ilova ichidagi bildirishnomalar tarixi (matnsiz: turi va ID'lar)
+  '''
+CREATE TABLE notifications (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users(id),
+  created_at  TIMESTAMPTZ NOT NULL,
+  read        BOOLEAN NOT NULL DEFAULT false,
+  data        JSONB NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX notifications_user ON notifications(user_id, created_at);
+''',
 ];
 
 /// Ishga tushirish tartibi (foreign key'lar uchun): ota jadvallar oldin.
@@ -154,4 +166,5 @@ const tableOrder = [
   'payme_transactions',
   'chat_messages',
   'devices',
+  'notifications',
 ];

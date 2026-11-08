@@ -63,6 +63,15 @@ class DoctorProfile {
   int startHour = 9;
   int endHour = 18;
 
+  /// Dam olish / ta'til kunlari (Toshkent sanasi, `YYYY-MM-DD`).
+  Set<String> daysOff = {};
+
+  static String dayKey(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  bool isDayOff(DateTime localDay) => daysOff.contains(dayKey(localDay));
+
   int priceFor(String type) => type == 'online' ? onlinePriceUzs : priceUzs;
 
   bool offers(String type) => type == 'online' ? onlineEnabled : clinicEnabled;
@@ -75,6 +84,7 @@ class DoctorProfile {
     'workDays': workDays.toList()..sort(),
     'startHour': startHour,
     'endHour': endHour,
+    'daysOff': daysOff.toList()..sort(),
   };
 
   Map<String, dynamic> toPublicJson() => {
@@ -213,7 +223,10 @@ class DoctorService {
             ..onlinePriceUzs = j['onlinePriceUzs'] as int
             ..workDays = (j['workDays'] as List).cast<int>().toSet()
             ..startHour = j['startHour'] as int
-            ..endHour = j['endHour'] as int;
+            ..endHour = j['endHour'] as int
+            ..daysOff = ((j['daysOff'] as List?) ?? const [])
+                .cast<String>()
+                .toSet();
       _doctors[d.id] = d;
     }
   }
@@ -253,7 +266,30 @@ class DoctorService {
     if (price < 0 || onlinePrice < 0 || (online && onlinePrice == 0)) {
       throw ApiException(400, 'invalid_price');
     }
+    // Dam olish kunlari: bugundan 1 yil ichida, ko'pi bilan 120 kun.
+    var off = d.daysOff;
+    if (j['daysOff'] is List) {
+      final today = DoctorProfile.dayKey(
+        DateTime.now().toUtc().add(const Duration(hours: 5)),
+      );
+      final limit = DoctorProfile.dayKey(
+        DateTime.now().toUtc().add(const Duration(days: 366)),
+      );
+      off = <String>{};
+      for (final v in j['daysOff'] as List) {
+        final s = v is String ? v : '';
+        final p = DateTime.tryParse(s);
+        if (s.length != 10 || p == null || DoctorProfile.dayKey(p) != s) {
+          throw ApiException(400, 'invalid_schedule', 'daysOff');
+        }
+        if (s.compareTo(today) >= 0 && s.compareTo(limit) <= 0) off.add(s);
+      }
+      if (off.length > 120) {
+        throw ApiException(400, 'invalid_schedule', 'daysOff');
+      }
+    }
     d
+      ..daysOff = off
       ..workDays = days
       ..startHour = start
       ..endHour = end
@@ -416,7 +452,8 @@ class DoctorService {
         '${d.status.name} -> ${decision.name}',
       );
     }
-    if (decision == ModerationStatus.rejected &&
+    if ((decision == ModerationStatus.rejected ||
+            decision == ModerationStatus.suspended) &&
         (note == null || note.trim().isEmpty)) {
       throw ApiException(400, 'note_required', 'Rad etish sababi majburiy');
     }
